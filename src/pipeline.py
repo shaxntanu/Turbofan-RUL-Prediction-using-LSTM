@@ -79,6 +79,17 @@ def main():
 
     logger.info(f"Test Metrics: {metrics}")
 
+    # 11. Visualization
+    viz = Visualizer(config)
+    viz.plot_training_history(history, f"{config.output_dir}/figures/training/loss_curves.png")
+    viz.plot_predictions_vs_actual(y_test, y_pred, f"{config.output_dir}/figures/performance/predicted_vs_actual.png")
+
+    # Plot trajectory for the first test engine
+    test_units = np.unique(X_test.shape[0]) # simplified for example
+    # Better: get the first engine's indices
+    # Since we don't track indices in a simple array, we'll skip per-engine trajectory in the main pipeline
+    # unless we modify the sequence generator to return mapping.
+
     # Save Final Model
     model_wrapper.save(f"{config.model_dir}/final_lstm_model.h5")
 
