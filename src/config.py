@@ -6,8 +6,7 @@ import os
 class ProjectConfig:
     # Dataset
     dataset: str = "FD001"
-    # Using the Ref directory provided by the user
-    raw_data_dir: str = r"C:\Users\Shantanu\Documents\GitHub\Turbofan-RUL-Prediction-using-LSTM\Ref\CMAPSSData"
+    raw_data_dir: str = r"C:\\Users\\Shantanu\\Documents\\GitHub\\Turbofan-RUL-Prediction-using-LSTM\\Ref\\CMAPSSData"
     processed_data_dir: str = "data/processed"
 
     # Preprocessing
@@ -23,6 +22,17 @@ class ProjectConfig:
     normalize: bool = True
     scaler_type: str = "minmax"
 
+    # Model
+    lstm_units: List[int] = field(default_factory=lambda: [64, 32])
+    dropout_rate: float = 0.2
+    dense_units: int = 16
+    learning_rate: float = 0.001
+
+    # Training
+    batch_size: int = 64
+    max_epochs: int = 100
+    early_stopping_patience: int = 10
+
     # Split
     train_ratio: float = 0.8
     val_ratio: float = 0.1
@@ -35,7 +45,6 @@ class ProjectConfig:
     model_dir: str = "models"
 
     def __post_init__(self):
-        # Ensure directories exist
         os.makedirs(self.processed_data_dir, exist_ok=True)
         os.makedirs(self.output_dir, exist_ok=True)
         os.makedirs(self.model_dir, exist_ok=True)
