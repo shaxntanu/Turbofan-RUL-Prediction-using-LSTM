@@ -36,25 +36,18 @@ config = ProjectConfig()
 
 # Load artifacts with a cache to prevent reloading on every interaction
 @st.cache_resource
-def load_artifacts():
+def load_artifacts(dataset_name):
     try:
-        model = load_model(f"{config.model_dir}/final_lstm_model.h5")
-        scaler = joblib.load(f"{config.model_dir}/scaler.pkl")
+        model = load_model(f"{config.model_dir}/final_lstm_model_{dataset_name}.h5")
+        scaler = joblib.load(f"{config.model_dir}/scaler_{dataset_name}.pkl")
         return model, scaler
     except Exception as e:
         return None, None
 
-model, scaler = load_artifacts()
-
-# --- HEADER SECTION ---
-st.title("Turbofan Engine RUL Prediction Dashboard")
-st.markdown("Predicting the Remaining Useful Life (RUL) of aircraft engines using deep learning.")
-st.divider()
-
-# --- SIDEBAR SECTION ---
+# Sidebar for Model Selection
 st.sidebar.header("Control Panel")
-st.sidebar.markdown("Upload engine sensor data to get an RUL forecast.")
-
+selected_dataset = st.sidebar.selectbox("Select Dataset Model", ["FD001", "FD002", "FD003", "FD004"])
+model, scaler = load_artifacts(selected_dataset)
 uploaded_file = st.sidebar.file_uploader("Upload Sensor Data (CSV)", type=["csv"])
 
 # --- MAIN CONTENT ---

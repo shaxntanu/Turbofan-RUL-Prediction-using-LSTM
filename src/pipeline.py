@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import logging
 import joblib
+import os
 from src.config import ProjectConfig
 from src.data_loader import DataLoader
 from src.data_validator import DataValidator
@@ -13,13 +14,15 @@ from src.data_splitter import DataSplitter
 from src.lstm_model import LSTMModel
 from src.trainer import Trainer
 from src.evaluator import Evaluator
+from src.visualizer import Visualizer
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-def main():
+def run_pipeline(dataset_name="FD001"):
     # 1. Configuration
     config = ProjectConfig()
+    config.dataset = dataset_name
     logger.info(f"Starting RUL Prediction Pipeline for {config.dataset}")
 
     # 2. Data Ingestion
@@ -57,7 +60,9 @@ def main():
     val_split_scaled = normalizer.transform(val_split_df, feature_cols)
     test_scaled = normalizer.transform(test_df, feature_cols)
 
-    normalizer.save(f"{config.model_dir}/scaler.pkl")
+    # Save dataset-specific scaler
+    scaler_path = f"{config.model_dir}/scaler_{dataset_name}.pkl"
+    normalizer.save(scaler_path)
 
     # 8. Sequence Generation
     seq_gen = SequenceGenerator(config)
@@ -65,7 +70,7 @@ def main():
     X_val, y_val = seq_gen.generate(val_split_scaled, feature_cols)
     X_test, y_test = seq_gen.generate(test_scaled, feature_cols)
 
-    logger.info(f"Sequences generated. X_train shape: {X_train.shape}, X_val shape: {X_val.shape}, X_test shape: {X_test.shape}")
+    logger.info(f"Sequences generated for {dataset_name}. X_train: {X_train.shape}")
 
     # 9. Model Training
     model_wrapper = LSTMModel(config, input_shape=(config.window_size, len(feature_cols)))
@@ -77,21 +82,22 @@ def main():
     y_pred = model_wrapper.model.predict(X_test)
     metrics = evaluator.compute_metrics(y_test, y_pred)
 
-    logger.info(f"Test Metrics: {metrics}")
+    logger.info(f"Dataset {dataset_name} Test Metrics: {metrics}")
 
     # 11. Visualization
     viz = Visualizer(config)
-    viz.plot_training_history(history, f"{config.output_dir}/figures/training/loss_curves.png")
-    viz.plot_predictions_vs_actual(y_test, y_pred, f"{config.output_dir}/figures/performance/predicted_vs_actual.png")
+    dataset_fig_dir = f"{config.output_dir}/figures/{dataset_name}"
+    os.makedirs(dataset_fig_dir, exist_ok=True)
 
-    # Plot trajectory for the first test engine
-    test_units = np.unique(X_test.shape[0]) # simplified for example
-    # Better: get the first engine's indices
-    # Since we don't track indices in a simple array, we'll skip per-engine trajectory in the main pipeline
-    # unless we modify the sequence generator to return mapping.
+    viz.plot_training_history(history, f"{dataset_fig_dir}/loss_curves.png")
+    viz.plot_predictions_vs_actual(y_test, y_pred, f"{dataset_fig_dir}/predicted_vs_actual.png")
 
-    # Save Final Model
-    model_wrapper.save(f"{config.model_dir}/final_lstm_model.h5")
+    # Save Final Model for this dataset
+    model_path = f"{config.model_dir}/final_lstm_model_{dataset_name}.h5"
+    model_wrapper.save(model_path)
+
+    return metrics
 
 if __name__ == "__main__":
-    main()
+    # Run for the baseline dataset by default
+    run_pipeline("FD001")
