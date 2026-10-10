@@ -2,10 +2,10 @@
 
 This project implements a deep learning pipeline to predict the Remaining Useful Life (RUL) of aircraft turbofan engines using the NASA C-MAPSS dataset.
 
-## 🚀 Project Overview
+## Project Overview
 The system transforms multivariate sensor time-series data into RUL predictions using a stacked LSTM (Long Short-Term Memory) network. It includes a full pipeline from raw data ingestion to an interactive Streamlit dashboard.
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Language**: Python 3.12+
 - **Deep Learning**: TensorFlow / Keras
 - **Data Processing**: Pandas, NumPy, Scikit-Learn
@@ -13,15 +13,15 @@ The system transforms multivariate sensor time-series data into RUL predictions 
 - **UI**: Streamlit
 - **Testing**: Pytest
 
-## 📂 Project Structure
+## Project Structure
 - `src/`: Core source code (modular pipeline)
 - `data/`: Raw and processed datasets
-- `models/`: Saved model weights (`.h5`) and scalers (`.pkl`)
+- `models/`: Saved model weights (.h5) and scalers (.pkl)
 - `outputs/`: Figures and evaluation metrics
 - `tests/`: Unit tests for the data pipeline
 - `streamlit_app.py`: Interactive prediction dashboard
 
-## ⚙️ Installation & Setup
+## Installation and Setup
 
 1. **Clone the repository**:
    ```bash
@@ -34,10 +34,10 @@ The system transforms multivariate sensor time-series data into RUL predictions 
    pip install -r requirements.txt
    ```
 
-## 🏃 How to Run
+## How to Run
 
 ### 1. Train the Model
-To run the end-to-end pipeline (ingestion $\rightarrow$ preprocessing $\rightarrow$ training $\rightarrow$ evaluation):
+To run the end-to-end pipeline (ingestion, preprocessing, training, and evaluation):
 ```bash
 py src/pipeline.py
 ```
@@ -49,12 +49,12 @@ To explore the model and make predictions interactively:
 streamlit run streamlit_app.py
 ```
 
-## 📈 Methodology
+## Methodology
 The pipeline follows these stages:
-1. **Data Ingestion**: Parsing NASA C-MAPSS `.txt` files.
+1. **Data Ingestion**: Parsing NASA C-MAPSS .txt files.
 2. **Labeling**: Computing RUL per engine based on run-to-failure trajectories.
-3. **Cleaning**: Removing constant/uninformative sensors.
-4. **Normalization**: Scaling features using `MinMaxScaler` (fitted on training data only).
+3. **Cleaning**: Removing constant or uninformative sensors.
+4. **Normalization**: Scaling features using MinMaxScaler (fitted on training data only).
 5. **Sequencing**: Generating sliding window sequences for LSTM input.
 6. **Training**: Stacked LSTM with Early Stopping and Model Checkpointing.
 7. **Evaluation**: Metrics calculated using MAE and RMSE.
