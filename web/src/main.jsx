@@ -372,8 +372,8 @@ function Reliability({ data, dataset, theme }) {
   const activeModel = modelOptions.includes(selectedModel) ? selectedModel : modelOptions[0] ?? "";
   const selectedSummary = summaries.find((row) => row.model === activeModel);
   const stressRows = (tables.sensor_stress_summary ?? []).filter((row) => row.dataset === dataset && row.model === activeModel);
-  const stressOnly = stressRows.filter((row) => row.scenario !== "clean");
-  const clean = stressRows.find((row) => row.scenario === "clean");
+  const stressOnly = stressRows.filter((row) => row.corruption_type !== "clean");
+  const clean = stressRows.find((row) => row.corruption_type === "clean");
   const stressData = {
     labels: stressOnly.map((row) => `${row.corruption_type} / ${row.severity}`),
     datasets: [{
