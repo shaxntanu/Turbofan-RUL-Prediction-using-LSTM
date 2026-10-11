@@ -346,7 +346,7 @@ def sensor_corruption_scenarios(
 
 def _combine_dropout_noise(frame, groups, sensors, medians, scales, *, seed, noise_fraction):
     result = frame.copy()
-    columns = groups[0] + groups[-1]
+    columns = list(dict.fromkeys(groups[0] + groups[-1]))
     result.loc[:, columns] = [medians[name] for name in columns]
     rng = np.random.default_rng(seed)
     noise = rng.normal(size=(len(result), len(sensors)))
