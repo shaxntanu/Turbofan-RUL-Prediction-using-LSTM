@@ -37,6 +37,12 @@ models/*.h5
 models/*.pkl
 models/*.pt
 models/*.json
+models/**/*.h5
+models/**/*.keras
+models/**/*.joblib
+web/node_modules/
+web/dist/
+.vite/
 
 # Outputs
 outputs/
