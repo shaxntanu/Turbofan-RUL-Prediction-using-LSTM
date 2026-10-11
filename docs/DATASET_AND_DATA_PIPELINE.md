@@ -62,7 +62,24 @@ The NASA C-MAPSS dataset contains four subsets with varying complexity:
 - Established baseline in literature
 - Suitable for academic mini-project scope
 
-**Future Extensions**: FD002, FD003, FD004 can be added for more complex experiments
+### 3.3 Complete Dataset Coverage
+
+**All Subsets**: The pipeline should support all four subsets (FD001, FD002, FD003, FD004)
+
+**Implementation Strategy**:
+- Baseline development on FD001
+- Extension to FD002, FD003, FD004 for comprehensive evaluation
+- Each subset requires separate model training due to different characteristics
+- Results should be reported for all subsets to demonstrate generalization
+
+### 3.4 Subset Characteristics Comparison
+
+| Subset | Complexity | Train Engines | Test Engines | Conditions | Fault Modes | Use Case |
+|--------|------------|---------------|---------------|------------|-------------|----------|
+| FD001 | Low | 100 | 100 | 1 | 1 | Baseline, quick experiments |
+| FD002 | Medium | 260 | 259 | 6 | 1 | Multi-condition evaluation |
+| FD003 | Medium | 100 | 100 | 1 | 2 | Multi-fault evaluation |
+| FD004 | High | 248 | 249 | 6 | 2 | Comprehensive evaluation |
 
 ---
 
@@ -963,32 +980,22 @@ class DataConfig:
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Dataset source | Defined | NASA C-MAPSS FD001 |
+| Dataset source | Implemented | Bundled NASA C-MAPSS FD001-FD004 under `Ref/CMAPSSData/` |
 | License | Defined | Public domain |
-| Dataset structure | Defined | 26 columns, 100 train/test engines |
-| Engine identifier | Defined | Unit column |
-| Cycle information | Defined | Cycle column |
-| Sensor variables | Defined | 21 sensors |
-| Operational settings | Defined | 3 settings |
-| Target definition | Defined | RUL (cycles remaining) |
-| RUL formulation | Defined | Per-engine computation |
-| Training data | Defined | train_FD001.txt |
-| Validation strategy | Defined | Engine-level split |
-| Test data | Defined | test_FD001.txt + RUL_FD001.txt |
-| Missing values | Defined | None expected |
-| Constant sensors | Defined | Remove after EDA |
-| Outliers | Defined | Keep for baseline |
-| Sensor normalization | Defined | MinMaxScaler on train only |
-| Feature selection | Defined | All non-constant sensors + settings |
-| Sequence generation | Defined | Sliding windows |
-| Window size | Defined | 30 cycles (baseline) |
-| Prediction horizon | Defined | RUL at window end |
-| Label generation | Defined | RUL at last cycle |
-| Data splitting | Defined | Engine-level 80/10/10 |
-| Leakage prevention | Defined | Engine-level split, scaler on train only |
-| Data validation | Defined | Schema, integrity, consistency checks |
-| Preprocessing artifacts | Defined | Scaler, metadata JSONs |
-| Dataset versioning | Defined | File hashes, source documentation |
+| Dataset structure | Implemented | 26 columns; engine counts vary by subset |
+| Engine/cycle fields | Implemented | Validated and sorted per engine |
+| Sensors/settings | Implemented | 21 sensor channels and 3 operating settings |
+| RUL labels | Implemented | Per-engine run-to-failure targets, capped at 125 cycles |
+| Training/validation | Implemented | Engine-level 80/20 split of the supplied training engines |
+| Official test data | Implemented | Per-subset test trajectories and final-cycle RUL labels |
+| Data validation | Implemented | Schema, numeric values, duplicates, and cycle ordering |
+| Constant sensors | Implemented | Filtered using training engines only |
+| Sensor normalization | Implemented | MinMaxScaler fit on training engines only |
+| Feature screening | Implemented | Training-only Pearson/PCA analysis |
+| Sequence generation | Implemented | Per-engine, 30-cycle windows with RUL at window end |
+| Leakage prevention | Implemented | Engine split precedes scaler fitting and model selection |
+| Preprocessing artifacts | Implemented | Scalers and selected feature metadata saved under `models/` |
+| Dataset versioning | Documented | Bundled source files are used directly; generated data is not committed |
 
 ---
 
@@ -996,13 +1003,13 @@ class DataConfig:
 
 ### 30.1 Dataset Selection
 
-**Decision**: Use NASA C-MAPSS FD001 subset
+**Decision**: Support all four NASA C-MAPSS subsets; report FD001-FD004 separately
 
-**Rationale**: Simplest configuration, suitable for baseline
+**Rationale**: FD001 is a quick baseline; the remaining subsets broaden operating-condition and fault-mode coverage.
 
 ### 30.2 Splitting Strategy
 
-**Decision**: Engine-level splitting (not row-level)
+**Decision**: Engine-level training/validation split (not row-level); retain the official test partition
 
 **Rationale**: Prevents data leakage, mimics real-world scenario
 
@@ -1026,12 +1033,12 @@ class DataConfig:
 
 ### 30.6 RUL Clipping
 
-**Decision**: Not applied in baseline
+**Decision**: Cap training and test RUL labels at 125 cycles
 
-**Rationale**: Can experiment as extension
+**Rationale**: Use the common piecewise-linear C-MAPSS target protocol consistently.
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-10-08  
-**Status**: Defined - Ready for implementation
+**Document Version**: 1.1  
+**Last Updated**: 2026-10-11  
+**Status**: Implemented for FD001-FD004; see `README.md` for run commands.
