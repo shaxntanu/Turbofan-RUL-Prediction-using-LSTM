@@ -285,6 +285,12 @@ def run_pipeline(
     visualizer.plot_predictions_vs_actual(y_test, selected_predictions, figures_dir / "predicted_vs_actual.png")
     visualizer.plot_error_distribution(y_test, selected_predictions, figures_dir / "residual_distribution.png")
     visualizer.plot_model_comparison(test_metrics, figures_dir / "model_comparison.png")
+    fractional_metrics = pd.DataFrame(fractional_life_analysis["metrics"])
+    if not fractional_metrics.empty:
+        visualizer.plot_fractional_life_metrics(
+            fractional_metrics,
+            figures_dir / "fractional_life_metrics.png",
+        )
     visualizer.plot_prediction_intervals(
         y_test,
         selected_predictions,
