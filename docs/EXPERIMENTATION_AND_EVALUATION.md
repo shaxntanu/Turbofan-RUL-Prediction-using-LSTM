@@ -247,7 +247,7 @@ Develop and evaluate an LSTM-based model for turbofan engine RUL prediction that
 - Early stopping decisions
 - Hyperparameter tuning
 
-**Size**: 10% of training engines (10 engines for FD001)
+**Size**: 20% of the supplied training engines (20 engines for FD001); the official test engines remain untouched for final evaluation.
 
 **Split Method**: Engine-level split (see DATASET_AND_DATA_PIPELINE.md)
 
