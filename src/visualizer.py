@@ -59,7 +59,7 @@ class Visualizer:
         sns.histplot(errors, bins=40, kde=True, color=PALETTE["blue"], ax=ax)
         ax.axvline(0, color=PALETTE["coral"], linestyle="--", linewidth=1.7)
         ax.axvline(errors.mean(), color=PALETTE["gold"], linewidth=1.7, label=f"Mean = {errors.mean():.1f}")
-        ax.set(title="RUL residual distribution", xlabel="Observed − predicted RUL (cycles)", ylabel="Window count")
+        ax.set(title="RUL residual distribution", xlabel="Observed - predicted RUL (cycles)", ylabel="Window count")
         ax.legend(frameon=False)
         fig.tight_layout()
         return self._save(fig, save_path)
@@ -112,8 +112,34 @@ class Visualizer:
         rows = [{"Model": name, "MAE": values["mae"], "RMSE": values["rmse"]} for name, values in metrics.items()]
         frame = pd.DataFrame(rows).melt(id_vars="Model", var_name="Metric", value_name="Cycles")
         fig, ax = plt.subplots(figsize=(7, 4.5))
-        sns.barplot(data=frame, x="Metric", y="Cycles", hue="Model", palette=[PALETTE["teal"], PALETTE["coral"]], ax=ax)
+        palette = {"ridge": PALETTE["teal"], "lstm": PALETTE["coral"]}
+        sns.barplot(data=frame, x="Metric", y="Cycles", hue="Model", palette=palette, ax=ax)
         ax.set(title=f"{self.config.dataset}: model comparison", ylabel="Error (cycles)")
+        ax.legend(title=None, frameon=False)
+        fig.tight_layout()
+        return self._save(fig, save_path)
+
+    def plot_fractional_life_metrics(self, results: pd.DataFrame, save_path: str | Path) -> Path:
+        fig, ax = plt.subplots(figsize=(8, 4.8))
+        palette = {
+            "shared_full_life": PALETTE["blue"],
+            "phase_specialized": PALETTE["coral"],
+        }
+        sns.barplot(
+            data=results,
+            x="life_stage",
+            y="mae",
+            hue="model_scope",
+            order=["early", "middle", "late"],
+            hue_order=["shared_full_life", "phase_specialized"],
+            palette=palette,
+            ax=ax,
+        )
+        ax.set(
+            title=f"{self.config.dataset}: RUL error by fractional life stage",
+            xlabel="Estimated engine life stage",
+            ylabel="Mean absolute error (cycles)",
+        )
         ax.legend(title=None, frameon=False)
         fig.tight_layout()
         return self._save(fig, save_path)
