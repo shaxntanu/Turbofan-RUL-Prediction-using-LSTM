@@ -12,12 +12,14 @@ import streamlit as st
 
 from src.baseline_model import WindowRidgeBaseline
 from src.config import DATASET_NAMES, ProjectConfig
+from src.cpp_bridge import module_status
 from src.data_cleaner import DataCleaner
 from src.data_loader import DataLoader
 from src.data_validator import DataValidator
 from src.evaluator import Evaluator
 from src.normalization import Normalizer
 from src.pipeline import run_pipeline
+from src.run_cpp_benchmark import OUTPUT_PATH as CPP_BENCHMARK_PATH, run_benchmark
 from src.sequence_generator import SequenceGenerator
 from src.target_construction import TargetConstructor
 
@@ -309,6 +311,65 @@ def main() -> None:
         _render_signals(dataset)
 
     with outputs_tab:
+        st.subheader("Native PCA / K-Means kernels")
+        native_status = module_status()
+        if native_status["available"]:
+            st.caption(
+                "Optional C++17 sensor-analysis kernels. Timings are local microbenchmarks, "
+                "not end-to-end RUL or LSTM speedups."
+            )
+            if st.button("Run native parity benchmark", key="run-cpp-benchmark", width="stretch"):
+                try:
+                    with st.spinner(f"Benchmarking native kernels on {dataset} training sensors…"):
+                        run_benchmark((dataset,), max_rows=10000)
+                    st.rerun()
+                except Exception as error:
+                    st.error(f"Native benchmark failed: {error}")
+
+            native_result = _read_json(CPP_BENCHMARK_PATH)
+            native_row = next(
+                (
+                    item for item in (native_result or {}).get("datasets", [])
+                    if item.get("dataset") == dataset and "pca" in item and "kmeans" in item
+                ),
+                None,
+            )
+            if native_row:
+                pca = native_row["pca"]
+                kmeans = native_row["kmeans"]
+                st.dataframe(
+                    pd.DataFrame(
+                        [{
+                            "Subset": dataset,
+                            "Rows": native_row["n_samples"],
+                            "Sensors": native_row["n_features"],
+                            "PCA sklearn (ms)": round(pca["python_ms"], 3),
+                            "PCA C++ (ms)": round(pca["cpp_ms"], 3),
+                            "PCA subspace angle (deg)": round(
+                                pca["maximum_principal_angle_degrees"], 8
+                            ),
+                            "K-Means sklearn (ms)": round(kmeans["python_ms"], 3),
+                            "K-Means C++ (ms)": round(kmeans["cpp_ms"], 3),
+                            "K-Means speedup": round(kmeans["speedup_x"], 2),
+                            "ARI": round(kmeans["adjusted_rand_index"], 4),
+                        }]
+                    ),
+                    hide_index=True,
+                    width="stretch",
+                )
+                st.caption(
+                    "Both PCA implementations use the same standardized training rows. "
+                    "K-Means consumes shared sklearn PCA scores; ARI compares cluster labels. "
+                    "Results vary by machine and compiler."
+                )
+            elif native_result and native_result.get("status") == "not_executed":
+                st.info(native_result.get("reason") or "Run the native benchmark to populate results.")
+        else:
+            st.info(
+                "The optional native module is not built. From the repository root, run "
+                "`python -m pip install ./cpp_engine` to enable the C++ benchmark."
+            )
+
         if not result:
             st.info("Run the selected subset from the sidebar to populate these results.")
         else:
