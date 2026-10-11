@@ -3,12 +3,15 @@ import pandas as pd
 
 from src.research_extensions import (
     causal_ema_windows,
+    EmaWindowRidge,
     fit_online_onset_detector,
     history_windows,
     onset_detection_report,
     onset_probability,
     select_asymmetric_ridge,
     select_training_features,
+    PolynomialWindowRidge,
+    SummaryMLP,
 )
 
 
@@ -64,6 +67,18 @@ def test_asymmetric_weight_selection_uses_validation_phm_score():
     assert weight in {0.5, 1.0, 2.0}
     assert len(rows) == 3
     assert selected.predict(validation_x).shape == (60,)
+
+
+def test_engineered_model_wrappers_accept_shared_sequence_inputs():
+    rng = np.random.default_rng(44)
+    sequences = rng.normal(size=(40, 6, 4)).astype(np.float32)
+    targets = np.linspace(0, 100, len(sequences))
+    models = [
+        EmaWindowRidge(0.35).fit(sequences, targets),
+        PolynomialWindowRidge([0, 1, 2, 3]).fit(sequences, targets),
+        SummaryMLP(seed=4, max_iter=3).fit(sequences, targets),
+    ]
+    assert all(model.predict(sequences[:5]).shape == (5,) for model in models)
 
 
 def test_online_onset_uses_sensor_windows_and_reports_validation_delay():
