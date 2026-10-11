@@ -4,7 +4,7 @@
 
 ### 1.1 Primary Objective
 
-Develop and evaluate an LSTM-based model for turbofan engine RUL prediction that achieves competitive performance on the NASA C-MAPSS FD001 benchmark dataset.
+Develop and evaluate an LSTM-based model for turbofan engine RUL prediction that achieves competitive performance on all NASA C-MAPSS benchmark datasets (FD001, FD002, FD003, FD004).
 
 ### 1.2 Secondary Objectives
 
@@ -16,10 +16,11 @@ Develop and evaluate an LSTM-based model for turbofan engine RUL prediction that
 
 ### 1.3 Success Criteria
 
-- LSTM model outperforms baseline on MAE
-- Test set MAE is competitive with literature values for FD001
+- LSTM model outperforms baseline on MAE for all subsets
+- Test set MAE is competitive with literature values for FD001, FD002, FD003, FD004
 - Experiments are reproducible from documentation
 - Code and artifacts are properly versioned
+- Results demonstrate generalization across different operating conditions and fault modes
 
 ---
 
@@ -929,29 +930,20 @@ graph TD
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Experimental objectives | Defined | LSTM RUL prediction on FD001 |
-| Baseline model | Defined | Linear regression on aggregated features |
-| Primary LSTM architecture | Defined | 2-layer LSTM with dropout |
-| Alternative models | Proposed | GRU, CNN-LSTM, XGBoost (optional) |
-| Hyperparameters | Defined | Data, model, training hyperparameters specified |
-| Training configuration | Defined | Adam optimizer, MSE loss, batch size 64 |
-| Validation strategy | Defined | Engine-level split, early stopping |
-| Early stopping | Defined | Patience 10, monitor val MAE |
-| Checkpointing | Defined | Save best model, training history |
-| Random seed strategy | Defined | Seed 42 for all operations |
-| Experiment naming | Defined | Config hash-based naming |
-| Experiment tracking | Defined | Metadata JSON with package versions |
-| Metrics | Defined | MAE (primary), RMSE (secondary) |
-| Error analysis | Defined | Distribution, vs RUL, per-engine |
-| Prediction visualization | Defined | Scatter plots, trajectories, curves |
-| Residual analysis | Defined | Residual vs fitted, Q-Q plot |
-| Engine-level analysis | Defined | Per-engine MAE, characteristics |
-| Generalization analysis | Defined | Train/val/test comparison |
-| Ablation experiments | Proposed | Window size, features, architecture (optional) |
-| Model comparison | Defined | LSTM vs baseline |
-| Reproducibility procedure | Defined | Step-by-step reproduction guide |
-| Expected artifacts | Defined | Model, training, evaluation, visualization, report artifacts |
-| Acceptance thresholds | Defined | LSTM > baseline, MAE < 30, overfitting check |
+| Experimental scope | Implemented | FD001-FD004 with a separate pipeline per subset |
+| Baseline | Implemented | Ridge regression on window summary features |
+| Primary sequence model | Implemented | Stacked 64/32-unit many-to-one LSTM with dropout |
+| Training | Implemented | Adam, MSE, batch size 64, early stopping on validation MAE |
+| Validation strategy | Implemented | Engine-level 80/20 split of training engines |
+| Reproducibility | Implemented | Seeded Python/NumPy/TensorFlow runs; configuration and package versions recorded |
+| Model selection | Implemented | Minimum validation MAE; official test is not used for selection |
+| Core metrics | Implemented | MAE, RMSE, R-squared, median absolute error, and asymmetric score |
+| Uncertainty | Implemented | Validation-calibrated split-conformal intervals and observed test coverage |
+| Error/robustness analysis | Implemented | Per-engine errors, Tukey outliers, bias, residual figures |
+| Research methods | Implemented | Sensor/PCA screening, detrending, fractional-life metrics, cross-subset transfer |
+| Visualization | Implemented | Matplotlib figures for training, predictions, residuals, intervals, and sensors |
+| Results artifacts | Implemented | JSON metrics, predictions, figures, Markdown run summaries under `outputs/` |
+| Optional architectures/ablations | Not implemented | GRU, CNN-LSTM, and systematic hyperparameter search remain out of scope |
 
 ---
 
@@ -959,15 +951,15 @@ graph TD
 
 ### 27.1 Baseline
 
-**Decision**: Linear regression on aggregated features
+**Decision**: Ridge regression on window summary features
 
-**Rationale**: Simple, interpretable, establishes performance floor
+**Rationale**: A regularized, reproducible tabular baseline for the same 30-cycle windows.
 
 ### 27.2 Primary Architecture
 
-**Decision**: 2-layer LSTM (64, 32 units) with dropout
+**Decision**: Stacked LSTM (64, 32 units) with dropout and a 16-unit dense layer
 
-**Rationale**: Balance between capacity and overfitting
+**Rationale**: Many-to-one regression from each sensor window to its end-of-window RUL label.
 
 ### 27.3 Metrics
 
@@ -983,12 +975,12 @@ graph TD
 
 ### 27.5 Reproducibility
 
-**Decision**: Fixed seed, config hashing, metadata logging
+**Decision**: Fixed random seed and run metadata logging
 
-**Rationale**: Enables exact reproduction
+**Rationale**: Improves repeatability; TensorFlow kernels and package/platform differences mean bitwise-identical results are not guaranteed.
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-10-08  
-**Status**: Defined - Ready for implementation
+**Document Version**: 1.1  
+**Last Updated**: 2026-10-11  
+**Status**: Implemented experiment workflow; generated run outputs are local and reproducible with `python -m src.train_all`.
