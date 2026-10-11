@@ -75,6 +75,18 @@ npm run dev
 
 The dashboard presents measured per-subset scores, transfer errors, figures, and methodology notes. After retraining, rerun the export command above to refresh its data bundle.
 
+## Optional C++ Sensor Kernels
+
+`cpp_engine/` contains optional C++17 PCA and K-Means kernels exposed to Python through pybind11. Build tools with a C++17 compiler are required:
+
+```powershell
+python -m pip install ./cpp_engine
+python -m src.run_cpp_benchmark --datasets FD001 FD002 FD003 FD004 --max-rows 10000
+python scripts/export_web_data.py
+```
+
+The benchmark uses training-engine sensor rows and compares numerical parity and local kernel timings with scikit-learn. Results depend on the machine/compiler; K-Means consumes shared sklearn PCA scores. These exploratory kernels do not affect RUL model selection, prediction, or LSTM inference. The Streamlit Research outputs tab can run the benchmark when the extension is installed.
+
 ## Evaluation Protocol
 
 - Compute capped RUL labels per engine, with a 125-cycle cap and 30-cycle input windows.
