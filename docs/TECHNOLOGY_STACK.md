@@ -1,5 +1,9 @@
 # Technology Stack & Engineering Specification
 
+> **Implemented stack:** The authoritative dependencies are `requirements.txt` and `web/package.json`. The project uses TensorFlow/Keras (not PyTorch), Python 3.12 for the supported training environment, scikit-learn, pandas/NumPy, Matplotlib/Seaborn, Streamlit, and React/Vite with Chart.js. The sections below retain rationale and design notes from the initial specification; proposal labels do not imply missing implementation.
+
+TensorFlow training was exercised in a Python 3.12 environment on CPU. On native Windows, TensorFlow 2.11 and later does not provide built-in CUDA GPU execution; use CPU or a supported WSL2 setup for GPU workflows.
+
 ## 1. Programming Language
 
 ### Python 3.12+
@@ -921,20 +925,21 @@ env/
 
 | Technology | Version | Purpose | Required/Optional | Rationale |
 |------------|---------|---------|-------------------|-----------|
-| Python | 3.12+ | Language | Required | Standard ML language |
+| Python | 3.12 | Language/runtime | Required for TensorFlow path | Supported project environment |
 | pip | - | Package manager | Required | Simple, standard |
-| NumPy | 2.3.5 | Numerical computing | Required | Fundamental |
-| Pandas | 3.0.0 | Data processing | Required | Tabular data |
-| TensorFlow | 2.18.0 | Deep learning | Required (or PyTorch) | LSTM implementation |
-| PyTorch | 2.5.0 | Deep learning | Alternative | LSTM implementation |
-| scikit-learn | 1.9.0 | ML utilities | Required | Preprocessing, metrics |
-| Matplotlib | 3.10.8 | Visualization | Required | Static plots |
-| Seaborn | 0.13.2 | Statistical plots | Required | Enhanced visualization |
-| Streamlit | 1.62.0 | Dashboard | Recommended | Interactive app |
-| Joblib | 1.5.3 | Serialization | Required | Model artifacts |
-| pytest | 8.4.2 | Testing | Required | Test suite |
-| Black | 24.x | Formatting | Optional | Code style |
-| flake8 | 7.x | Linting | Optional | Code quality |
+| NumPy | `requirements.txt` | Numerical computing | Required | Sequence and metric arrays |
+| Pandas | `requirements.txt` | Data processing | Required | C-MAPSS trajectories and artifacts |
+| TensorFlow/Keras | `>=2.18.0` | Deep learning | Required for LSTM runs | Sequence model and training callbacks |
+| scikit-learn | `requirements.txt` | ML utilities | Required | Ridge baseline, scaling, and metrics |
+| Matplotlib/Seaborn | `requirements.txt` | Visualization | Required | Experiment figures |
+| Streamlit | `requirements.txt` | Dashboard | Included | Interactive exploration/prediction |
+| Joblib | `requirements.txt` | Serialization | Required | Baseline and scaler artifacts |
+| React/React DOM | `web/package.json` | Web UI | Included | Results dashboard |
+| Vite | `web/package.json` | Frontend build | Included | Development and production bundles |
+| Chart.js | `web/package.json` | Interactive charts | Included | Dashboard comparisons and metrics |
+| Lucide React | `web/package.json` | Icons | Included | Dashboard controls and navigation |
+| pytest | `requirements.txt` | Test framework | Development | Repository unit tests |
+| Docker | Root `Dockerfile` | Containerization | Optional | Reproducible service packaging |
 | Git | - | Version control | Required | Standard |
 | GitHub | - | Repository hosting | Required | Platform |
 | Docker | - | Containerization | Optional | Reproducibility |
@@ -945,24 +950,18 @@ env/
 
 | Technology | Status | Notes |
 |------------|--------|-------|
-| Python 3.12+ | Defined | Minimum version |
-| pip/requirements.txt | Defined | Pinned versions |
-| NumPy | Defined | 2.3.5 |
-| Pandas | Defined | 3.0.0 |
-| TensorFlow | Proposed | 2.18.0 (PyTorch alternative) |
-| scikit-learn | Defined | 1.9.0 |
-| Matplotlib | Defined | 3.10.8 |
-| Seaborn | Defined | 0.13.2 |
-| Streamlit | Proposed | 1.62.0 |
-| Joblib | Defined | 1.5.3 |
-| pytest | Defined | 8.4.2 |
-| Black | Optional | Recommended |
-| flake8 | Optional | Recommended |
-| Git/GitHub | Defined | Standard workflow |
-| Docker | Optional | For reproducibility |
+| Python 3.12 | Implemented | Used for the TensorFlow LSTM workflow |
+| pip requirements | Implemented | See root dependency file |
+| TensorFlow/Keras | Implemented | LSTM training and model serialization |
+| scikit-learn | Implemented | Ridge model and preprocessing |
+| Matplotlib/Seaborn | Implemented | Static experiment figures |
+| Streamlit | Implemented | Interactive local app |
+| React/Vite/Chart.js | Implemented | Research results dashboard |
+| Git/GitHub | Implemented | Per-file commit/push workflow |
+| Docker | Available | Root `Dockerfile`; host capabilities vary |
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-10-08  
-**Status**: Defined - Ready for implementation
+**Document Version**: 1.1  
+**Last Updated**: 2026-10-11  
+**Status**: Core stack implemented; dependency sources of truth are the root and web package manifests.
