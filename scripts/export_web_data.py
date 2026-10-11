@@ -8,6 +8,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 DESTINATION = ROOT / "web" / "public" / "results" / "benchmark.json"
+CPP_BENCHMARK = OUTPUTS / "benchmarks" / "cpp_engine_benchmark.json"
 DATASETS = ("FD001", "FD002", "FD003", "FD004")
 FIGURE_NAMES = ("predicted_vs_actual", "fractional_life_metrics", "prediction_intervals")
 
@@ -50,6 +51,16 @@ def export() -> Path:
             columns.append("n_samples")
         transfer_rows = frame[columns].to_dict("records")
 
+    cpp_benchmark = (
+        json.loads(CPP_BENCHMARK.read_text(encoding="utf-8"))
+        if CPP_BENCHMARK.is_file()
+        else {
+            "status": "not_executed",
+            "reason": "Run python -m src.run_cpp_benchmark to generate native kernel timings.",
+            "datasets": [],
+        }
+    )
+
     payload = {
         "schema_version": 1,
         "protocol": {
@@ -70,6 +81,7 @@ def export() -> Path:
                 "not separate real-world engine fleets."
             ),
         },
+        "cpp_engine": cpp_benchmark,
     }
     DESTINATION.parent.mkdir(parents=True, exist_ok=True)
     DESTINATION.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
