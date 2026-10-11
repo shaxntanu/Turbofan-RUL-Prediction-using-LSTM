@@ -65,8 +65,8 @@ def _read_upload(uploaded_file) -> pd.DataFrame:
     return frame.sort_values(["unit", "cycle"]).reset_index(drop=True)
 
 
-def _run_baseline(dataset: str) -> dict:
-    return run_pipeline(dataset, ProjectConfig(dataset=dataset), train_lstm=False)
+def _run_experiment(dataset: str, *, train_lstm: bool) -> dict:
+    return run_pipeline(dataset, ProjectConfig(dataset=dataset), train_lstm=train_lstm)
 
 
 def _render_signals(dataset: str) -> None:
@@ -234,11 +234,19 @@ def main() -> None:
     with st.sidebar:
         st.divider()
         st.caption(f"Window: {config.window_size} cycles · RUL cap: {config.rul_clip_value} cycles")
-        if st.button("Run Ridge experiment", use_container_width=True, type="primary"):
+        if st.button("Run Ridge baseline", use_container_width=True, type="primary"):
             try:
                 with st.spinner(f"Running {dataset} through the research pipeline…"):
-                    _run_baseline(dataset)
-                st.success(f"{dataset} baseline run complete")
+                    _run_experiment(dataset, train_lstm=False)
+                st.success(f"{dataset} Ridge baseline complete")
+                st.rerun()
+            except Exception as error:
+                st.error(f"Experiment failed: {error}")
+        if st.button("Train LSTM + compare", use_container_width=True):
+            try:
+                with st.spinner(f"Training and comparing models for {dataset}…"):
+                    _run_experiment(dataset, train_lstm=True)
+                st.success(f"{dataset} LSTM comparison complete")
                 st.rerun()
             except Exception as error:
                 st.error(f"Experiment failed: {error}")
