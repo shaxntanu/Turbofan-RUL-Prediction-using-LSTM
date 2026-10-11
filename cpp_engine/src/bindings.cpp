@@ -89,7 +89,8 @@ py::dict compile_info_py() {
 #else
   info["openmp"] = false;
 #endif
-  info["cxx_standard"] = std::to_string(__cplusplus);
+  // MSVC reports an older __cplusplus value unless /Zc:__cplusplus is enabled.
+  info["cxx_standard"] = "C++17";
   return info;
 }
 
