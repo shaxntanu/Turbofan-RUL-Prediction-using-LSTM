@@ -13,6 +13,8 @@ import {
   Layers3,
   Plane,
   ShieldCheck,
+  Moon,
+  Sun,
   Workflow,
 } from "lucide-react";
 import {
@@ -40,18 +42,23 @@ const TARGETS = {
   FD004: "6 operating conditions / 2 fault modes",
 };
 const CHART_COLORS = ["#17877f", "#e68a4b", "#5679ad", "#c85b54"];
-const BASE_OPTIONS = {
+function getBaseOptions(theme) {
+  const muted = theme === "dark" ? "#a4b5af" : "#707980";
+  const grid = theme === "dark" ? "#34443f" : "#e8ece9";
+  const legend = theme === "dark" ? "#bdc9c4" : "#57616a";
+  return {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 7, color: "#57616a", padding: 18 } },
+    legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 7, color: legend, padding: 18 } },
     tooltip: { intersect: false, mode: "index" },
   },
   scales: {
-    x: { grid: { display: false }, ticks: { color: "#707980" }, border: { display: false } },
-    y: { grid: { color: "#e8ece9" }, ticks: { color: "#707980" }, border: { display: false } },
+    x: { grid: { display: false }, ticks: { color: muted }, border: { display: false } },
+    y: { grid: { color: grid }, ticks: { color: muted }, border: { display: false } },
   },
-};
+  };
+}
 
 function format(value, digits = 2) {
   return Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : "--";
@@ -97,7 +104,7 @@ function SectionTitle({ eyebrow, title, detail, action }) {
   );
 }
 
-function TransferHeatmap({ rows, selectedModel }) {
+function TransferHeatmap({ rows, selectedModel, theme }) {
   const targets = DATASETS;
   const sources = [...DATASETS, "pooled"];
   const cells = rows.filter((row) => row.model === selectedModel);
@@ -121,7 +128,7 @@ function TransferHeatmap({ rows, selectedModel }) {
                 <div
                   className="heat-cell"
                   key={target}
-                  style={{ backgroundColor: Number.isFinite(value) ? `rgba(199, 91, 72, ${strength})` : "#f0f2f0" }}
+                  style={{ backgroundColor: Number.isFinite(value) ? `rgba(199, 91, 72, ${strength})` : theme === "dark" ? "#293532" : "#f0f2f0" }}
                   title={`${source} to ${target}: ${format(value)} cycles MAE`}
                 >
                   {format(value)}
@@ -136,7 +143,8 @@ function TransferHeatmap({ rows, selectedModel }) {
   );
 }
 
-function Overview({ data, dataset, setPage }) {
+function Overview({ data, dataset, setPage, theme }) {
+  const baseOptions = getBaseOptions(theme);
   const result = data.datasets[dataset];
   const metrics = result.test_metrics;
   const allResults = DATASETS.map((name) => data.datasets[name]).filter(Boolean);
@@ -186,7 +194,7 @@ function Overview({ data, dataset, setPage }) {
 
       <section className="section-block">
         <SectionTitle eyebrow="SUBSET PERFORMANCE" title="One pipeline, four conditions" detail="Official C-MAPSS test labels · errors shown in cycles" action={<button className="text-button" onClick={() => setPage("transfer")}>Transfer study <ChevronRight size={15} /></button>} />
-        <div className="chart-panel chart-panel-short"><Bar data={comparison} options={{ ...BASE_OPTIONS, scales: { ...BASE_OPTIONS.scales, y: { ...BASE_OPTIONS.scales.y, title: { display: true, text: "Error (cycles)", color: "#707980" } } } }} /></div>
+        <div className="chart-panel chart-panel-short"><Bar data={comparison} options={{ ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: "Error (cycles)", color: theme === "dark" ? "#a4b5af" : "#707980" } } } }} /></div>
         <div className="subset-table">
           <div className="table-head"><span>SUBSET</span><span>CONDITIONS / FAULTS</span><span>ENGINES</span><span>MAE</span><span>RMSE</span><span>MODEL</span></div>
           {labels.map((name) => {
@@ -228,7 +236,7 @@ function Overview({ data, dataset, setPage }) {
   );
 }
 
-function Transfer({ data, dataset }) {
+function Transfer({ data, dataset, theme }) {
   const [model, setModel] = useState("ridge");
   const rows = data.transfer.rows;
   const selectedRows = rows.filter((row) => row.model === model);
@@ -250,7 +258,7 @@ function Transfer({ data, dataset }) {
       </div>
       <section className="section-block">
         <SectionTitle eyebrow="MAE / CYCLES" title="Train subset to test subset" detail="Each source scaler is fitted on source training engines only; rows are source models and columns are target test subsets." />
-        <TransferHeatmap rows={rows} selectedModel={model} />
+        <TransferHeatmap rows={rows} selectedModel={model} theme={theme} />
       </section>
       <section className="section-block">
         <SectionTitle eyebrow="TRANSFER DETAIL" title="Every source-target score" detail="Window-level MAE and RMSE, including pooled training across all four subsets." />
@@ -289,7 +297,8 @@ function Methods({ data }) {
   );
 }
 
-function Artifacts({ data, dataset }) {
+function Artifacts({ data, dataset, theme }) {
+  const baseOptions = getBaseOptions(theme);
   const result = data.datasets[dataset];
   const figures = [
     ["predicted_vs_actual", "Observed vs predicted RUL"],
@@ -313,8 +322,8 @@ function Artifacts({ data, dataset }) {
       <div className="page-intro"><div><div className="eyebrow">MEASURED OUTPUTS / {dataset}</div><h1>Research outputs</h1><p>Figures and tables generated from the saved experiment run.</p></div><div className="protocol-pill"><BarChart3 size={15} /> {result.dataset_summary.retained_sensors} active channels</div></div>
       <div className="figure-grid">{figures.map(([key, title]) => <ImageFigure key={key} src={result.figures[key]} alt={title} caption={`${dataset} / ${title}`} />)}</div>
       <section className="section-block split-section">
-        <div><SectionTitle eyebrow="FEATURE SCREENING" title="Training sensor relevance" detail="Pearson associations use training trajectories only." /><div className="chart-panel chart-panel-short"><Bar data={sensorChart} options={{ ...BASE_OPTIONS, indexAxis: "y", plugins: { ...BASE_OPTIONS.plugins, legend: { display: false } }, scales: { x: { ...BASE_OPTIONS.scales.x, min: 0, max: 1 }, y: { ...BASE_OPTIONS.scales.y, grid: { display: false } } } }} /></div></div>
-        <div><SectionTitle eyebrow="SEGMENTATION PROXY" title="Shared model error by life stage" detail="The phase-specialized comparison is available in the detailed table." /><div className="chart-panel chart-panel-short"><Line data={stageData} options={{ ...BASE_OPTIONS, plugins: { ...BASE_OPTIONS.plugins, legend: { display: false } }, scales: { ...BASE_OPTIONS.scales, y: { ...BASE_OPTIONS.scales.y, title: { display: true, text: "MAE (cycles)" } } } }} /></div></div>
+        <div><SectionTitle eyebrow="FEATURE SCREENING" title="Training sensor relevance" detail="Pearson associations use training trajectories only." /><div className="chart-panel chart-panel-short"><Bar data={sensorChart} options={{ ...baseOptions, indexAxis: "y", plugins: { ...baseOptions.plugins, legend: { display: false } }, scales: { x: { ...baseOptions.scales.x, min: 0, max: 1 }, y: { ...baseOptions.scales.y, grid: { display: false } } } }} /></div></div>
+        <div><SectionTitle eyebrow="SEGMENTATION PROXY" title="Shared model error by life stage" detail="The phase-specialized comparison is available in the detailed table." /><div className="chart-panel chart-panel-short"><Line data={stageData} options={{ ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } }, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: "MAE (cycles)", color: theme === "dark" ? "#a4b5af" : "#707980" } } } }} /></div></div>
       </section>
       <section className="section-block">
         <SectionTitle eyebrow="LIFE-STAGE DETAIL" title="Shared vs phase-specialized Ridge" detail="Per-stage MAE and sample counts for the selected subset." />
@@ -349,6 +358,12 @@ function App() {
   const [error, setError] = useState("");
   const [dataset, setDataset] = useState("FD001");
   const [page, setPage] = useState("overview");
+  const [theme, setTheme] = useState(() => window.localStorage.getItem("aero-rul-theme") === "dark" ? "dark" : "light");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("aero-rul-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     fetch("/results/benchmark.json")
@@ -371,11 +386,11 @@ function App() {
 
   const pageView = useMemo(() => {
     if (!data) return null;
-    if (page === "transfer") return <Transfer data={data} dataset={dataset} />;
+    if (page === "transfer") return <Transfer data={data} dataset={dataset} theme={theme} />;
     if (page === "methods") return <Methods data={data} />;
-    if (page === "artifacts") return <Artifacts data={data} dataset={dataset} />;
-    return <Overview data={data} dataset={dataset} setPage={setPage} />;
-  }, [data, dataset, page]);
+    if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
+    return <Overview data={data} dataset={dataset} setPage={setPage} theme={theme} />;
+  }, [data, dataset, page, theme]);
 
   return (
     <div className="app-shell">
@@ -387,6 +402,9 @@ function App() {
         <nav className="main-nav" aria-label="Primary">
           {[["overview", "Overview", Activity], ["transfer", "Transfer", Workflow], ["methods", "Methods", Layers3], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
         </nav>
+        <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} aria-pressed={theme === "dark"} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
         <label className="dataset-control"><span>DATASET</span><select value={dataset} onChange={(event) => setDataset(event.target.value)}>{DATASETS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
       </header>
       <main className="main-content">
