@@ -945,6 +945,10 @@ graph TD
 | Results artifacts | Implemented | JSON metrics, predictions, figures, Markdown run summaries under `outputs/` |
 | Optional architectures/ablations | Not implemented | GRU, CNN-LSTM, and systematic hyperparameter search remain out of scope |
 
+### Observed Outcome
+
+The completed 20-epoch run does **not** meet the aspirational success criterion that the LSTM outperform the baseline on every subset: validation-based selection chose the LSTM only for FD001 and Ridge for FD002-FD004. On FD003 the LSTM's test MAE is lower, but Ridge remains selected because its validation MAE was lower. The model was not selected using test results. See the [measured results report](RESULTS.md) for per-model scores, research analyses, and protocol limits.
+
 ---
 
 ## 27. Key Experimental Decisions Summary
