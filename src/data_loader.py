@@ -1,45 +1,50 @@
-import pandas as pd
-import numpy as np
-import os
+from __future__ import annotations
+
 import logging
+from pathlib import Path
+
+import pandas as pd
+
 from src.config import ProjectConfig
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
+
 
 class DataLoader:
     def __init__(self, config: ProjectConfig):
         self.config = config
-        self.columns = ['unit', 'cycle', 'setting_1', 'setting_2', 'setting_3'] + \
-                       [f'sensor_{i}' for i in range(1, 22)]
+        self.columns = [
+            "unit",
+            "cycle",
+            "setting_1",
+            "setting_2",
+            "setting_3",
+            *[f"sensor_{i}" for i in range(1, 22)],
+        ]
+
+    def _load_measurements(self, split: str) -> pd.DataFrame:
+        path = Path(self.config.raw_data_dir) / f"{split}_{self.config.dataset}.txt"
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"Missing {split} data for {self.config.dataset}: {path}. "
+                "Set CMAPSS_DATA_DIR to the directory containing the C-MAPSS files."
+            )
+
+        frame = pd.read_csv(path, sep=r"\s+", header=None, names=self.columns)
+        if frame.shape[1] != len(self.columns):
+            raise ValueError(f"{path} has {frame.shape[1]} columns; expected 26")
+        logger.info("Loaded %s rows from %s", len(frame), path)
+        return frame
 
     def load_train_data(self) -> pd.DataFrame:
-        file_path = os.path.join(self.config.raw_data_dir, f"train_{self.config.dataset}.txt")
-        logger.info(f"Loading training data from {file_path}")
-        try:
-            df = pd.read_csv(file_path, sep=r'\s+', header=None, names=self.columns)
-            return df
-        except FileNotFoundError:
-            logger.error(f"Training file not found: {file_path}")
-            raise
+        return self._load_measurements("train")
 
     def load_test_data(self) -> pd.DataFrame:
-        file_path = os.path.join(self.config.raw_data_dir, f"test_{self.config.dataset}.txt")
-        logger.info(f"Loading test data from {file_path}")
-        try:
-            df = pd.read_csv(file_path, sep=r'\s+', header=None, names=self.columns)
-            return df
-        except FileNotFoundError:
-            logger.error(f"Test file not found: {file_path}")
-            raise
+        return self._load_measurements("test")
 
     def load_rul_data(self) -> pd.Series:
-        file_path = os.path.join(self.config.raw_data_dir, f"RUL_{self.config.dataset}.txt")
-        logger.info(f"Loading RUL ground truth from {file_path}")
-        try:
-            # RUL files are usually a single column of values
-            rul = pd.read_csv(file_path, sep='\s+', header=None).iloc[:, 0]
-            return rul
-        except FileNotFoundError:
-            logger.error(f"RUL file not found: {file_path}")
-            raise
+        path = Path(self.config.raw_data_dir) / f"RUL_{self.config.dataset}.txt"
+        if not path.is_file():
+            raise FileNotFoundError(f"Missing test RUL labels for {self.config.dataset}: {path}")
+        values = pd.read_csv(path, sep=r"\s+", header=None).iloc[:, 0]
+        return values.astype(float)
