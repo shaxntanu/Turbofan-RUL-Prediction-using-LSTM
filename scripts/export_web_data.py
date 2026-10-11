@@ -43,7 +43,10 @@ def export() -> Path:
     transfer_rows = []
     if transfer_path.is_file():
         frame = pd.read_csv(transfer_path)
-        transfer_rows = frame[["source_dataset", "target_dataset", "model", "mae", "rmse"]].to_dict("records")
+        columns = ["source_dataset", "target_dataset", "model", "mae", "rmse"]
+        if "n_samples" in frame.columns:
+            columns.append("n_samples")
+        transfer_rows = frame[columns].to_dict("records")
 
     payload = {
         "schema_version": 1,
