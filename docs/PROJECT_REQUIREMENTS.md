@@ -79,8 +79,8 @@ Develop a reproducible LSTM-based model to predict turbofan engine RUL from mult
 ### 8.1 Data Ingestion (Required)
 
 - Download and parse NASA C-MAPSS dataset files
-- Support at least one dataset subset (FD001 recommended for baseline)
-- Handle train/test split structure
+- Support all four dataset subsets (FD001, FD002, FD003, FD004)
+- Handle train/test split structure for each subset
 - Parse 26-column format (unit ID, cycle, 3 settings, 21 sensors)
 - Validate data integrity (missing values, data types, ranges)
 
@@ -156,8 +156,9 @@ Develop a reproducible LSTM-based model to predict turbofan engine RUL from mult
 
 ### 9.1 Performance
 
-- Training should complete within reasonable time on a standard laptop (e.g., < 2 hours for FD001)
+- Training should complete within reasonable time on a standard laptop (e.g., < 2 hours for FD001, < 6 hours for larger subsets)
 - Inference latency should be suitable for batch prediction (not real-time)
+- Pipeline should handle varying dataset sizes efficiently
 
 ### 9.2 Reliability
 
@@ -192,7 +193,8 @@ Develop a reproducible LSTM-based model to predict turbofan engine RUL from mult
 
 ### 10.1 Dataset
 
-- NASA C-MAPSS dataset files (train_FD001.txt, test_FD001.txt, RUL_FD001.txt for baseline)
+- NASA C-MAPSS dataset files for all subsets (FD001, FD002, FD003, FD004)
+- Files per subset: train_FDxxx.txt, test_FDxxx.txt, RUL_FDxxx.txt
 - Alternative: Hugging Face dataset version (SoyVitou/NASA-C-MAPSS-Turbofan-Engine)
 - File format: Space-separated values, 26 columns
 
@@ -209,8 +211,8 @@ Develop a reproducible LSTM-based model to predict turbofan engine RUL from mult
 - Cycle: Time step in operational cycles
 - Operational settings: 3 columns (setting_1, setting_2, setting_3)
 - Sensor measurements: 21 columns (sensor_1 to sensor_21)
-- Training: ~20,000+ rows per dataset subset
-- Test: ~13,000+ rows per dataset subset
+- Training: ~20,000+ rows (FD001), ~50,000+ rows (FD002), ~20,000+ rows (FD003), ~60,000+ rows (FD004)
+- Test: ~13,000+ rows (FD001), ~34,000+ rows (FD002), ~13,000+ rows (FD003), ~45,000+ rows (FD004)
 
 ## 11. Output Requirements
 
@@ -222,10 +224,11 @@ Develop a reproducible LSTM-based model to predict turbofan engine RUL from mult
 
 ### 11.2 Evaluation Results
 
-- Test set metrics (MAE, RMSE)
-- Per-engine predictions
-- Error analysis reports
-- Comparison with baseline
+- Test set metrics (MAE, RMSE) for all subsets (FD001, FD002, FD003, FD004)
+- Per-engine predictions for each subset
+- Error analysis reports per subset
+- Comparison with baseline for each subset
+- Cross-subset performance comparison
 
 ### 11.3 Visualizations
 
@@ -522,18 +525,21 @@ Develop a reproducible LSTM-based model to predict turbofan engine RUL from mult
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
-| Data ingestion | Defined | NASA C-MAPSS FD001 as baseline |
-| Preprocessing | Defined | RUL computation, normalization, sequence generation |
-| LSTM model | Defined | Architecture TBD during implementation |
-| Baseline model | Defined | Linear regression or persistence model |
-| Evaluation | Defined | MAE, RMSE, engine-level analysis |
-| Visualization | Defined | EDA, performance, degradation plots |
-| Reproducibility | Defined | Seeds, configuration hashing |
-| Documentation | Defined | README, architecture docs |
-| Streamlit app | Proposed | Optional enhancement |
+| Data ingestion | Implemented | Bundled C-MAPSS FD001-FD004 with schema and engine-cycle validation |
+| Preprocessing | Implemented | Capped RUL, engine-level validation split, training-only scaling, 30-cycle windows |
+| LSTM model | Implemented | Stacked 64/32-unit TensorFlow/Keras sequence model |
+| Baseline model | Implemented | Window-summary Ridge regression |
+| Evaluation | Implemented | MAE/RMSE, validation model selection, intervals, per-engine robustness |
+| Research analyses | Implemented | Transfer, sensor/PCA screening, detrending and life-stage proxy |
+| Visualization | Implemented | Matplotlib performance, uncertainty, sensor, and error figures |
+| Reproducibility | Implemented | Seeded CLI runs with configuration and package metadata |
+| Documentation | Implemented | Usage, architecture, protocol, dataset, and research scope |
+| Streamlit app | Implemented | Exploration, saved results, and CSV/TXT prediction workflow |
+| Web dashboard | Implemented | React/Vite results viewer with committed experiment data |
+| Docker | Available | Root `Dockerfile`; GPU behavior depends on the host runtime |
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-10-08  
-**Status**: Defined - Ready for implementation
+**Document Version**: 1.1  
+**Last Updated**: 2026-10-11  
+**Status**: Core requested pipeline and applications implemented; performance criteria remain empirical and are reported per subset.
