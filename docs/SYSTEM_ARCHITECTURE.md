@@ -227,8 +227,8 @@ Engine 1, cycles 1-100:
 
 ---
 
-#### Stage 9: Train/Validation/Test Strategy
-**Responsibility**: Split engines into train/validation/test sets.
+#### Stage 9: Engine-Level Training/Validation Strategy
+**Responsibility**: Split the supplied training engines into fit and validation groups; retain the official test partition.
 
 **Input**: Sequence arrays
 
@@ -236,18 +236,19 @@ Engine 1, cycles 1-100:
 
 **Key Operations**:
 - **Engine-level split**: Split engines, not rows
-- Example: 80% engines for training, 10% for validation, 10% for test
+- Example: 80% of supplied training engines for fitting and 20% for validation
 - Validation set used for early stopping and hyperparameter tuning
-- Test set held out completely until final evaluation
+- Official test engines and final-cycle RUL labels held out completely until final evaluation
 - Stratified split optional (by RUL distribution or fault mode)
 
 **Module**: `data_splitter.py`
 
 **Critical**: Random row-level splitting is inappropriate because it would leak future information from the same engine into training data.
 
-**Split Example (FD001 - 100 train engines)**:
+**Split Example (FD001 - 100 supplied training engines)**:
 - Train: 80 engines (sequences from these engines)
-- Validation: 10 engines
+- Validation: 20 engines
+- Official test: the separate supplied 100-engine test partition
 - Test: 10 engines (original test set is separate)
 
 ---
