@@ -19,6 +19,7 @@ from src.data_splitter import DataSplitter
 from src.data_validator import DataValidator
 from src.evaluator import Evaluator
 from src.normalization import Normalizer
+from src.research_analysis import run_sensor_screening, summarize_engine_robustness
 from src.sequence_generator import SequenceGenerator
 from src.target_construction import TargetConstructor
 from src.trainer import Trainer
@@ -228,14 +229,17 @@ def run_pipeline(
     per_engine.insert(0, "dataset", dataset_name)
     per_engine.insert(1, "selected_model", selected_model)
     per_engine.to_csv(metrics_dir / "per_engine_metrics.csv", index=False)
+    robustness_summary = summarize_engine_robustness(per_engine, metric="mae")
+    _save_json(metrics_dir / "engine_robustness.json", robustness_summary)
 
     metric_rows = []
     for name in predictions_test:
         metric_rows.append({"dataset": dataset_name, "model": name, **test_metrics[name]})
     pd.DataFrame(metric_rows).to_csv(metrics_dir / "model_metrics.csv", index=False)
-    sensor_relevance = train_split[sensor_cols].corrwith(train_split["RUL"]).rename("pearson_r")
-    sensor_relevance.rename_axis("sensor").reset_index().to_csv(
-        metrics_dir / "sensor_rul_correlations.csv", index=False
+    sensor_screening = run_sensor_screening(
+        train_split,
+        sensor_cols,
+        metrics_dir / "sensor_screening",
     )
     _save_json(metrics_dir / "uncertainty.json", uncertainty_metrics)
     _save_json(model_dir / "feature_columns.json", {"features": feature_cols, "removed_sensors": removed_sensors})
@@ -290,6 +294,8 @@ def run_pipeline(
         "validation_metrics": validation_metrics,
         "test_metrics": test_metrics,
         "uncertainty": uncertainty_metrics,
+        "sensor_screening": sensor_screening,
+        "engine_robustness": robustness_summary,
         "model_paths": {name: str(path) for name, path in model_paths.items()},
         "figures": {
             path.stem: str(path.relative_to(config.output_dir))
