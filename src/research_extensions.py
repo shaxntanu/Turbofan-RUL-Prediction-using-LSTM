@@ -5,9 +5,10 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
 from src.baseline_model import WindowRidgeBaseline
 from src.evaluator import Evaluator
@@ -84,6 +85,119 @@ class SelectedWindowRidge:
 
     def predict(self, sequences: np.ndarray) -> np.ndarray:
         return self.estimator.predict(sequences[:, :, self.feature_indices])
+
+
+class EmaWindowRidge:
+    def __init__(self, smoothing_alpha: float, ridge_alpha: float = 10.0):
+        self.smoothing_alpha = float(smoothing_alpha)
+        self.estimator = WindowRidgeBaseline(alpha=ridge_alpha)
+
+    def fit(self, sequences: np.ndarray, targets: np.ndarray):
+        self.estimator.fit(causal_ema_windows(sequences, self.smoothing_alpha), targets)
+        return self
+
+    def predict(self, sequences: np.ndarray) -> np.ndarray:
+        smoothed = causal_ema_windows(sequences, self.smoothing_alpha)
+        return self.estimator.predict(smoothed)
+
+
+class PolynomialWindowRidge:
+    """Degree-two Ridge on six documented summaries of four selected channels."""
+
+    def __init__(self, feature_indices: list[int], ridge_alpha: float = 10.0):
+        if not feature_indices:
+            raise ValueError("Polynomial Ridge requires selected features")
+        self.feature_indices = np.asarray(feature_indices[:4], dtype=int)
+        self.model = make_pipeline(
+            PolynomialFeatures(degree=2, include_bias=False),
+            StandardScaler(),
+            Ridge(alpha=ridge_alpha),
+        )
+
+    def _features(self, sequences: np.ndarray) -> np.ndarray:
+        selected = np.asarray(sequences)[:, :, self.feature_indices]
+        first = selected[:, 0, :]
+        last = selected[:, -1, :]
+        window = selected.shape[1]
+        positions = np.arange(window, dtype=np.float32)
+        centered = positions - positions.mean()
+        denominator = float(np.dot(centered, centered)) or 1.0
+        slope = np.einsum("ntf,t->nf", selected, centered) / denominator
+        return np.concatenate(
+            [
+                selected.mean(axis=1),
+                selected.std(axis=1),
+                last,
+                last - first,
+                slope,
+            ],
+            axis=1,
+        )
+
+    def fit(self, sequences: np.ndarray, targets: np.ndarray):
+        self.model.fit(self._features(sequences), targets)
+        return self
+
+    def predict(self, sequences: np.ndarray) -> np.ndarray:
+        return np.asarray(self.model.predict(self._features(sequences)), dtype=np.float32)
+
+
+class SummaryMLP:
+    """Small fixed-budget MLP on non-sequential five-statistic window summaries."""
+
+    def __init__(self, *, seed: int, max_iter: int = 80):
+        self.model = make_pipeline(
+            StandardScaler(),
+            MLPRegressor(
+                hidden_layer_sizes=(64, 32),
+                activation="relu",
+                solver="adam",
+                alpha=1e-4,
+                max_iter=max_iter,
+                early_stopping=False,
+                random_state=seed,
+            ),
+        )
+
+    def fit(self, sequences: np.ndarray, targets: np.ndarray):
+        self.model.fit(WindowRidgeBaseline.summarize(sequences), targets)
+        return self
+
+    def predict(self, sequences: np.ndarray) -> np.ndarray:
+        return np.asarray(self.model.predict(WindowRidgeBaseline.summarize(sequences)), dtype=np.float32)
+
+
+class XGBoostWindowRegressor:
+    """Optional XGBoost baseline; xgboost is imported only when this model is fit."""
+
+    def __init__(self, *, seed: int):
+        self.seed = int(seed)
+        self.model = None
+
+    def fit(self, sequences: np.ndarray, targets: np.ndarray):
+        try:
+            from xgboost import XGBRegressor
+        except ImportError as exc:
+            raise RuntimeError(
+                "XGBoost is optional; install it with `pip install xgboost` to run this challenger"
+            ) from exc
+        self.model = XGBRegressor(
+            n_estimators=300,
+            max_depth=4,
+            learning_rate=0.05,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            objective="reg:squarederror",
+            random_state=self.seed,
+            n_jobs=-1,
+        )
+        self.model.fit(WindowRidgeBaseline.summarize(sequences), targets)
+        return self
+
+    def predict(self, sequences: np.ndarray) -> np.ndarray:
+        if self.model is None:
+            raise ValueError("Fit XGBoost before prediction")
+        return np.asarray(self.model.predict(WindowRidgeBaseline.summarize(sequences)), dtype=np.float32)
 
 
 class AsymmetricWindowRidge:
@@ -259,10 +373,12 @@ class OnlineOnsetGate:
     shared_model: WindowRidgeBaseline
     post_onset_model: WindowRidgeBaseline
 
-    def predict(self, sequences: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def predict(
+        self, sequences: np.ndarray, *, threshold: float = 0.5
+    ) -> tuple[np.ndarray, np.ndarray]:
         probabilities = onset_probability(self.detector, sequences)
         predictions = self.shared_model.predict(sequences)
-        detected = probabilities >= 0.5
+        detected = probabilities >= threshold
         if detected.any():
             predictions[detected] = self.post_onset_model.predict(sequences[detected])
         return predictions, probabilities
