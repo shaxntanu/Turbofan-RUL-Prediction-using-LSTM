@@ -258,15 +258,17 @@ def main() -> None:
         if result:
             summary = result["dataset_summary"]
             metrics = result["test_metrics"].get(result["selected_model"], {})
-            metric_cols = st.columns(5)
-            metric_cols[0].metric("Test MAE", f"{metrics['mae']:.2f} cycles")
-            metric_cols[1].metric("Test RMSE", f"{metrics['rmse']:.2f} cycles")
+            metric_cols = st.columns(4)
+            metric_cols[0].metric("Test MAE (cycles)", f"{metrics['mae']:.2f}")
+            metric_cols[1].metric("Test RMSE (cycles)", f"{metrics['rmse']:.2f}")
             metric_cols[2].metric("Test engines", summary["test_engines"])
-            metric_cols[3].metric("Sensors retained", summary["retained_sensors"])
-            metric_cols[4].metric("Selected model", result["selected_model"].upper())
+            metric_cols[3].metric("Selected model", result["selected_model"].upper())
             tf_version = result["package_versions"].get("tensorflow", "not-installed")
             tf_note = "TensorFlow not installed" if tf_version == "not-installed" else f"TensorFlow {tf_version}"
-            st.caption(f"Run {result['run_id']} · selected on validation MAE · {tf_note}")
+            st.caption(
+                f"Run {result['run_id']} · selected on validation MAE · {tf_note} · "
+                f"{summary['retained_sensors']} sensor channels retained"
+            )
         else:
             st.info(f"No saved experiment is available for {dataset} yet.")
 
