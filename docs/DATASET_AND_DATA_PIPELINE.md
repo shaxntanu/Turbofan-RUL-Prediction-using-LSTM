@@ -705,7 +705,7 @@ df['RUL'] = df['RUL'].clip(upper=125)
 
 **Training Set**: 80% of training engines (from train_FD001.txt)
 
-**Validation Set**: 10% of training engines (from train_FD001.txt)
+**Validation Set**: 20% of training engines (from train_FD001.txt; held out before preprocessing)
 
 **Test Set**: Original test file (test_FD001.txt)
 
