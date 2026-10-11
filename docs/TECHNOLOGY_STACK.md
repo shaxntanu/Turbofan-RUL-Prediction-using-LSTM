@@ -957,6 +957,7 @@ env/
 | Matplotlib/Seaborn | Implemented | Static experiment figures |
 | Streamlit | Implemented | Interactive local app |
 | React/Vite/Chart.js | Implemented | Research results dashboard |
+| C++17/pybind11/OpenMP | Optional, implemented | PCA and K-Means sensor diagnostics; Python/scikit-learn remains the reference |
 | Git/GitHub | Implemented | Per-file commit/push workflow |
 | Docker | Available | Root `Dockerfile`; host capabilities vary |
 
