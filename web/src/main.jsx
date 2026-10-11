@@ -393,7 +393,7 @@ function Reliability({ data, dataset, theme }) {
   const riskScenarios = [...new Set((tables.risk_coverage ?? []).filter((row) => row.dataset === dataset && row.model === activeModel).map((row) => row.scenario))].sort();
   const activeScenario = riskScenarios.includes(selectedScenario) ? selectedScenario : riskScenarios[0] ?? "";
   const riskRows = (tables.risk_coverage ?? [])
-    .filter((row) => row.dataset === dataset && row.model === activeModel && row.scenario === activeScenario && row.record_type === "risk_coverage")
+    .filter((row) => row.dataset === dataset && row.model === activeModel && row.scenario === activeScenario)
     .sort((a, b) => Number(a.coverage_fraction) - Number(b.coverage_fraction));
   const riskData = {
     labels: riskRows.map((row) => `${Math.round(Number(row.coverage_fraction) * 100)}%`),
