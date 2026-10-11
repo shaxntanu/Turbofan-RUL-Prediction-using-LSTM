@@ -2,7 +2,7 @@
 
 :root{font-family:'DM Sans',Arial,sans-serif;color:#202c30;background:#f4f6f4;font-synthesis:none;text-rendering:optimizeLegibility;font-smooth:always;font-weight:400;--ink:#202c30;--muted:#707a7e;--line:#e2e7e3;--teal:#17877f;--orange:#e68a4b;--paper:#fff;--mono:'DM Mono',monospace;--display:'Manrope','DM Sans',sans-serif}
 *{box-sizing:border-box}
-body{margin:0;min-width:320px;min-height:100vh}
+body{margin:0;min-height:100vh}
 button,select{font:inherit}
 button{color:inherit}
 .app-shell{min-height:100vh;display:flex;flex-direction:column}
