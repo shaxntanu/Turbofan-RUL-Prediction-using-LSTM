@@ -14,6 +14,17 @@ SEVERITY_LEVELS = ("mild", "moderate", "severe")
 SEVERITY = {"mild": 1, "moderate": 2, "severe": 3}
 
 
+def leave_one_subset_sources(datasets, target: str) -> tuple[str, ...]:
+    selected = tuple(dict.fromkeys(str(name).upper() for name in datasets))
+    target = target.upper()
+    if len(selected) < 2 or target not in selected:
+        raise ValueError("LOFO requires at least two subsets and a target included in the subset list")
+    sources = tuple(name for name in selected if name != target)
+    if target in sources:
+        raise AssertionError("Target subset must be excluded from LOFO sources")
+    return sources
+
+
 @dataclass(frozen=True)
 class CorruptionScenario:
     name: str
