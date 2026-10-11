@@ -137,6 +137,8 @@ def _predict(bundle: dict, frame: pd.DataFrame, config: ProjectConfig) -> tuple[
             model.model.predict(sequences, batch_size=config.batch_size, verbose=0),
             dtype=np.float32,
         ).ravel()
+    upper = config.rul_clip_value if config.clip_rul else None
+    predictions = np.clip(predictions, 0.0, upper) if upper is not None else np.maximum(predictions, 0.0)
     return predictions, targets
 
 
