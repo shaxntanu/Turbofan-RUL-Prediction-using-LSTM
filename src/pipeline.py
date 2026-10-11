@@ -81,7 +81,7 @@ def _write_report(path: Path, result: dict) -> None:
         "",
         "## Official test performance",
         "",
-        "| Model | MAE (cycles) | RMSE (cycles) | PHM08 score (lower is better) |",
+        "| Model | MAE (cycles) | RMSE (cycles) | Asymmetric score (window sum) |",
         "|---|---:|---:|---:|",
         *model_rows,
         "",
@@ -95,6 +95,8 @@ def _write_report(path: Path, result: dict) -> None:
         "The research papers use proprietary in-service EHM data and predict TGT. "
         "This run uses NASA C-MAPSS simulated trajectories and predicts RUL; the "
         "reported procedures are adaptations, not a reproduction of their published results.",
+        "The asymmetric score applies the PHM08 penalty function to all evaluated windows and sums the penalties; "
+        "it is not the official per-engine PHM08 challenge aggregation.",
         "",
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
