@@ -99,6 +99,23 @@ def test_training_augmentation_is_deterministic_and_keeps_labels():
     assert not np.array_equal(augmented_x[12:], sequences)
 
 
+def test_augmentation_ablation_modes_are_separately_configurable():
+    rng = np.random.default_rng(31)
+    sequences = rng.normal(size=(8, 5, 3)).astype(np.float32)
+    targets = np.arange(8, dtype=np.float32)
+    dropout_x, _ = training_augmentation(
+        sequences, targets, seed=7, channel_dropout=0.5, noise_fraction=0.0
+    )
+    noise_x, _ = training_augmentation(
+        sequences, targets, seed=7, channel_dropout=0.0, noise_fraction=0.1
+    )
+
+    np.testing.assert_array_equal(dropout_x[:8], sequences)
+    np.testing.assert_array_equal(noise_x[:8], sequences)
+    assert np.any(dropout_x[8:] == np.median(sequences, axis=(0, 1)))
+    assert np.all(noise_x[8:] != sequences)
+
+
 def test_abstention_thresholds_are_validation_derived_and_report_flag_counts():
     validation_scores = np.arange(10, dtype=float)
     thresholds = validation_abstention_thresholds(validation_scores, (0.0, 0.2))
