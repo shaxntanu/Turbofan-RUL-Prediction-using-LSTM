@@ -8,9 +8,6 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 from src.baseline_model import WindowRidgeBaseline
-from src.evaluator import Evaluator
-
-
 LIFE_STAGES = ("early", "middle", "late")
 ABSTENTION_FRACTIONS = (0.0, 0.1, 0.2, 0.3, 0.5)
 SEVERITY_LEVELS = ("mild", "moderate", "severe")
@@ -226,9 +223,15 @@ def sensor_corruption_scenarios(
     groups = [group for group in groups if group]
     scenarios: list[CorruptionScenario] = []
 
+    def float_sensor_frame(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+        result = frame.copy()
+        for column in columns:
+            result[column] = result[column].astype(float)
+        return result
+
     def dropout(columns: list[str], probability: float, scenario_seed: int):
         def apply(frame: pd.DataFrame) -> pd.DataFrame:
-            result = frame.copy()
+            result = float_sensor_frame(frame, columns)
             rng = np.random.default_rng(scenario_seed)
             mask = rng.random((len(result), len(columns))) < probability
             result.loc[:, columns] = np.where(
@@ -265,7 +268,7 @@ def sensor_corruption_scenarios(
         group_name = f"sensor_group_{group_index + 1}"
         for level, onset in zip(SEVERITY_LEVELS, (180, 120, 60), strict=True):
             def stuck(frame: pd.DataFrame, names=columns, onset_cycle=onset):
-                result = frame.copy()
+                result = float_sensor_frame(frame, names)
                 mask = result["cycle"] >= onset_cycle
                 result.loc[mask, names] = [medians[name] for name in names]
                 return result
@@ -277,7 +280,7 @@ def sensor_corruption_scenarios(
 
     for level, magnitude in zip(SEVERITY_LEVELS, (0.5, 1.0, 2.0), strict=True):
         def drift(frame: pd.DataFrame, factor=magnitude):
-            result = frame.copy()
+            result = float_sensor_frame(frame, sensors)
             elapsed = np.maximum(result["cycle"].to_numpy(dtype=float) - 1.0, 0.0)
             ramp = np.minimum(elapsed / 200.0, 1.0)
             for name in sensors:
@@ -287,7 +290,7 @@ def sensor_corruption_scenarios(
 
     for level, multiplier in zip(SEVERITY_LEVELS, (0.1, 0.25, 0.5), strict=True):
         def noise(frame: pd.DataFrame, factor=multiplier, severity_offset=SEVERITY[level]):
-            result = frame.copy()
+            result = float_sensor_frame(frame, sensors)
             rng = np.random.default_rng(seed + severity_offset)
             values = rng.normal(size=(len(result), len(sensors)))
             values *= np.asarray([scales[name] for name in sensors]) * factor
@@ -299,7 +302,7 @@ def sensor_corruption_scenarios(
         SEVERITY_LEVELS, ((100, 10), (100, 25), (100, 50)), strict=True
     ):
         def missing_block(frame: pd.DataFrame, start=start_cycle, block_length=length):
-            result = frame.copy()
+            result = float_sensor_frame(frame, sensors)
             missing = result["cycle"].between(start, start + block_length - 1)
             result.loc[missing, sensors] = [medians[name] for name in sensors]
             return result
@@ -346,6 +349,8 @@ def sensor_corruption_scenarios(
 
 def _combine_dropout_noise(frame, groups, sensors, medians, scales, *, seed, noise_fraction):
     result = frame.copy()
+    for name in sensors:
+        result[name] = result[name].astype(float)
     columns = list(dict.fromkeys(groups[0] + groups[-1]))
     result.loc[:, columns] = [medians[name] for name in columns]
     rng = np.random.default_rng(seed)
@@ -358,6 +363,8 @@ def _combine_dropout_noise(frame, groups, sensors, medians, scales, *, seed, noi
 
 def _combine_drift_missing(frame, sensors, medians, scales, *, horizon, start_cycle, block_length):
     result = frame.copy()
+    for name in sensors:
+        result[name] = result[name].astype(float)
     elapsed = np.maximum(result["cycle"].to_numpy(dtype=float) - 1.0, 0.0)
     ramp = np.minimum(elapsed / horizon, 1.0)
     for name in sensors:
