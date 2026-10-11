@@ -17,14 +17,16 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 
 ## Setup
 
-Use Python 3.12 for the TensorFlow training workflow. Create an environment and install the Python dependencies:
+The base requirements support the Streamlit app and Ridge pipeline without TensorFlow. Use Python 3.12 for LSTM training:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements-training.txt
 ```
+
+For the TensorFlow-free Streamlit/Ridge runtime, install `requirements.txt` instead. Streamlit Community Cloud logs supplied for this app show Python 3.14.8, where TensorFlow 2.21 has no compatible wheel; the app therefore disables LSTM training when TensorFlow is absent. To enable cloud LSTM training, select Python 3.12 in the app's Advanced settings and redeploy.
 
 The pipeline discovers the bundled data under `Ref/CMAPSSData/`. Set `CMAPSS_DATA_DIR` to use a different C-MAPSS directory.
 
@@ -50,6 +52,14 @@ python -c "from src.config import ProjectConfig; from src.transfer_analysis impo
 ```
 
 Each run selects the model by validation MAE, then evaluates it on the official test trajectories and RUL labels. Artifacts are written beneath `outputs/<subset>/` and `models/<subset>/`. For the transfer experiment, see `outputs/transfer/`.
+
+Run the reliability and robustness study with repeated seeds, an LSTM comparison on seed 42, optional model challengers, and leave-one-subset-out evaluation:
+
+```powershell
+python -m src.reliability_analysis --datasets FD001 FD002 FD003 FD004 --seeds 42 43 44 --lstm-seeds 42 --extended-models --with-cnn --epochs 20
+```
+
+The study writes terminal-engine and overlapping-window metrics, sensor-stress and risk-coverage tables, progressive-prefix onset results, short-history protocols, RUL-cap sensitivity, and cross-subset holdout results under `outputs/reliability/`. XGBoost is optional; install `xgboost` separately before adding `--with-xgboost`. Protocol definitions and limitations are in [Reliability and robustness](docs/RELIABILITY_AND_ROBUSTNESS.md).
 
 Regenerate the static dashboard bundle from the latest run:
 
