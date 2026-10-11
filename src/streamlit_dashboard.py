@@ -95,7 +95,7 @@ def _render_signals(dataset: str) -> None:
             axes[-1].set_xlabel("Cycle")
             fig.suptitle(f"{dataset} · engine {engine}", y=1.01)
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig, width="stretch")
             plt.close(fig)
 
         left, right = st.columns(2)
@@ -104,16 +104,16 @@ def _render_signals(dataset: str) -> None:
             sns.histplot(train_frame["RUL"], bins=40, color="#4169a1", ax=axis)
             axis.set(title="Training target distribution", xlabel="RUL (cycles)", ylabel="Cycle count")
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig, width="stretch")
             plt.close(fig)
         with right:
             fig, axis = plt.subplots(figsize=(7, 4))
             sns.heatmap(train_frame[sensors].corr(), cmap="vlag", center=0, ax=axis, cbar=False)
             axis.set(title="Sensor correlation", xlabel="Sensor", ylabel="Sensor")
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig, width="stretch")
             plt.close(fig)
-        st.dataframe(engine_frame, hide_index=True, use_container_width=True)
+        st.dataframe(engine_frame, hide_index=True, width="stretch")
     except Exception as error:
         st.error(f"Could not load {dataset} training signals: {error}")
 
@@ -184,7 +184,7 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
                 st.write(Evaluator.compute_metrics(observed, predictions))
 
         latest = prediction_frame.groupby("unit", sort=False).tail(1)
-        st.dataframe(latest, hide_index=True, use_container_width=True)
+        st.dataframe(latest, hide_index=True, width="stretch")
         selected_engine = st.selectbox("Trajectory engine", latest["unit"].tolist())
         trajectory = prediction_frame[prediction_frame["unit"] == selected_engine]
         fig, axis = plt.subplots(figsize=(9, 4.2))
@@ -202,7 +202,7 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
         axis.set(xlabel="Cycle", ylabel="RUL (cycles)", title=f"Engine {selected_engine}")
         axis.legend(frameon=False)
         fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig, width="stretch")
         plt.close(fig)
         st.caption(
             "Intervals use split-conformal residuals from held-out validation engines; they are not per-prediction "
@@ -215,7 +215,7 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
             mime="text/csv",
         )
         with st.expander("Uploaded data"):
-            st.dataframe(uploaded, hide_index=True, use_container_width=True)
+            st.dataframe(uploaded, hide_index=True, width="stretch")
     except Exception as error:
         st.error(f"Could not process the uploaded history: {error}")
 
@@ -234,7 +234,7 @@ def main() -> None:
     with st.sidebar:
         st.divider()
         st.caption(f"Window: {config.window_size} cycles · RUL cap: {config.rul_clip_value} cycles")
-        if st.button("Run Ridge baseline", use_container_width=True, type="primary"):
+        if st.button("Run Ridge baseline", width="stretch", type="primary"):
             try:
                 with st.spinner(f"Running {dataset} through the research pipeline…"):
                     _run_experiment(dataset, train_lstm=False)
@@ -242,7 +242,7 @@ def main() -> None:
                 st.rerun()
             except Exception as error:
                 st.error(f"Experiment failed: {error}")
-        if st.button("Train LSTM + compare", use_container_width=True):
+        if st.button("Train LSTM + compare", width="stretch"):
             try:
                 with st.spinner(f"Training and comparing models for {dataset}…"):
                     _run_experiment(dataset, train_lstm=True)
@@ -290,7 +290,7 @@ def main() -> None:
                 )
         if fleet_rows:
             st.subheader("Saved subset benchmarks")
-            st.dataframe(pd.DataFrame(fleet_rows), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(fleet_rows), hide_index=True, width="stretch")
         else:
             st.subheader("C-MAPSS benchmark")
             st.write("FD001–FD004 vary operating conditions and fault modes. Each subset has separate train, test, and RUL-label files.")
@@ -315,7 +315,7 @@ def main() -> None:
             metrics_path = results_dir / "metrics" / "model_metrics.csv"
             if metrics_path.is_file():
                 st.subheader("Model comparison")
-                st.dataframe(pd.read_csv(metrics_path), hide_index=True, use_container_width=True)
+                st.dataframe(pd.read_csv(metrics_path), hide_index=True, width="stretch")
 
             per_engine_path = results_dir / "metrics" / "per_engine_metrics.csv"
             if per_engine_path.is_file():
@@ -327,7 +327,7 @@ def main() -> None:
                 axis.set(xlabel="Test engine", ylabel="MAE (cycles)", title="Per-engine test error")
                 axis.legend(frameon=False)
                 fig.tight_layout()
-                st.pyplot(fig, use_container_width=True)
+                st.pyplot(fig, width="stretch")
                 plt.close(fig)
 
             figure_names = ["predicted_vs_actual", "fractional_life_metrics", "prediction_intervals", "sensor_correlation"]
@@ -337,12 +337,12 @@ def main() -> None:
                 image_path = config.output_dir / relative if relative else None
                 if image_path and image_path.is_file():
                     with figure_columns[index % 2]:
-                        st.image(str(image_path), caption=name.replace("_", " ").title(), use_container_width=True)
+                        st.image(str(image_path), caption=name.replace("_", " ").title(), width="stretch")
 
             stage_result = result.get("fractional_life_analysis", {})
             if stage_result.get("metrics"):
                 st.subheader("Fractional-life evaluation")
-                st.dataframe(pd.DataFrame(stage_result["metrics"]), hide_index=True, use_container_width=True)
+                st.dataframe(pd.DataFrame(stage_result["metrics"]), hide_index=True, width="stretch")
                 st.caption(stage_result["limitation"])
 
             screening = result.get("sensor_screening", {})
@@ -352,12 +352,12 @@ def main() -> None:
                     f"{screening['components_to_threshold']} components explain "
                     f"{screening['cumulative_variance_at_threshold']:.1%} of standardized sensor variance."
                 )
-                st.dataframe(pd.DataFrame(screening["top_sensors_by_absolute_pearson"]), hide_index=True, use_container_width=True)
+                st.dataframe(pd.DataFrame(screening["top_sensors_by_absolute_pearson"]), hide_index=True, width="stretch")
 
             transfer_path = config.output_dir / "transfer" / "transfer_metrics.csv"
             if transfer_path.is_file():
                 st.subheader("Cross-subset transfer")
-                st.dataframe(pd.read_csv(transfer_path), hide_index=True, use_container_width=True)
+                st.dataframe(pd.read_csv(transfer_path), hide_index=True, width="stretch")
                 transfer_meta = _read_json(transfer_path.with_name("transfer_results.json"))
                 if transfer_meta:
                     st.caption(transfer_meta["domain_caveat"])
