@@ -1,0 +1,149 @@
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e4ece8;
+  --muted: #a0b0aa;
+  --line: #35443f;
+  --paper: #1b2522;
+  background: #121917;
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] body { background: #121917; }
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .run-stamp,
+:root[data-theme="dark"] .protocol-pill,
+:root[data-theme="dark"] .dataset-strip,
+:root[data-theme="dark"] .metric,
+:root[data-theme="dark"] .chart-panel,
+:root[data-theme="dark"] .subset-table,
+:root[data-theme="dark"] .transfer-table,
+:root[data-theme="dark"] .figure-panel,
+:root[data-theme="dark"] .run-summary,
+:root[data-theme="dark"] .segmented,
+:root[data-theme="dark"] .transfer-summary,
+:root[data-theme="dark"] .heatmap-wrap,
+:root[data-theme="dark"] .method-list,
+:root[data-theme="dark"] .paper-note,
+:root[data-theme="dark"] .model-compare,
+:root[data-theme="dark"] .table-row { background-color: #1b2522; }
+
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .run-stamp,
+:root[data-theme="dark"] .protocol-pill,
+:root[data-theme="dark"] .dataset-strip,
+:root[data-theme="dark"] .metric,
+:root[data-theme="dark"] .chart-panel,
+:root[data-theme="dark"] .subset-table,
+:root[data-theme="dark"] .transfer-table,
+:root[data-theme="dark"] .figure-panel,
+:root[data-theme="dark"] .run-summary,
+:root[data-theme="dark"] .segmented,
+:root[data-theme="dark"] .transfer-summary,
+:root[data-theme="dark"] .heatmap-wrap,
+:root[data-theme="dark"] .method-list,
+:root[data-theme="dark"] .paper-note,
+:root[data-theme="dark"] .model-compare { border-color: var(--line); }
+
+:root[data-theme="dark"] .brand-text small,
+:root[data-theme="dark"] .eyebrow,
+:root[data-theme="dark"] .dataset-control > span,
+:root[data-theme="dark"] .run-stamp,
+:root[data-theme="dark"] .protocol-pill,
+:root[data-theme="dark"] .dataset-strip-end,
+:root[data-theme="dark"] .metric-head,
+:root[data-theme="dark"] .metric-value small,
+:root[data-theme="dark"] .metric-note,
+:root[data-theme="dark"] .insight span:not(.insight-icon),
+:root[data-theme="dark"] .table-head,
+:root[data-theme="dark"] .table-row,
+:root[data-theme="dark"] .figure-panel figcaption,
+:root[data-theme="dark"] .figure-missing,
+:root[data-theme="dark"] .run-summary h3 small,
+:root[data-theme="dark"] .summary-line,
+:root[data-theme="dark"] .summary-line b,
+:root[data-theme="dark"] .transfer-summary b small,
+:root[data-theme="dark"] .transfer-summary > div > span:last-child,
+:root[data-theme="dark"] .transfer-caveat p,
+:root[data-theme="dark"] .heat-label,
+:root[data-theme="dark"] .source-label,
+:root[data-theme="dark"] .heat-legend,
+:root[data-theme="dark"] .transfer-row,
+:root[data-theme="dark"] .method-step p,
+:root[data-theme="dark"] .step-number,
+:root[data-theme="dark"] .step-chevron,
+:root[data-theme="dark"] .paper-note p,
+:root[data-theme="dark"] .paper-status small,
+:root[data-theme="dark"] .table-footnote,
+:root[data-theme="dark"] .model-compare-head,
+:root[data-theme="dark"] .model-compare-row { color: #a4b3ad; }
+
+:root[data-theme="dark"] .dataset-control select {
+  color: #72c8bb;
+  background-color: #202d29;
+  border-color: var(--line);
+}
+:root[data-theme="dark"] .run-stamp b,
+:root[data-theme="dark"] .table-row b,
+:root[data-theme="dark"] .transfer-row b,
+:root[data-theme="dark"] .transfer-row strong,
+:root[data-theme="dark"] .model-compare-row b,
+:root[data-theme="dark"] .model-compare-row strong,
+:root[data-theme="dark"] .method-step h3,
+:root[data-theme="dark"] .paper-note h3 { color: #e4ece8; }
+:root[data-theme="dark"] .nav-link { color: #a4b3ad; }
+:root[data-theme="dark"] .nav-link:hover { color: #e4ece8; background: #202d29; }
+:root[data-theme="dark"] .nav-active { color: #72c8bb; }
+:root[data-theme="dark"] .table-head,
+:root[data-theme="dark"] .model-compare-head { background: #222e2a; }
+:root[data-theme="dark"] .table-row,
+:root[data-theme="dark"] .transfer-row,
+:root[data-theme="dark"] .method-step,
+:root[data-theme="dark"] .summary-line,
+:root[data-theme="dark"] .figure-panel figcaption,
+:root[data-theme="dark"] .model-compare-row { border-color: #303d38; }
+:root[data-theme="dark"] .table-row:not(.table-row-static):hover,
+:root[data-theme="dark"] .row-selected,
+:root[data-theme="dark"] .model-picked { background: #24332e; }
+:root[data-theme="dark"] .model-tag,
+:root[data-theme="dark"] .paper-status span { background: #263a34; color: #8ad3c4; }
+:root[data-theme="dark"] .insight-row { background: #1a2924; border-color: #30423b; }
+:root[data-theme="dark"] .insight-icon,
+:root[data-theme="dark"] .step-icon { background: #263c35; color: #80cec0; }
+:root[data-theme="dark"] .insight-icon-orange { background: #3a2e25; color: #f0ad78; }
+:root[data-theme="dark"] .insight-icon-blue { background: #293545; color: #9db8e2; }
+:root[data-theme="dark"] .text-button,
+:root[data-theme="dark"] .outline-button { color: #81d0c2; border-color: #426158; }
+:root[data-theme="dark"] .text-button:hover,
+:root[data-theme="dark"] .outline-button:hover { background: #263a34; }
+:root[data-theme="dark"] .notice-bar { background: #1b302a; color: #bbd6cd; }
+:root[data-theme="dark"] .notice-warn { background: #382c22; color: #efd0b2; border-color: #d58a51; }
+:root[data-theme="dark"] .segmented button { color: #a4b3ad; }
+:root[data-theme="dark"] .segmented button.active { background: #29423a; color: #8ad3c4; }
+:root[data-theme="dark"] .heat-cell { color: #f0f4f2; }
+:root[data-theme="dark"] .paper-status-orange span { background: #3b2e24; color: #f0b17d; }
+:root[data-theme="dark"] .footer { background: #18211f; border-color: var(--line); color: #9eaaa5; }
+:root[data-theme="dark"] .footer > div,
+:root[data-theme="dark"] .footer button { color: #bdc9c4; }
+:root[data-theme="dark"] .error-state { background: #382622; color: #ffb7a8; }
+:root[data-theme="dark"] .loading-line { background: linear-gradient(90deg, #17877f 35%, #34443f 35%); }
+:root[data-theme="dark"] .main-nav { border-color: var(--line); }
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--paper);
+  cursor: pointer;
+}
+.theme-toggle:hover { color: var(--teal); border-color: var(--teal); }
+.theme-toggle:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+@media (max-width: 620px) {
+  .theme-toggle { width: 32px; height: 32px; }
+}
