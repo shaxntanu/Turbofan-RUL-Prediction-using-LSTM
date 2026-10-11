@@ -20,6 +20,7 @@ from src.data_validator import DataValidator
 from src.evaluator import Evaluator
 from src.normalization import Normalizer
 from src.research_analysis import run_sensor_screening, summarize_engine_robustness
+from src.segmentation_analysis import run_fractional_life_analysis
 from src.sequence_generator import SequenceGenerator
 from src.target_construction import TargetConstructor
 from src.trainer import Trainer
@@ -160,7 +161,10 @@ def run_pipeline(
     normalizer.save(model_dir / "scaler.joblib")
 
     generator = SequenceGenerator(config)
-    X_train, y_train, _, _ = generator.generate_with_metadata(train_scaled, feature_cols)
+    X_train, y_train, train_units, train_cycles = generator.generate_with_metadata(
+        train_scaled,
+        feature_cols,
+    )
     X_val, y_val, val_units, val_cycles = generator.generate_with_metadata(val_scaled, feature_cols)
     X_test, y_test, test_units, test_cycles = generator.generate_with_metadata(test_scaled, feature_cols)
     if min(len(X_train), len(X_val), len(X_test)) == 0:
@@ -168,6 +172,30 @@ def run_pipeline(
             f"{dataset_name} produced an empty sequence split; reduce window_size "
             "or adjust the engine-level validation split"
         )
+
+    train_lifetimes = {
+        int(unit): float(cycles)
+        for unit, cycles in train_split.groupby("unit", sort=False)["cycle"].max().items()
+    }
+    test_observed_lifetimes = raw_test.groupby("unit", sort=False)["cycle"].max().to_dict()
+    test_units_in_file = raw_test["unit"].drop_duplicates().tolist()
+    test_lifetimes = {
+        int(unit): float(test_observed_lifetimes[unit] + final_rul.iloc[index])
+        for index, unit in enumerate(test_units_in_file)
+    }
+    fractional_life_analysis = run_fractional_life_analysis(
+        X_train,
+        y_train,
+        train_units,
+        train_cycles,
+        X_test,
+        y_test,
+        test_units,
+        test_cycles,
+        train_lifetimes,
+        test_lifetimes,
+        metrics_dir / "fractional_life",
+    )
 
     baseline = WindowRidgeBaseline().fit(X_train, y_train)
     predictions_val = {"ridge": baseline.predict(X_val)}
@@ -294,6 +322,7 @@ def run_pipeline(
         "validation_metrics": validation_metrics,
         "test_metrics": test_metrics,
         "uncertainty": uncertainty_metrics,
+        "fractional_life_analysis": fractional_life_analysis,
         "sensor_screening": sensor_screening,
         "engine_robustness": robustness_summary,
         "model_paths": {name: str(path) for name, path in model_paths.items()},
