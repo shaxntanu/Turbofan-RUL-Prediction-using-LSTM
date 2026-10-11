@@ -9,8 +9,62 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 DESTINATION = ROOT / "web" / "public" / "results" / "benchmark.json"
 CPP_BENCHMARK = OUTPUTS / "benchmarks" / "cpp_engine_benchmark.json"
+RELIABILITY_DIR = OUTPUTS / "reliability"
 DATASETS = ("FD001", "FD002", "FD003", "FD004")
 FIGURE_NAMES = ("predicted_vs_actual", "fractional_life_metrics", "prediction_intervals")
+RELIABILITY_TABLES = {
+    "repeated_seed_metrics": "repeated_seed_metrics.csv",
+    "repeated_seed_summary": "repeated_seed_summary.csv",
+    "sensor_stress_summary": "sensor_stress_summary.csv",
+    "risk_coverage": "risk_coverage.csv",
+    "history_protocol_metrics": "history_protocol_metrics.csv",
+    "online_onset_metrics": "online_onset_metrics.csv",
+    "online_stage_metrics": "online_stage_metrics.csv",
+    "rul_cap_sensitivity": "rul_cap_sensitivity.csv",
+    "leave_one_subset_out_metrics": "leave_one_subset_out_metrics.csv",
+    "leave_one_subset_out_stress_metrics": "leave_one_subset_out_stress_metrics.csv",
+}
+
+
+def _read_reliability_results() -> dict | None:
+    metrics_dir = RELIABILITY_DIR / "metrics"
+    manifest_path = metrics_dir / "reliability_study.json"
+    if not manifest_path.is_file():
+        return None
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    tables = {}
+    for key, filename in RELIABILITY_TABLES.items():
+        path = metrics_dir / filename
+        if path.is_file():
+            try:
+                frame = pd.read_csv(path)
+            except pd.errors.EmptyDataError:
+                continue
+            tables[key] = json.loads(frame.to_json(orient="records"))
+
+    study_fields = (
+        "run_id",
+        "datasets",
+        "repeated_seeds",
+        "lstm_seeds",
+        "extended_model_comparisons",
+        "short_history_protocols",
+        "online_onset_protocol",
+        "window_size",
+        "rul_cap",
+        "rul_cap_sensitivity",
+        "validation_protocol",
+        "test_protocol",
+        "domain_protocol",
+        "domain_note",
+        "limitations",
+    )
+    return {
+        "status": "available",
+        "study": {key: manifest[key] for key in study_fields if key in manifest},
+        "tables": tables,
+    }
 
 
 def export() -> Path:
@@ -61,6 +115,8 @@ def export() -> Path:
         }
     )
 
+    reliability = _read_reliability_results()
+
     payload = {
         "schema_version": 1,
         "protocol": {
@@ -83,6 +139,8 @@ def export() -> Path:
         },
         "cpp_engine": cpp_benchmark,
     }
+    if reliability is not None:
+        payload["reliability"] = reliability
     DESTINATION.parent.mkdir(parents=True, exist_ok=True)
     DESTINATION.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return DESTINATION
