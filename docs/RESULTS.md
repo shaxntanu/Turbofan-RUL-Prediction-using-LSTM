@@ -65,6 +65,19 @@ Entries are target test MAE in cycles; rows are target subsets and columns are t
 
 Source-specific scaling is retained, without refitting on target test data. The pooled model sees training data from each target subset, so pooled results are not zero-shot transfer to an unseen domain. All FD subsets are simulated variants of C-MAPSS, not independent real-world fleets.
 
+### Optional Native Sensor Kernels
+
+The C++17/pybind11 PCA and K-Means kernels were compared with scikit-learn using a seeded sample of 10,000 standardized training rows per subset. PCA timings include sklearn `fit_transform` and the equivalent native fit plus score projection; K-Means uses shared sklearn PCA scores, `k=4`, and ten initializations. Timings are best-of-three after one warm-up on this Windows/MSVC/OpenMP host.
+
+| Subset | PCA sklearn (ms) | PCA C++ (ms) | Max PCA subspace angle | K-Means speedup | Adjusted Rand index |
+|---|---:|---:|---:|---:|---:|
+| FD001 | 8.73 | 13.62 | 0 deg | 1.21x | 0.994 |
+| FD002 | 7.61 | 15.12 | 0 deg | 3.46x | 1.000 |
+| FD003 | 5.25 | 16.43 | 0 deg | 1.74x | 0.996 |
+| FD004 | 7.74 | 12.00 | 0 deg | 3.11x | 1.000 |
+
+The PCA component subspaces match to numerical precision, but this native PCA implementation was slower on this host. The K-Means speedups are local microbenchmark results, not RUL or LSTM inference gains. Full per-run measurements and compiler metadata are in [`benchmark.json`](../web/public/results/benchmark.json).
+
 ### Prediction Intervals and Engine Robustness
 
 Two-sided 95% split-conformal intervals are calibrated from validation residuals. Coverage and mean interval width are measured over test windows.
