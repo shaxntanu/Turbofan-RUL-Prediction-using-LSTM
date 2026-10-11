@@ -1,40 +1,39 @@
-import pandas as pd
-import numpy as np
-import logging
-from src.config import ProjectConfig
+from __future__ import annotations
 
-logger = logging.getLogger(__name__)
+import pandas as pd
+
 
 class TargetConstructor:
     @staticmethod
-    def compute_training_rul(df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Computes RUL for training data: max_cycle - current_cycle
-        """
-        df = df.copy()
-        # Find max cycle for each engine
-        max_cycles = df.groupby('unit')['cycle'].max()
-        # Map max cycle back to each row and subtract current cycle
-        df['RUL'] = df['unit'].map(max_cycles) - df['cycle']
-        return df
+    def compute_training_rul(
+        df: pd.DataFrame,
+        clip_value: int | None = None,
+    ) -> pd.DataFrame:
+        result = df.copy()
+        last_cycles = result.groupby("unit")["cycle"].transform("max")
+        result["RUL"] = (last_cycles - result["cycle"]).astype(float)
+        if clip_value is not None:
+            result["RUL"] = result["RUL"].clip(upper=clip_value)
+        return result
 
     @staticmethod
-    def compute_test_rul(df: pd.DataFrame, final_ruls: pd.Series) -> pd.DataFrame:
-        """
-        Computes RUL for test data: max_test_cycle - current_cycle + final_rul
-        """
-        df = df.copy()
-        # Map final RUL from the provided Series (indexed by 0...N-1)
-        # We assume the order in final_ruls matches the order of unique units in test_df
-        units = df['unit'].unique()
-        unit_to_final_rul = {unit: final_ruls.iloc[i] for i, unit in enumerate(units)}
+    def compute_test_rul(
+        df: pd.DataFrame,
+        final_ruls: pd.Series,
+        clip_value: int | None = None,
+    ) -> pd.DataFrame:
+        result = df.copy()
+        units = result["unit"].drop_duplicates().tolist()
+        final_values = pd.Series(final_ruls).reset_index(drop=True)
+        if len(units) != len(final_values):
+            raise ValueError(
+                f"Test set has {len(units)} engines but the RUL file has "
+                f"{len(final_values)} labels"
+            )
 
-        max_cycles = df.groupby('unit')['cycle'].max()
-
-        def calc_row_rul(row):
-            unit = row['unit']
-            cycle = row['cycle']
-            return max_cycles[unit] - cycle + unit_to_final_rul[unit]
-
-        df['RUL'] = df.apply(calc_row_rul, axis=1)
-        return df
+        final_by_unit = dict(zip(units, final_values.astype(float), strict=True))
+        last_cycles = result.groupby("unit")["cycle"].transform("max")
+        result["RUL"] = last_cycles - result["cycle"] + result["unit"].map(final_by_unit)
+        if clip_value is not None:
+            result["RUL"] = result["RUL"].clip(upper=clip_value)
+        return result
