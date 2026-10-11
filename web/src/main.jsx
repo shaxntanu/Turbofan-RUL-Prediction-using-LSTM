@@ -395,6 +395,8 @@ function Reliability({ data, dataset, theme }) {
   const riskRows = (tables.risk_coverage ?? [])
     .filter((row) => row.dataset === dataset && row.model === activeModel && row.scenario === activeScenario)
     .sort((a, b) => Number(a.coverage_fraction) - Number(b.coverage_fraction));
+  const requestedRiskRows = riskRows.filter((row) => Number(row.requested_abstention_fraction) > 0);
+  const zeroCoverageRiskCount = requestedRiskRows.filter((row) => Number(row.coverage_fraction) === 0).length;
   const riskData = {
     labels: riskRows.map((row) => `${Math.round(Number(row.coverage_fraction) * 100)}%`),
     datasets: [{
@@ -419,7 +421,7 @@ function Reliability({ data, dataset, theme }) {
       <div className="metrics-grid">
         <Metric label="MEAN TERMINAL MAE" value={format(selectedSummary?.terminal_mae_mean)} unit="cycles" note={`${selectedSummary?.seed_count ?? 0} run(s); mean across seeds`} icon={Activity} tone="teal" />
         <Metric label="BETWEEN-SEED SD" value={format(selectedSummary?.terminal_mae_sd)} unit="cycles" note="A single LSTM seed is not a variance estimate" icon={BarChart3} tone="orange" />
-        <Metric label="CLEAN INTERVAL COVERAGE" value={clean?.interval_coverage_mean == null ? "--" : `${format(Number(clean.interval_coverage_mean) * 100, 1)}%`} unit="" note={`${format(clean?.interval_width_mean)} cycle mean width`} icon={ShieldCheck} tone="blue" />
+        <Metric label="CLEAN INTERVAL COVERAGE" value={clean?.interval_coverage_mean == null ? "--" : `${format(Number(clean.interval_coverage_mean) * 100, 1)}%`} unit="" note={`Seed ${study.extended_model_comparisons?.runs_on_seed ?? "--"}; ${format(clean?.interval_width_mean)}-cycle mean width`} icon={ShieldCheck} tone="blue" />
         <Metric label="ONSET MEDIAN DELAY" value={format(detector?.median_detection_delay_cycles, 0)} unit="cycles" note={detector ? `${format(Number(detector.engine_detection_rate) * 100, 1)}% validation-engine detection` : "Validation detector metrics unavailable"} icon={ArrowUpRight} tone="red" />
       </div>
 
@@ -440,11 +442,12 @@ function Reliability({ data, dataset, theme }) {
           <SectionTitle eyebrow="ABSTENTION / SELECTIVE RISK" title="Error versus retained coverage" detail="Thresholds are fit on validation windows; lower coverage means more predictions withheld." />
           <label className="reliability-control scenario-control"><span>SCENARIO</span><select value={activeScenario} onChange={(event) => setSelectedScenario(event.target.value)}>{riskScenarios.map((name) => <option key={name} value={name}>{name.replaceAll("_", " ")}</option>)}</select></label>
           {riskRows.length ? <div className="chart-panel chart-panel-short"><Line data={riskData} options={{ ...options, plugins: { ...options.plugins, legend: { display: false } }, scales: { ...options.scales, x: { ...options.scales.x, title: { display: true, text: "Retained predictions", color: theme === "dark" ? "#a4b5af" : "#707980" } }, y: { ...options.scales.y, beginAtZero: true, title: { display: true, text: "MAE (cycles)", color: theme === "dark" ? "#a4b5af" : "#707980" } } } }} /></div> : <div className="empty-inline">No risk-coverage rows are available.</div>}
+          {zeroCoverageRiskCount > 0 && <p className="table-footnote">Validation thresholds yielded 0% retained coverage at {zeroCoverageRiskCount} of {requestedRiskRows.length} nonzero abstention levels; retained MAE is undefined at 0% coverage.</p>}
         </div>
       </section>
 
       <section className="section-block">
-        <SectionTitle eyebrow="ONLINE AVAILABILITY" title="Progressive prefix and fault-onset results" detail="Prefix predictions use only the history observed by each cycle. The onset detector is assessed on validation engines." />
+          <SectionTitle eyebrow="ONLINE AVAILABILITY" title="Progressive prefix and fault-onset results" detail="Prefix predictions use only observed history. The onset threshold is selected and assessed on validation engines, not an independent holdout." />
         <div className="reliability-table-wrap"><div className="reliability-table reliability-table-head"><span>PROTOCOL</span><span>MODEL</span><span>MAE</span><span>RMSE</span><span>WINDOW F1</span><span>ENGINE DETECTION</span></div>
           {[...onsetModels, ...(detector ? [detector] : [])].map((row) => <div className="reliability-table" key={`${row.protocol}-${row.model}`}><b>{row.protocol.replaceAll("_", " ")}</b><span>{row.model.replaceAll("_", " ")}</span><span>{format(row.mae ?? row.terminal_engine_mae)}</span><span>{format(row.rmse ?? row.terminal_engine_rmse)}</span><span>{format(row.window_f1, 3)}</span><span>{row.engine_detection_rate == null ? "--" : `${format(Number(row.engine_detection_rate) * 100, 1)}%`}</span></div>)}
         </div>
