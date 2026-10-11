@@ -1,29 +1,29 @@
-import pandas as pd
-import numpy as np
+from __future__ import annotations
+
 import logging
+
+import numpy as np
+import pandas as pd
+
 from src.config import ProjectConfig
 
 logger = logging.getLogger(__name__)
+
 
 class DataSplitter:
     def __init__(self, config: ProjectConfig):
         self.config = config
 
-    def split_engines(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Splits engines into training and validation sets at the engine level.
-        """
-        np.random.seed(self.config.random_seed)
-        unique_units = df['unit'].unique()
-        np.random.shuffle(unique_units)
+    def split_engines(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+        units = df["unit"].drop_duplicates().to_numpy(copy=True)
+        if len(units) < 2:
+            raise ValueError("At least two engines are required for an engine-level split")
 
-        n_train = int(self.config.train_ratio * len(unique_units))
-
-        train_units = unique_units[:n_train]
-        val_units = unique_units[n_train:]
-
-        train_df = df[df['unit'].isin(train_units)]
-        val_df = df[df['unit'].isin(val_units)]
-
-        logger.info(f"Split engines: {len(train_units)} train, {len(val_units)} val")
+        np.random.default_rng(self.config.random_seed).shuffle(units)
+        n_train = min(max(int(self.config.train_ratio * len(units)), 1), len(units) - 1)
+        train_units = units[:n_train]
+        val_units = units[n_train:]
+        train_df = df[df["unit"].isin(train_units)].copy()
+        val_df = df[df["unit"].isin(val_units)].copy()
+        logger.info("Engine split: %d train, %d validation", len(train_units), len(val_units))
         return train_df, val_df
