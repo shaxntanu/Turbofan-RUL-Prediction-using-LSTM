@@ -53,8 +53,12 @@ def select_training_features(
     means = values.mean(axis=1)
     rows = []
     for index, name in enumerate(feature_names):
-        correlation = np.corrcoef(means[:, index], y)[0, 1]
-        score = abs(float(correlation)) if np.isfinite(correlation) else 0.0
+        feature_values = means[:, index]
+        if np.std(feature_values) <= 1e-12 or np.std(y) <= 1e-12:
+            score = 0.0
+        else:
+            correlation = np.corrcoef(feature_values, y)[0, 1]
+            score = abs(float(correlation)) if np.isfinite(correlation) else 0.0
         rows.append({"feature": name, "train_abs_target_correlation": score, "index": index})
     ranking = pd.DataFrame(rows).sort_values(
         ["train_abs_target_correlation", "feature"], ascending=[False, True]
