@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+from importlib.util import find_spec
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -230,6 +231,7 @@ def main() -> None:
     results_dir = config.output_dir / dataset
     model_dir = config.model_dir / dataset
     result = _read_json(results_dir / "metrics" / "results.json")
+    tensorflow_available = find_spec("tensorflow") is not None
 
     st.title("Turbofan RUL Lab")
     st.caption("NASA C-MAPSS run-to-failure trajectories · Remaining useful life")
@@ -244,7 +246,7 @@ def main() -> None:
                 st.rerun()
             except Exception as error:
                 st.error(f"Experiment failed: {error}")
-        if st.button("Train LSTM + compare", width="stretch"):
+        if st.button("Train LSTM + compare", width="stretch", disabled=not tensorflow_available):
             try:
                 with st.spinner(f"Training and comparing models for {dataset}…"):
                     _run_experiment(dataset, train_lstm=True)
@@ -252,6 +254,8 @@ def main() -> None:
                 st.rerun()
             except Exception as error:
                 st.error(f"Experiment failed: {error}")
+        if not tensorflow_available:
+            st.caption("LSTM training needs TensorFlow; use Python 3.12 and install requirements-training.txt.")
 
     overview_tab, signals_tab, outputs_tab, forecast_tab = st.tabs(
         ["Fleet overview", "Signals", "Research outputs", "Forecast"]
