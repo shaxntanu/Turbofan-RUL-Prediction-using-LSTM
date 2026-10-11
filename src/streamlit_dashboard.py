@@ -223,6 +223,124 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
         st.error(f"Could not process the uploaded history: {error}")
 
 
+def _render_reliability(dataset: str, config: ProjectConfig) -> None:
+    metrics_dir = config.output_dir / "reliability" / "metrics"
+    study = _read_json(metrics_dir / "reliability_study.json")
+    if not study:
+        st.info("No completed reliability study is available. Run the documented CLI study to populate this view.")
+        st.code(
+            "python -m src.reliability_analysis --datasets FD001 FD002 FD003 FD004 "
+            "--seeds 42 43 44 --lstm-seeds 42 --extended-models --with-cnn --epochs 20",
+            language="bash",
+        )
+        return
+    if dataset not in study.get("datasets", []):
+        st.warning(f"{dataset} is not included in reliability run {study.get('run_id', '--')}.")
+        st.caption(f"Included subsets: {', '.join(study.get('datasets', [])) or 'none'}")
+        return
+
+    st.caption(
+        f"Run {study.get('run_id', '--')} | seeds {', '.join(map(str, study.get('repeated_seeds', [])))} | "
+        f"window {study.get('window_size', '--')} | RUL cap {study.get('rul_cap', '--')} cycles"
+    )
+    if study.get("domain_note"):
+        st.info(study["domain_note"])
+
+    def read_table(name: str) -> pd.DataFrame:
+        path = metrics_dir / name
+        if not path.is_file() or path.stat().st_size == 0:
+            return pd.DataFrame()
+        try:
+            return pd.read_csv(path)
+        except pd.errors.EmptyDataError:
+            return pd.DataFrame()
+
+    repeated = read_table("repeated_seed_summary.csv")
+    if not repeated.empty:
+        repeated = repeated.loc[repeated["dataset"] == dataset]
+    if not repeated.empty:
+        st.subheader("Repeated-seed terminal performance")
+        columns = [
+            name for name in (
+                "model", "seed_count", "terminal_mae_mean", "terminal_mae_sd",
+                "terminal_rmse_mean", "terminal_rmse_sd", "phm08_sum_mean",
+                "interval_coverage_mean", "interval_coverage_sd",
+            ) if name in repeated.columns
+        ]
+        st.dataframe(repeated[columns], hide_index=True, width="stretch")
+        fig, axis = plt.subplots(figsize=(10, max(3.2, 0.35 * len(repeated))))
+        axis.barh(repeated["model"], repeated["terminal_mae_mean"], color="#17877f")
+        axis.set(xlabel="Terminal-engine MAE (cycles)", title=f"{dataset} mean across recorded seeds")
+        axis.invert_yaxis()
+        axis.spines[["top", "right"]].set_visible(False)
+        fig.tight_layout()
+        st.pyplot(fig, width="stretch")
+        plt.close(fig)
+        st.caption("The LSTM challenger uses one configured seed; a single run does not estimate between-seed variance.")
+
+    stress = read_table("sensor_stress_summary.csv")
+    if not stress.empty:
+        stress = stress.loc[stress["dataset"] == dataset]
+    if not stress.empty:
+        st.subheader("Controlled sensor stress")
+        models = sorted(stress["model"].dropna().unique().tolist())
+        model = st.selectbox("Stress model", models, key=f"reliability-stress-{dataset}")
+        selected = stress.loc[(stress["model"] == model) & (stress["corruption_type"] != "clean")].copy()
+        if not selected.empty:
+            selected["condition"] = selected["corruption_type"] + " / " + selected["severity"]
+            colors = [
+                "#c85b54" if severity == "severe" else "#e68a4b" if severity == "moderate" else "#17877f"
+                for severity in selected["severity"]
+            ]
+            fig, axis = plt.subplots(figsize=(10, max(3.5, 0.29 * len(selected))))
+            axis.barh(selected["condition"], selected["terminal_engine_mae_mean"], color=colors)
+            axis.set(xlabel="Terminal-engine MAE (cycles)", title=f"{dataset} / {model}")
+            axis.invert_yaxis()
+            axis.spines[["top", "right"]].set_visible(False)
+            fig.tight_layout()
+            st.pyplot(fig, width="stretch")
+            plt.close(fig)
+            st.dataframe(selected, hide_index=True, width="stretch")
+        st.caption("Corruptions are controlled synthetic stressors, not an empirical sensor-failure distribution.")
+
+    risk = read_table("risk_coverage.csv")
+    if not risk.empty:
+        risk = risk.loc[(risk["dataset"] == dataset) & (risk["record_type"] == "risk_coverage")]
+    if not risk.empty:
+        st.subheader("Selective risk and coverage")
+        left, right = st.columns(2)
+        models = sorted(risk["model"].dropna().unique().tolist())
+        model = left.selectbox("Risk-coverage model", models, key=f"reliability-risk-model-{dataset}")
+        scenarios = sorted(risk.loc[risk["model"] == model, "scenario"].dropna().unique().tolist())
+        scenario = right.selectbox("Sensor scenario", scenarios, key=f"reliability-risk-scenario-{dataset}")
+        curve = risk.loc[(risk["model"] == model) & (risk["scenario"] == scenario)].sort_values("coverage_fraction")
+        fig, axis = plt.subplots(figsize=(9, 3.8))
+        axis.plot(curve["coverage_fraction"], curve["retained_mae"], marker="o", color="#17877f")
+        axis.set(xlabel="Retained prediction fraction", ylabel="MAE (cycles)", title=f"{dataset} / {model} / {scenario}")
+        axis.spines[["top", "right"]].set_visible(False)
+        fig.tight_layout()
+        st.pyplot(fig, width="stretch")
+        plt.close(fig)
+
+    for title, filename, subset_column in (
+        ("Online onset and progressive-prefix results", "online_onset_metrics.csv", "dataset"),
+        ("Short-history protocols", "history_protocol_metrics.csv", "dataset"),
+        ("RUL-cap sensitivity", "rul_cap_sensitivity.csv", "dataset"),
+        ("Leave-one-subset-out transfer", "leave_one_subset_out_metrics.csv", "target_dataset"),
+    ):
+        frame = read_table(filename)
+        if not frame.empty and subset_column in frame:
+            frame = frame.loc[frame[subset_column] == dataset]
+        if not frame.empty:
+            st.subheader(title)
+            st.dataframe(frame, hide_index=True, width="stretch")
+
+    if study.get("limitations"):
+        with st.expander("Protocol limits"):
+            for item in study["limitations"]:
+                st.write(f"- {item}")
+
+
 def main() -> None:
     st.set_page_config(page_title="Turbofan RUL Lab", page_icon="✈", layout="wide")
     st.sidebar.selectbox("C-MAPSS subset", DATASET_NAMES, key="dataset")
@@ -257,8 +375,8 @@ def main() -> None:
         if not tensorflow_available:
             st.caption("LSTM training needs TensorFlow; use Python 3.12 and install requirements-training.txt.")
 
-    overview_tab, signals_tab, outputs_tab, forecast_tab = st.tabs(
-        ["Fleet overview", "Signals", "Research outputs", "Forecast"]
+    overview_tab, signals_tab, outputs_tab, reliability_tab, forecast_tab = st.tabs(
+        ["Fleet overview", "Signals", "Research outputs", "Reliability", "Forecast"]
     )
     with overview_tab:
         if result:
@@ -426,6 +544,9 @@ def main() -> None:
                 transfer_meta = _read_json(transfer_path.with_name("transfer_results.json"))
                 if transfer_meta:
                     st.caption(transfer_meta["domain_caveat"])
+
+    with reliability_tab:
+        _render_reliability(dataset, config)
 
     with forecast_tab:
         _render_forecast(dataset, config, model_dir, result)
