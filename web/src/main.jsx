@@ -27,6 +27,7 @@ import {
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
 import "./styles.css";
+import "./model-comparison.css";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
