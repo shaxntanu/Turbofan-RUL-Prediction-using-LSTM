@@ -66,11 +66,28 @@ def _benchmark_subset(dataset: str, max_rows: int, seed: int) -> dict:
         lambda: pca_fit_numpy(matrix, variance_threshold=0.95)
     )
     components_match = python_pca.components_.shape == cpp_pca["components"].shape
-    component_diff = (
-        float(np.max(np.abs(python_pca.components_ - cpp_pca["components"])))
-        if components_match
-        else None
-    )
+    if components_match:
+        signed_alignment = np.sum(
+            python_pca.components_ * cpp_pca["components"], axis=1
+        )
+        aligned_cpp_components = cpp_pca["components"] * np.where(
+            signed_alignment[:, None] < 0, -1.0, 1.0
+        )
+        component_diff = float(
+            np.max(np.abs(python_pca.components_ - aligned_cpp_components))
+        )
+        principal_cosines = np.linalg.svd(
+            python_pca.components_ @ cpp_pca["components"].T,
+            compute_uv=False,
+        )
+        minimum_principal_cosine = float(np.clip(principal_cosines.min(), 0.0, 1.0))
+        maximum_principal_angle_degrees = float(
+            np.degrees(np.arccos(minimum_principal_cosine))
+        )
+    else:
+        component_diff = None
+        minimum_principal_cosine = None
+        maximum_principal_angle_degrees = None
     variance_diff = float(
         np.max(
             np.abs(
@@ -113,7 +130,9 @@ def _benchmark_subset(dataset: str, max_rows: int, seed: int) -> dict:
             "python_components": int(python_pca.n_components_),
             "cpp_components": int(cpp_pca["n_components"]),
             "component_count_match": components_match,
-            "max_abs_component_difference": component_diff,
+            "max_abs_component_difference_sign_aligned": component_diff,
+            "minimum_principal_subspace_cosine": minimum_principal_cosine,
+            "maximum_principal_angle_degrees": maximum_principal_angle_degrees,
             "max_explained_variance_ratio_difference": variance_diff,
             "variance_retained_python": float(python_pca.explained_variance_ratio_.sum()),
             "variance_retained_cpp": float(
