@@ -34,26 +34,45 @@ from src.reliability import (
     validation_censor_windows,
     window_health_scores,
 )
+from src.research_extensions import (
+    EMA_ALPHAS,
+    SHORT_HISTORY_LENGTHS,
+    EmaWindowRidge,
+    PolynomialWindowRidge,
+    SelectedWindowRidge,
+    SummaryMLP,
+    XGBoostWindowRegressor,
+    fit_online_onset_gate,
+    history_windows,
+    onset_detection_report,
+    select_asymmetric_ridge,
+    select_training_features,
+)
 from src.sequence_generator import SequenceGenerator
 from src.target_construction import TargetConstructor
 from src.trainer import Trainer
 from src.uncertainty import SplitConformalRUL
 
 logger = logging.getLogger(__name__)
-MODEL_NAMES = ("ridge_clean", "ridge_augmented", "lstm_clean")
-
-
 def _bound(values: np.ndarray, config: ProjectConfig) -> np.ndarray:
     upper = config.rul_clip_value if config.clip_rul else None
     return np.clip(values, 0.0, upper) if upper is not None else np.maximum(values, 0.0)
 
 
 def _predict(model, values: np.ndarray, config: ProjectConfig) -> np.ndarray:
-    if isinstance(model, WindowRidgeBaseline):
+    if callable(getattr(model, "predict", None)) and hasattr(model, "layers"):
+        predictions = np.asarray(
+            model.predict(values, batch_size=config.batch_size, verbose=0),
+            dtype=np.float32,
+        ).ravel()
+    elif callable(getattr(model, "predict", None)):
         predictions = model.predict(values)
     else:
+        keras_model = getattr(model, "model", None)
+        if keras_model is None or not callable(getattr(keras_model, "predict", None)):
+            raise TypeError(f"Model {type(model).__name__} does not expose a prediction method")
         predictions = np.asarray(
-            model.model.predict(values, batch_size=config.batch_size, verbose=0),
+            keras_model.predict(values, batch_size=config.batch_size, verbose=0),
             dtype=np.float32,
         ).ravel()
     return _bound(predictions, config)
@@ -83,6 +102,9 @@ def _fit_suite(
     *,
     seed: int,
     train_lstm: bool,
+    extended_models: bool = False,
+    train_cnn: bool = False,
+    train_xgboost: bool = False,
 ) -> dict:
     seeded_config = replace(config, random_seed=seed)
     train_frame, validation_frame = DataSplitter(seeded_config).split_engines(labeled_training)
@@ -99,16 +121,141 @@ def _fit_suite(
     x_train, y_train, train_units, train_cycles = generator.generate_with_metadata(
         train_scaled, features
     )
-    x_validation, y_validation, _, _ = generator.generate_with_metadata(
+    x_validation, y_validation, validation_units, validation_cycles = generator.generate_with_metadata(
         validation_scaled, features
     )
     if not len(x_train) or not len(x_validation):
         raise ValueError("The engine split produced an empty window set")
 
     ridge = WindowRidgeBaseline().fit(x_train, y_train)
-    augmented_x, augmented_y = training_augmentation(x_train, y_train, seed=seed + 500)
-    augmented_ridge = WindowRidgeBaseline().fit(augmented_x, augmented_y)
-    models = {"ridge_clean": ridge, "ridge_augmented": augmented_ridge}
+    dropout_x, dropout_y = training_augmentation(
+        x_train, y_train, seed=seed + 501, noise_fraction=0.0
+    )
+    noise_x, noise_y = training_augmentation(
+        x_train, y_train, seed=seed + 502, channel_dropout=0.0
+    )
+    combined_x, combined_y = training_augmentation(x_train, y_train, seed=seed + 500)
+    models = {
+        "ridge_clean": ridge,
+        "ridge_dropout_augmented": WindowRidgeBaseline().fit(dropout_x, dropout_y),
+        "ridge_noise_augmented": WindowRidgeBaseline().fit(noise_x, noise_y),
+        "ridge_augmented": WindowRidgeBaseline().fit(combined_x, combined_y),
+    }
+    model_selection_candidates = ["ridge_clean"]
+    comparison_metadata = {}
+    if extended_models:
+        selected_indices, feature_ranking = select_training_features(
+            x_train, y_train, features, top_sensors=min(10, len(features))
+        )
+        models["ridge_feature_selected"] = SelectedWindowRidge(selected_indices).fit(
+            x_train, y_train
+        )
+        model_selection_candidates.append("ridge_feature_selected")
+        comparison_metadata["selected_features"] = [features[index] for index in selected_indices]
+        comparison_metadata["feature_ranking"] = feature_ranking.to_dict("records")
+
+        asymmetric_model, selected_weight, asymmetric_candidates = select_asymmetric_ridge(
+            x_train, y_train, x_validation, y_validation
+        )
+        models["ridge_asymmetric_selected"] = asymmetric_model
+        model_selection_candidates.append("ridge_asymmetric_selected")
+        comparison_metadata["asymmetric_loss"] = {
+            "selected_overestimate_weight": selected_weight,
+            "selection_metric": "validation-window PHM08 sum, then MAE",
+            "candidate_results": asymmetric_candidates,
+        }
+
+        ema_candidates = []
+        for alpha in EMA_ALPHAS:
+            candidate = EmaWindowRidge(alpha).fit(x_train, y_train)
+            metrics = Evaluator.compute_metrics(y_validation, candidate.predict(x_validation))
+            ema_candidates.append((metrics["phm08_score"], metrics["mae"], alpha, candidate, metrics))
+        _, _, selected_ema_alpha, selected_ema_model, selected_ema_metrics = min(
+            ema_candidates, key=lambda row: (row[0], row[1])
+        )
+        models["ridge_ema_selected"] = selected_ema_model
+        model_selection_candidates.append("ridge_ema_selected")
+        comparison_metadata["causal_ema"] = {
+            "selected_alpha": selected_ema_alpha,
+            "selection_metric": "validation-window PHM08 sum, then MAE",
+            "candidate_results": [
+                {"alpha": alpha, **metrics}
+                for _, _, alpha, _, metrics in ema_candidates
+            ],
+            "selected_validation_metrics": selected_ema_metrics,
+        }
+
+        models["polynomial_ridge"] = PolynomialWindowRidge(selected_indices).fit(
+            x_train, y_train
+        )
+        mlp_model = SummaryMLP(seed=seed).fit(x_train, y_train)
+        models["mlp_summary"] = mlp_model
+        mlp_estimator = mlp_model.model.steps[-1][1]
+        comparison_metadata["mlp_summary"] = {
+            "status": "completed",
+            "architecture": "StandardScaler -> MLPRegressor(64,32, ReLU)",
+            "max_iterations": int(mlp_estimator.max_iter),
+            "iterations_completed": int(mlp_estimator.n_iter_),
+            "converged_within_budget": bool(mlp_estimator.n_iter_ < mlp_estimator.max_iter),
+            "early_stopping": False,
+            "validation_use": "engine-held-out comparison only",
+        }
+        model_selection_candidates.extend(["polynomial_ridge", "mlp_summary"])
+        if train_xgboost:
+            try:
+                models["xgboost_summary"] = XGBoostWindowRegressor(seed=seed).fit(x_train, y_train)
+                model_selection_candidates.append("xgboost_summary")
+                comparison_metadata["xgboost_summary"] = {"status": "completed"}
+            except RuntimeError as error:
+                comparison_metadata["xgboost_summary"] = {
+                    "status": "unavailable",
+                    "reason": str(error),
+                }
+        if train_cnn:
+            import tensorflow as tf
+
+            tf.keras.utils.set_random_seed(seed + 8000)
+            cnn = tf.keras.Sequential(
+                [
+                    tf.keras.layers.Input(shape=(config.window_size, len(features))),
+                    tf.keras.layers.Conv1D(32, 3, padding="causal", activation="relu"),
+                    tf.keras.layers.Conv1D(32, 3, padding="causal", activation="relu"),
+                    tf.keras.layers.GlobalAveragePooling1D(),
+                    tf.keras.layers.Dense(32, activation="relu"),
+                    tf.keras.layers.Dense(1),
+                ],
+                name="cmapss_causal_cnn",
+            )
+            cnn.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=config.learning_rate),
+                loss="mse",
+                metrics=[tf.keras.metrics.MeanAbsoluteError(name="mae")],
+            )
+            cnn_history = cnn.fit(
+                x_train,
+                y_train,
+                validation_data=(x_validation, y_validation),
+                epochs=config.max_epochs,
+                batch_size=config.batch_size,
+                callbacks=[
+                    tf.keras.callbacks.EarlyStopping(
+                        monitor="val_mae",
+                        patience=config.early_stopping_patience,
+                        restore_best_weights=True,
+                    ),
+                    tf.keras.callbacks.TerminateOnNaN(),
+                ],
+                verbose=0,
+            )
+            models["cnn_sequence"] = cnn
+            comparison_metadata["cnn_sequence"] = {
+                "status": "completed",
+                "architecture": "causal Conv1D(32,3) x2 -> global average pooling -> Dense(32) -> linear RUL",
+                "epochs_completed": len(cnn_history.history["loss"]),
+                "max_epochs": int(config.max_epochs),
+                "best_weights": "restored by validation-MAE early stopping",
+            }
+            model_selection_candidates.append("cnn_sequence")
     if train_lstm:
         import tensorflow as tf
 
@@ -138,7 +285,9 @@ def _fit_suite(
         )
         for name, model in models.items()
     }
-    clean_model_names = [name for name in ("ridge_clean", "lstm_clean") if name in models]
+    clean_model_names = [name for name in model_selection_candidates if name in models]
+    if train_lstm:
+        clean_model_names.append("lstm_clean")
     selected_clean_model = min(
         clean_model_names,
         key=lambda name: validation_window_metrics[name]["mae"],
@@ -164,12 +313,15 @@ def _fit_suite(
         "validation_scaled": validation_scaled,
         "validation_windows": x_validation,
         "validation_targets": y_validation,
+        "validation_units": validation_units,
+        "validation_cycles": validation_cycles,
         "calibration_windows": censor_x,
         "calibration_units": censor_units,
         "calibration_cycles": censor_cycles,
         "calibration_targets": censor_y,
         "calibration_predictions": calibration,
         "validation_window_metrics": validation_window_metrics,
+        "comparison_metadata": comparison_metadata,
         "selected_clean_model": selected_clean_model,
         "abstention_thresholds": abstention_thresholds,
         "health_validation": health_validation,
@@ -223,8 +375,13 @@ def _save_model_artifacts(suite: dict, output_dir: Path, dataset: str) -> None:
         target.mkdir(parents=True, exist_ok=True)
         if isinstance(model, WindowRidgeBaseline):
             model.save(target / f"{name}.joblib")
-        else:
+        elif callable(getattr(model, "save", None)) and (
+            hasattr(model, "layers")
+            or callable(getattr(getattr(model, "model", None), "save", None))
+        ):
             model.save(str(target / f"{name}.keras"))
+        else:
+            joblib.dump(model, target / f"{name}.joblib")
     suite["normalizer"].save(
         output_dir / "models" / dataset / f"seed-{suite['seed']}" / "scaler.joblib"
     )
@@ -240,15 +397,379 @@ def _targets_unchanged(before: pd.DataFrame, after: pd.DataFrame) -> bool:
     return bool(np.array_equal(expected, observed))
 
 
+def _terminal_positions(units: np.ndarray) -> np.ndarray:
+    positions = []
+    for unit in dict.fromkeys(np.asarray(units, dtype=int).tolist()):
+        matches = np.flatnonzero(np.asarray(units) == unit)
+        if len(matches):
+            positions.append(int(matches[-1]))
+    return np.asarray(positions, dtype=int)
+
+
+def _truncate_windows(sequences: np.ndarray, observed_history: int) -> np.ndarray:
+    if not len(sequences) or observed_history >= sequences.shape[1]:
+        return np.asarray(sequences, dtype=np.float32).copy()
+    prefix = np.asarray(sequences[:, -observed_history:, :], dtype=np.float32)
+    padding = sequences.shape[1] - observed_history
+    return np.concatenate(
+        [np.repeat(prefix[:, :1, :], padding, axis=1), prefix], axis=1
+    )
+
+
+def _run_history_protocols(
+    dataset: str, suite: dict, testing_scaled: pd.DataFrame, seed: int
+) -> tuple[list[dict], list[pd.DataFrame]]:
+    config = suite["config"]
+    normal_window = config.window_size
+    lengths = sorted({size for size in SHORT_HISTORY_LENGTHS if size < normal_window} | {normal_window})
+    rows, outputs = [], []
+    normal_validation_x, _, _, normal_validation_y = validation_censor_windows(
+        suite["validation_scaled"],
+        suite["features"],
+        normal_window,
+        seed=seed + 2600,
+        max_rul=float(config.rul_clip_value),
+    )
+    for history in lengths:
+        short_config = replace(config, window_size=history)
+        short_generator = SequenceGenerator(short_config)
+        train_x, train_y, _, _ = short_generator.generate_with_metadata(
+            suite["train_scaled"], suite["features"]
+        )
+        validation_x, validation_y, _, _ = short_generator.generate_with_metadata(
+            suite["validation_scaled"], suite["features"]
+        )
+        if not len(train_x) or not len(validation_x):
+            continue
+        short_model = WindowRidgeBaseline().fit(train_x, train_y)
+        short_cal_x, _, _, short_cal_y = validation_censor_windows(
+            suite["validation_scaled"],
+            suite["features"],
+            history,
+            seed=seed + 2700 + history,
+            max_rul=float(config.rul_clip_value),
+        )
+        short_test_x, units, cycles, truth = history_windows(
+            testing_scaled,
+            suite["features"],
+            model_window=history,
+            observed_history=history,
+        )
+        terminal = _terminal_positions(units)
+        short_test_x, units, cycles, truth = (
+            short_test_x[terminal], units[terminal], cycles[terminal], truth[terminal]
+        )
+        short_prediction = _predict(short_model, short_test_x, short_config)
+        short_calibration = SplitConformalRUL().fit(
+            short_cal_y, _predict(short_model, short_cal_x, short_config)
+        )
+        lower, upper = short_calibration.predict_interval(
+            short_prediction, max_rul=config.rul_clip_value
+        )
+        short_frame = prediction_frame(
+            dataset,
+            f"ridge_trained_history_{history}",
+            units,
+            cycles,
+            truth,
+            short_prediction,
+            lower=lower,
+            upper=upper,
+            scenario=f"history_{history}",
+            kind="short_history_trained",
+            severity="none",
+        )
+        short_frame.insert(1, "seed", seed)
+        short_frame["model_window_cycles"] = history
+        short_frame["observed_history_cycles"] = history
+        short_frame["history_protocol"] = "trained_for_observed_history"
+        outputs.append(short_frame)
+        rows.append(
+            {
+                "dataset": dataset,
+                "model": f"ridge_trained_history_{history}",
+                "protocol": "short_history_trained_for_length_terminal_engine",
+                "seed": seed,
+                "model_window_cycles": history,
+                "observed_history_cycles": history,
+                "validation_overlapping_mae": Evaluator.compute_metrics(
+                    validation_y, _predict(short_model, validation_x, short_config)
+                )["mae"],
+                "calibration_radius_cycles": float(short_calibration.radius or 0.0),
+                **terminal_metrics(short_frame),
+            }
+        )
+
+        if history == normal_window:
+            continue
+        normal_model = suite["models"]["ridge_clean"]
+        truncated_test_x, units, cycles, truth = history_windows(
+            testing_scaled,
+            suite["features"],
+            model_window=normal_window,
+            observed_history=history,
+        )
+        terminal = _terminal_positions(units)
+        truncated_test_x, units, cycles, truth = (
+            truncated_test_x[terminal], units[terminal], cycles[terminal], truth[terminal]
+        )
+        truncated_cal_x = _truncate_windows(normal_validation_x, history)
+        truncated_prediction = _predict(normal_model, truncated_test_x, config)
+        truncated_calibration = SplitConformalRUL().fit(
+            normal_validation_y,
+            _predict(normal_model, truncated_cal_x, config),
+        )
+        lower, upper = truncated_calibration.predict_interval(
+            truncated_prediction, max_rul=config.rul_clip_value
+        )
+        truncated_frame = prediction_frame(
+            dataset,
+            f"ridge_normal_truncated_to_{history}",
+            units,
+            cycles,
+            truth,
+            truncated_prediction,
+            lower=lower,
+            upper=upper,
+            scenario=f"history_{history}",
+            kind="short_history_inference_truncation",
+            severity="none",
+        )
+        truncated_frame.insert(1, "seed", seed)
+        truncated_frame["model_window_cycles"] = normal_window
+        truncated_frame["observed_history_cycles"] = history
+        truncated_frame["history_protocol"] = "trained_normal_then_truncated_at_inference"
+        outputs.append(truncated_frame)
+        rows.append(
+            {
+                "dataset": dataset,
+                "model": f"ridge_normal_truncated_to_{history}",
+                "protocol": "normal_history_model_truncated_at_inference_terminal_engine",
+                "seed": seed,
+                "model_window_cycles": normal_window,
+                "observed_history_cycles": history,
+                "calibration_radius_cycles": float(truncated_calibration.radius or 0.0),
+                **terminal_metrics(truncated_frame),
+            }
+        )
+    return rows, outputs
+
+
+def _run_online_onset(
+    dataset: str, suite: dict, testing_scaled: pd.DataFrame, seed: int
+) -> tuple[list[dict], pd.DataFrame, pd.DataFrame]:
+    config = suite["config"]
+    gate = fit_online_onset_gate(
+        suite["train_windows"],
+        suite["train_targets"],
+        rul_cap=float(config.rul_clip_value),
+    )
+    threshold_rows = []
+    for threshold in (0.2, 0.35, 0.5, 0.65, 0.8):
+        validation_prediction, _ = gate.predict(
+            suite["validation_windows"], threshold=threshold
+        )
+        metric = Evaluator.compute_metrics(
+            suite["validation_targets"], validation_prediction
+        )
+        threshold_rows.append((metric["phm08_score"], metric["mae"], threshold, metric))
+    _, _, selected_threshold, selected_validation_metrics = min(
+        threshold_rows, key=lambda item: (item[0], item[1])
+    )
+    validation_prediction, validation_probability = gate.predict(
+        suite["validation_windows"], threshold=selected_threshold
+    )
+    onset_summary, onset_events = onset_detection_report(
+        suite["validation_units"],
+        suite["validation_cycles"],
+        suite["validation_targets"],
+        validation_probability,
+        rul_cap=float(config.rul_clip_value),
+        threshold=selected_threshold,
+    )
+    onset_events.insert(0, "dataset", dataset)
+    onset_events.insert(1, "seed", seed)
+    onset_events["threshold_selection_metric"] = "validation-window PHM08 sum, then MAE"
+
+    generator = SequenceGenerator(config)
+    test_x, test_y, test_units, test_cycles = generator.generate_with_metadata(
+        testing_scaled, suite["features"]
+    )
+    gated_all, test_probability = gate.predict(test_x, threshold=selected_threshold)
+    shared_all = gate.shared_model.predict(test_x)
+    terminal_x, units, cycles, truth = terminal_windows(
+        testing_scaled, suite["features"], config.window_size
+    )
+    terminal_gated, terminal_probability = gate.predict(
+        terminal_x, threshold=selected_threshold
+    )
+    terminal_shared = gate.shared_model.predict(terminal_x)
+    gated_calibration_prediction = gate.predict(
+        suite["calibration_windows"], threshold=selected_threshold
+    )[0]
+    gated_calibration = SplitConformalRUL().fit(
+        suite["calibration_targets"], gated_calibration_prediction
+    )
+    rows = []
+    for name, all_prediction, terminal_prediction in (
+        ("shared_ridge", shared_all, terminal_shared),
+        ("online_onset_gated_ridge", gated_all, terminal_gated),
+    ):
+        rows.append(
+            {
+                "dataset": dataset,
+                "model": name,
+                "protocol": "progressive_prefix_overlapping_windows",
+                "seed": seed,
+                "selected_onset_threshold": selected_threshold,
+                **Evaluator.compute_metrics(test_y, _bound(all_prediction, config)),
+            }
+        )
+        prediction = _bound(terminal_prediction, config)
+        if name == "shared_ridge":
+            lower, upper, radius = _model_interval(suite, "ridge_clean", prediction)
+        else:
+            lower, upper = gated_calibration.predict_interval(
+                prediction, max_rul=config.rul_clip_value
+            )
+            radius = float(gated_calibration.radius or 0.0)
+        terminal_frame = prediction_frame(
+            dataset,
+            name,
+            units,
+            cycles,
+            truth,
+            prediction,
+            lower=lower,
+            upper=upper,
+            scenario="online_onset_clean",
+            kind="online_onset",
+            severity="none",
+        )
+        terminal_frame.insert(1, "seed", seed)
+        terminal_frame["onset_probability"] = (
+            terminal_probability if name == "online_onset_gated_ridge" else np.nan
+        )
+        terminal_frame["selected_onset_threshold"] = selected_threshold
+        rows.append(
+            {
+                "dataset": dataset,
+                "model": name,
+                "protocol": "terminal_engine",
+                "seed": seed,
+                "selected_onset_threshold": selected_threshold,
+                "calibration_radius_cycles": radius,
+                **terminal_metrics(terminal_frame),
+            }
+        )
+    progress = pd.DataFrame(
+        {
+            "dataset": dataset,
+            "seed": seed,
+            "unit": test_units,
+            "cycle": test_cycles,
+            "rul_true_for_scoring_only": test_y,
+            "onset_probability": test_probability,
+            "shared_ridge_prediction": _bound(shared_all, config),
+            "online_onset_gated_prediction": _bound(gated_all, config),
+            "selected_onset_threshold": selected_threshold,
+        }
+    )
+    rows.append(
+        {
+            "dataset": dataset,
+            "model": "online_onset_detector",
+            "protocol": "validation_engine_detection",
+            "seed": seed,
+            "selected_onset_threshold": selected_threshold,
+            "validation_gate_mae": selected_validation_metrics["mae"],
+            "validation_gate_phm08_score": selected_validation_metrics["phm08_score"],
+            **onset_summary,
+        }
+    )
+    return rows, progress, onset_events
+
+
+def _run_cap_sensitivity(
+    dataset: str, config: ProjectConfig, seed: int
+) -> list[dict]:
+    loader = DataLoader(replace(config, dataset=dataset))
+    raw_train = loader.load_train_data()
+    raw_test = loader.load_test_data()
+    final_rul = loader.load_rul_data()
+    rows = []
+    for cap in (125, 130):
+        labeled_train = TargetConstructor.compute_training_rul(raw_train, cap)
+        labeled_test = TargetConstructor.compute_test_rul(raw_test, final_rul, cap)
+        seeded = replace(config, dataset=dataset, random_seed=seed)
+        train_frame, validation_frame = DataSplitter(seeded).split_engines(labeled_train)
+        train_frame, removed = DataCleaner(seeded).remove_constant_sensors(train_frame)
+        validation_frame = validation_frame.drop(columns=removed, errors="ignore")
+        labeled_test = labeled_test.drop(columns=removed, errors="ignore")
+        features = [name for name in train_frame if name not in {"unit", "cycle", "RUL"}]
+        normalizer = Normalizer(seeded).fit(train_frame, features)
+        train_scaled = normalizer.transform(train_frame, features)
+        validation_scaled = normalizer.transform(validation_frame, features)
+        test_scaled = normalizer.transform(labeled_test, features)
+        generator = SequenceGenerator(seeded)
+        train_x, train_y = generator.generate(train_scaled, features)
+        validation_x, validation_y = generator.generate(validation_scaled, features)
+        model = WindowRidgeBaseline().fit(train_x, train_y)
+        validation_metrics = Evaluator.compute_metrics(
+            validation_y, model.predict(validation_x)
+        )
+        terminal_x, units, cycles, truth = terminal_windows(
+            test_scaled, features, seeded.window_size
+        )
+        terminal = prediction_frame(
+            dataset,
+            "ridge_clean",
+            units,
+            cycles,
+            truth,
+            _bound(model.predict(terminal_x), seeded),
+        )
+        overlapping_x, overlapping_y = generator.generate(test_scaled, features)
+        overlapping_metrics = Evaluator.compute_metrics(
+            overlapping_y, _bound(model.predict(overlapping_x), seeded)
+        )
+        rows.append(
+            {
+                "dataset": dataset,
+                "seed": seed,
+                "rul_cap": cap,
+                "protocol": "same_seed_engine_split_ridge_terminal_and_overlapping",
+                "validation_overlapping_mae": validation_metrics["mae"],
+                "terminal_engine_mae": terminal_metrics(terminal)["terminal_engine_mae"],
+                "terminal_engine_rmse": terminal_metrics(terminal)["terminal_engine_rmse"],
+                "terminal_phm08_sum": terminal_metrics(terminal)["phm08_score_sum"],
+                "terminal_engine_count": terminal_metrics(terminal)["n_engines"],
+                "overlapping_window_mae": overlapping_metrics["mae"],
+                "overlapping_window_rmse": overlapping_metrics["rmse"],
+                "overlapping_window_phm08_sum": overlapping_metrics["phm08_score"],
+                "overlapping_window_count": overlapping_metrics["n_samples"],
+                "model_selection": "fixed Ridge; no test-based selection",
+            }
+        )
+    return rows
+
+
 def _run_in_domain(
     datasets: tuple[str, ...],
     config: ProjectConfig,
     seeds: tuple[int, ...],
     lstm_seeds: set[int],
-) -> tuple[list[dict], list[pd.DataFrame], list[dict], list[pd.DataFrame], list[dict], list[pd.DataFrame]]:
+    *,
+    extended_models: bool,
+    train_cnn: bool,
+    train_xgboost: bool,
+) -> tuple:
     repeated_rows, terminal_outputs = [], []
     stress_rows, stress_outputs = [], []
     online_rows, online_outputs = [], []
+    history_rows, history_outputs = [], []
+    onset_rows, onset_outputs, onset_events = [], [], []
+    cap_sensitivity_rows = []
     for dataset in datasets:
         training, testing = _validate_and_label(dataset, config)
         for seed in seeds:
@@ -257,7 +778,35 @@ def _run_in_domain(
                 replace(config, dataset=dataset),
                 seed=seed,
                 train_lstm=seed in lstm_seeds,
+                extended_models=extended_models and seed == seeds[0],
+                train_cnn=train_cnn and seed == seeds[0],
+                train_xgboost=train_xgboost and seed == seeds[0],
             )
+            if extended_models and seed == seeds[0] and suite["comparison_metadata"]:
+                comparison_dir = config.output_dir / "reliability" / "metrics"
+                comparison_dir.mkdir(parents=True, exist_ok=True)
+                metadata = suite["comparison_metadata"]
+                ranking = metadata.get("feature_ranking")
+                if ranking:
+                    pd.DataFrame(ranking).to_csv(
+                        comparison_dir / f"{dataset.lower()}_seed_{seed}_feature_ranking.csv",
+                        index=False,
+                    )
+                (comparison_dir / f"{dataset.lower()}_seed_{seed}_model_selection.json").write_text(
+                    json.dumps(metadata, indent=2, default=list) + "\n", encoding="utf-8"
+                )
+            for model_name, validation_metrics in suite["validation_window_metrics"].items():
+                repeated_rows.append(
+                    {
+                        "dataset": dataset,
+                        "model": model_name,
+                        "protocol": "validation_overlapping_windows",
+                        "seed": seed,
+                        "selected_clean_model": suite["selected_clean_model"],
+                        "source_subsets": dataset,
+                        **{f"validation_{key}": value for key, value in validation_metrics.items()},
+                    }
+                )
             (test_windows, test_units, test_cycles, test_truth), test_scaled = _evaluation_windows(
                 testing, suite
             )
@@ -316,6 +865,9 @@ def _run_in_domain(
                 )
 
             if seed == seeds[0]:
+                cap_sensitivity_rows.extend(
+                    _run_cap_sensitivity(dataset, config, seed)
+                )
                 _save_model_artifacts(suite, config.output_dir / "reliability", dataset)
                 stress_scenarios = [
                     CorruptionScenario("clean", "clean", "none", lambda frame: frame.copy()),
@@ -443,6 +995,18 @@ def _run_in_domain(
                     }
                 )
                 online_outputs.append(stage_frame)
+                if len(suite["models"]) and seed == seeds[0]:
+                    history_metrics, history_frames = _run_history_protocols(
+                        dataset, suite, test_scaled, seed
+                    )
+                    history_rows.extend(history_metrics)
+                    history_outputs.extend(history_frames)
+                    onset_metrics, onset_frame, event_frame = _run_online_onset(
+                        dataset, suite, test_scaled, seed
+                    )
+                    onset_rows.extend(onset_metrics)
+                    onset_outputs.append(onset_frame)
+                    onset_events.append(event_frame)
                 logger.info("Completed repeated in-domain run %s seed=%d", dataset, seed)
 
     return (
@@ -452,6 +1016,12 @@ def _run_in_domain(
         stress_outputs,
         online_rows,
         online_outputs,
+        history_rows,
+        history_outputs,
+        onset_rows,
+        onset_outputs,
+        onset_events,
+        cap_sensitivity_rows,
     )
 
 
@@ -540,6 +1110,7 @@ def _run_heldout_domains(
         )
         if not len(terminal_x):
             raise ValueError(f"{target} has no complete windows for held-out evaluation")
+        clean_anomaly = window_health_scores(suite["train_windows"], terminal_x)
         for model_name, model in suite["models"].items():
             prediction = _predict(model, terminal_x, suite["config"])
             lower, upper, radius = _model_interval(suite, model_name, prediction)
@@ -568,6 +1139,27 @@ def _run_heldout_domains(
             row["calibration_radius_cycles"] = radius
             row["target_training_used"] = False
             metric_rows.append(row)
+            for risk_row in risk_coverage_rows(
+                truth,
+                prediction,
+                clean_anomaly,
+                suite["abstention_thresholds"],
+            ):
+                stress_rows.append(
+                    {
+                        "dataset": target,
+                        "model": model_name,
+                        "protocol": "leave_one_subset_out_clean_terminal_engine",
+                        "source_subsets": ";".join(sources),
+                        "target_training_used": False,
+                        "scenario": "heldout_clean",
+                        "corruption_type": "clean",
+                        "severity": "none",
+                        "seed": seed,
+                        "record_type": "risk_coverage",
+                        **risk_row,
+                    }
+                )
 
         target_frame = target_test
         scenarios = sensor_corruption_scenarios(
@@ -623,6 +1215,27 @@ def _run_heldout_domains(
                 row["flagged_predictions"] = int(flagged.sum())
                 row["flagged_fraction"] = float(flagged.mean())
                 stress_rows.append(row)
+                for risk_row in risk_coverage_rows(
+                    stress_truth,
+                    prediction,
+                    anomaly,
+                    suite["abstention_thresholds"],
+                ):
+                    stress_rows.append(
+                        {
+                            "dataset": target,
+                            "model": model_name,
+                            "protocol": "leave_one_subset_out_corrupted_terminal_engine",
+                            "source_subsets": ";".join(sources),
+                            "target_training_used": False,
+                            "scenario": scenario.name,
+                            "corruption_type": scenario.kind,
+                            "severity": scenario.severity,
+                            "seed": seed,
+                            "record_type": "risk_coverage",
+                            **risk_row,
+                        }
+                    )
         logger.info("Completed held-out target %s; sources=%s", target, ",".join(sources))
     return metric_rows, prediction_frames, stress_rows, stress_frames
 
@@ -696,6 +1309,9 @@ def run_reliability_study(
     seeds: tuple[int, ...] = (42, 43, 44),
     lstm_seeds: tuple[int, ...] | None = None,
     run_heldout_domains: bool = True,
+    extended_models: bool = False,
+    train_cnn: bool = False,
+    train_xgboost: bool = False,
 ) -> dict:
     datasets = tuple(dict.fromkeys(name.upper() for name in datasets))
     if not datasets or any(name not in DATASET_NAMES for name in datasets):
@@ -704,6 +1320,8 @@ def run_reliability_study(
     lstm_seeds = tuple(int(seed) for seed in (seeds[:1] if lstm_seeds is None else lstm_seeds))
     if not seeds or not set(lstm_seeds).issubset(seeds):
         raise ValueError("LSTM seeds must be included in the repeated seed list")
+    if (train_cnn or train_xgboost) and not extended_models:
+        raise ValueError("CNN and XGBoost challengers require --extended-models")
     config = config or ProjectConfig(dataset=datasets[0], max_epochs=20)
     output_dir = config.output_dir / "reliability"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -718,15 +1336,51 @@ def run_reliability_study(
         "datasets": datasets,
         "repeated_seeds": seeds,
         "lstm_seeds": lstm_seeds,
+        "extended_model_comparisons": {
+            "enabled": extended_models,
+            "runs_on_seed": seeds[0] if extended_models else None,
+            "cnn_enabled": train_cnn,
+            "xgboost_enabled": train_xgboost,
+            "selection": "validation engine windows only; no official test labels",
+            "methods": [
+                "train-only sensor ranking plus Ridge",
+                "causal EMA Ridge with validation PHM08 selection",
+                "asymmetric squared-loss Ridge with validation PHM08 selection",
+                "degree-two polynomial Ridge over mean/std/final/delta/slope summaries of four selected channels",
+                "two-hidden-layer MLP over first/mean/std/slope/final summaries",
+            ] if extended_models else [],
+        },
+        "short_history_protocols": {
+            "history_lengths": sorted({size for size in SHORT_HISTORY_LENGTHS if size <= config.window_size} | {config.window_size}),
+            "cases": ["trained_for_each_history_length", "normal_window_model_truncated_at_inference"],
+            "fixed_shape_padding": "repeat earliest observed row on the left; never use future rows",
+            "run_seed": seeds[0],
+        },
+        "online_onset_protocol": {
+            "onset_definition": f"first training/validation cycle whose capped RUL is below {config.rul_clip_value}",
+            "classifier_features": "current sensor-window summaries only",
+            "test_decisions_use_test_RUL_or_future_cycles": False,
+            "threshold_selection": "validation engine windows by gated PHM08 sum, then MAE",
+        },
         "window_size": config.window_size,
         "rul_cap": config.rul_clip_value if config.clip_rul else None,
+        "rul_cap_sensitivity": {
+            "caps": [125, 130],
+            "same_engine_split": True,
+            "model": "fixed Ridge with unchanged feature/scaling pipeline",
+            "selection": "no test-based model or parameter selection",
+            "run_seed": seeds[0],
+        },
         "validation_protocol": "engine split; deterministic pseudo-censored validation endpoint per engine",
         "test_protocol": "official test labels are used only for final evaluation",
         "augmentation": {
             "copies_per_training_window": 1,
-            "channel_dropout_probability": 0.08,
-            "gaussian_noise_fraction_of_train_feature_std": 0.05,
             "targets_changed": False,
+            "ablation_variants": {
+                "ridge_dropout_augmented": {"channel_dropout_probability": 0.08, "noise_fraction": 0.0},
+                "ridge_noise_augmented": {"channel_dropout_probability": 0.0, "noise_fraction_of_train_feature_std": 0.05},
+                "ridge_augmented": {"channel_dropout_probability": 0.08, "noise_fraction_of_train_feature_std": 0.05},
+            },
         },
         "corruptions": {
             "individual_dropout": "each retained sensor independently replaced by its source-training median at 60% of observed points",
@@ -762,7 +1416,21 @@ def run_reliability_study(
         stress_frames,
         online_rows,
         online_frames,
-    ) = _run_in_domain(datasets, config, seeds, set(lstm_seeds))
+        history_rows,
+        history_frames,
+        onset_rows,
+        onset_frames,
+        onset_event_frames,
+        cap_sensitivity_rows,
+    ) = _run_in_domain(
+        datasets,
+        config,
+        seeds,
+        set(lstm_seeds),
+        extended_models=extended_models,
+        train_cnn=train_cnn,
+        train_xgboost=train_xgboost,
+    )
     heldout_rows: list[dict] = []
     heldout_frames: list[pd.DataFrame] = []
     heldout_stress_rows: list[dict] = []
@@ -786,6 +1454,12 @@ def run_reliability_study(
     stress_predictions = pd.concat(stress_frames, ignore_index=True) if stress_frames else pd.DataFrame()
     online = pd.DataFrame(online_rows)
     online_predictions = pd.concat(online_frames, ignore_index=True) if online_frames else pd.DataFrame()
+    histories = pd.DataFrame(history_rows)
+    history_predictions = pd.concat(history_frames, ignore_index=True) if history_frames else pd.DataFrame()
+    onset = pd.DataFrame(onset_rows)
+    onset_predictions = pd.concat(onset_frames, ignore_index=True) if onset_frames else pd.DataFrame()
+    onset_events = pd.concat(onset_event_frames, ignore_index=True) if onset_event_frames else pd.DataFrame()
+    cap_sensitivity = pd.DataFrame(cap_sensitivity_rows)
     heldout = pd.DataFrame(heldout_rows)
     heldout_predictions = pd.concat(heldout_frames, ignore_index=True) if heldout_frames else pd.DataFrame()
     heldout_stress = pd.DataFrame(heldout_stress_rows)
@@ -815,14 +1489,47 @@ def run_reliability_study(
     terminals.to_csv(predictions_dir / "terminal_engine_predictions.csv", index=False)
     stress.to_csv(metrics_dir / "sensor_stress_metrics.csv", index=False)
     stress_predictions.to_csv(predictions_dir / "sensor_stress_terminal_predictions.csv", index=False)
+    stress_record_type = stress.get(
+        "record_type", pd.Series(index=stress.index, dtype=object)
+    )
+    stress_metrics_only = stress.loc[stress_record_type != "risk_coverage"]
+    if not stress_metrics_only.empty:
+        stress_summary = stress_metrics_only.groupby(
+            ["dataset", "model", "corruption_type", "severity"], as_index=False
+        ).agg(
+            scenario_count=("scenario", "nunique"),
+            engine_predictions=("n_engines", "sum"),
+            terminal_engine_mae_mean=("terminal_engine_mae", "mean"),
+            terminal_engine_rmse_mean=("terminal_engine_rmse", "mean"),
+            phm08_score_mean=("phm08_score_mean", "mean"),
+            interval_coverage_mean=("interval_coverage", "mean"),
+            interval_width_mean=("mean_interval_width", "mean"),
+            flagged_fraction_mean=("flagged_fraction", "mean"),
+        )
+    else:
+        stress_summary = pd.DataFrame()
+    stress_summary.to_csv(metrics_dir / "sensor_stress_summary.csv", index=False)
     online.to_csv(metrics_dir / "online_stage_metrics.csv", index=False)
     online_predictions.to_csv(predictions_dir / "online_stage_predictions.csv", index=False)
+    histories.to_csv(metrics_dir / "history_protocol_metrics.csv", index=False)
+    history_predictions.to_csv(predictions_dir / "history_terminal_predictions.csv", index=False)
+    onset.to_csv(metrics_dir / "online_onset_metrics.csv", index=False)
+    onset_predictions.to_csv(predictions_dir / "online_onset_progressive_predictions.csv", index=False)
+    onset_events.to_csv(metrics_dir / "online_onset_validation_events.csv", index=False)
+    cap_sensitivity.to_csv(metrics_dir / "rul_cap_sensitivity.csv", index=False)
     heldout.to_csv(metrics_dir / "leave_one_subset_out_metrics.csv", index=False)
     heldout_predictions.to_csv(predictions_dir / "leave_one_subset_out_predictions.csv", index=False)
     heldout_stress.to_csv(metrics_dir / "leave_one_subset_out_stress_metrics.csv", index=False)
     heldout_stress_predictions.to_csv(
         predictions_dir / "leave_one_subset_out_stress_predictions.csv", index=False
     )
+    heldout_stress_record_type = heldout_stress.get(
+        "record_type", pd.Series(index=heldout_stress.index, dtype=object)
+    )
+    heldout_risk = heldout_stress.loc[
+        heldout_stress_record_type == "risk_coverage"
+    ].copy()
+    heldout_risk.to_csv(metrics_dir / "leave_one_subset_out_risk_coverage.csv", index=False)
     heldout_comparison = _compare_existing_protocols(heldout, PROJECT_ROOT / "web" / "public" / "results" / "benchmark.json")
     heldout_comparison.to_csv(metrics_dir / "heldout_protocol_comparison.csv", index=False)
     risk = stress.loc[stress.get("record_type", pd.Series(index=stress.index, dtype=object)) == "risk_coverage"].copy()
@@ -836,12 +1543,20 @@ def run_reliability_study(
             "repeated_seed_summary": str(metrics_dir / "repeated_seed_summary.csv"),
             "terminal_predictions": str(predictions_dir / "terminal_engine_predictions.csv"),
             "sensor_stress_metrics": str(metrics_dir / "sensor_stress_metrics.csv"),
+            "sensor_stress_summary": str(metrics_dir / "sensor_stress_summary.csv"),
             "sensor_stress_predictions": str(predictions_dir / "sensor_stress_terminal_predictions.csv"),
             "risk_coverage": str(metrics_dir / "risk_coverage.csv"),
             "online_stage_metrics": str(metrics_dir / "online_stage_metrics.csv"),
+            "history_protocol_metrics": str(metrics_dir / "history_protocol_metrics.csv"),
+            "history_terminal_predictions": str(predictions_dir / "history_terminal_predictions.csv"),
+            "online_onset_metrics": str(metrics_dir / "online_onset_metrics.csv"),
+            "online_onset_progressive_predictions": str(predictions_dir / "online_onset_progressive_predictions.csv"),
+            "online_onset_validation_events": str(metrics_dir / "online_onset_validation_events.csv"),
+            "rul_cap_sensitivity": str(metrics_dir / "rul_cap_sensitivity.csv"),
             "heldout_domain_metrics": str(metrics_dir / "leave_one_subset_out_metrics.csv"),
             "heldout_domain_predictions": str(predictions_dir / "leave_one_subset_out_predictions.csv"),
             "heldout_protocol_comparison": str(metrics_dir / "heldout_protocol_comparison.csv"),
+            "heldout_risk_coverage": str(metrics_dir / "leave_one_subset_out_risk_coverage.csv"),
             "figures": [str(path) for path in (output_dir / "figures").glob("*.png")],
         },
         "limitations": [
@@ -866,6 +1581,9 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--skip-heldout-domains", action="store_true")
     parser.add_argument("--without-lstm", action="store_true")
+    parser.add_argument("--extended-models", action="store_true")
+    parser.add_argument("--with-cnn", action="store_true")
+    parser.add_argument("--with-xgboost", action="store_true")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     lstm_seeds = () if args.without_lstm else tuple(args.lstm_seeds or [args.seeds[0]])
@@ -875,5 +1593,8 @@ if __name__ == "__main__":
         seeds=tuple(args.seeds),
         lstm_seeds=lstm_seeds,
         run_heldout_domains=not args.skip_heldout_domains,
+        extended_models=args.extended_models,
+        train_cnn=args.with_cnn,
+        train_xgboost=args.with_xgboost,
     )
     print(json.dumps(result, indent=2, default=list))
