@@ -29,6 +29,7 @@ class DataValidator:
         numeric = df[cls.REQUIRED_COLUMNS].select_dtypes(include=[np.number])
         if numeric.shape[1] != len(cls.REQUIRED_COLUMNS):
             issues.append("Non-numeric data types found in dataset")
+            return False, issues
         if df[cls.REQUIRED_COLUMNS].isna().any().any():
             issues.append("Missing values found in the measurement data")
         if not np.isfinite(numeric.to_numpy(dtype=float)).all():
