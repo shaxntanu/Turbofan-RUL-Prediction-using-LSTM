@@ -40,6 +40,7 @@ models/*.json
 models/**/*.h5
 models/**/*.keras
 models/**/*.joblib
+models/**/*.json
 web/node_modules/
 web/dist/
 .vite/
