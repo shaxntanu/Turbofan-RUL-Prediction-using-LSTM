@@ -149,6 +149,8 @@ function Overview({ data, dataset, setPage }) {
   const sortedEngines = [...allResults].sort((a, b) => b.engine_robustness.outlier_fraction - a.engine_robustness.outlier_fraction);
   const errorDirection = metrics.mean_error >= 0 ? "underestimation" : "overestimation";
   const topSensor = result.sensor_screening.top_sensors_by_absolute_pearson?.[0];
+  const modelMetrics = result.model_metrics ?? { [result.selected_model]: metrics };
+  const modelRows = Object.entries(modelMetrics);
 
   return (
     <>
@@ -191,6 +193,14 @@ function Overview({ data, dataset, setPage }) {
               <b>{name}</b><span>{TARGETS[name]}</span><span>{item.dataset_summary.test_engines}</span><span>{format(item.test_metrics.mae)}</span><span>{format(item.test_metrics.rmse)}</span><span className="model-tag">{item.selected_model}</span>
             </button>;
           })}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionTitle eyebrow="MODEL SELECTION" title="Validation first, test second" detail="All candidates are compared on validation engines; the official test set is scored only after selecting the lowest validation MAE." />
+        <div className="model-compare">
+          <div className="model-compare-head"><span>MODEL</span><span>VALIDATION MAE</span><span>TEST MAE</span><span>TEST RMSE</span></div>
+          {modelRows.map(([name, score]) => <div className={`model-compare-row ${name === result.selected_model ? "model-picked" : ""}`} key={name}><b>{name.toUpperCase()}{name === result.selected_model && <small>SELECTED</small>}</b><span>{format(result.validation_metrics?.[name]?.mae)} cycles</span><strong>{format(score.mae)} cycles</strong><span>{format(score.rmse)} cycles</span></div>)}
         </div>
       </section>
 
