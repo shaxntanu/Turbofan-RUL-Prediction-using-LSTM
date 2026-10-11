@@ -46,7 +46,7 @@ python -m src.train_all --baseline-only
 Add the source-to-target and pooled transfer study:
 
 ```powershell
-python -m src.train_all --baseline-only --include-transfer
+python -c "from src.config import ProjectConfig; from src.transfer_analysis import run_transfer_analysis; run_transfer_analysis(config=ProjectConfig(dataset='FD001'), train_lstm=False)"
 ```
 
 Each run selects the model by validation MAE, then evaluates it on the official test trajectories and RUL labels. Artifacts are written beneath `outputs/<subset>/` and `models/<subset>/`. For the transfer experiment, see `outputs/transfer/`.
