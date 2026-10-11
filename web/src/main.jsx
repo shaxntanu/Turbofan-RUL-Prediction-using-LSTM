@@ -31,6 +31,7 @@ import {
 import { Bar, Line } from "react-chartjs-2";
 import "./styles.css";
 import "./model-comparison.css";
+import "./theme.css";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
