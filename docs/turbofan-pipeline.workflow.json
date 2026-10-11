@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Turbofan RUL Research Pipeline",
+    "output": "docs/turbofan-pipeline.html",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "data-to-model", "label": "Data to model", "focus": ["cmapss", "quality_gate", "engine_split", "features", "model_selection"], "note": "Follow the train-only preprocessing and validation path." },
+      { "id": "evaluation", "label": "Evaluation", "focus": ["model_selection", "test_eval", "research_outputs", "apps"], "note": "Trace selected models into held-out evaluation and user-facing outputs." },
+      { "id": "quality-recovery", "label": "Quality recovery", "focus": ["cmapss", "quality_gate", "repair_data", "engine_split"], "note": "Invalid input is reported and corrected before modeling." }
+    ]
+  },
+  "lanes": [
+    { "id": "data_model", "label": "Data preparation + modeling" },
+    { "id": "evaluation_delivery", "label": "Evaluation + delivery" },
+    { "id": "recovery", "label": "Data-quality recovery", "variant": "exception" }
+  ],
+  "mainPath": ["cmapss", "quality_gate", "engine_split", "features", "model_selection", "test_eval", "research_outputs", "apps"],
+  "semanticChecks": {
+    "allowedRoots": ["cmapss"],
+    "allowedTerminals": ["apps"],
+    "requiredPaths": [{ "from": "cmapss", "to": "apps" }]
+  },
+  "nodes": [
+    { "id": "cmapss", "lane": "data_model", "col": 0, "type": "database", "label": "NASA C-MAPSS", "sublabel": "FD001-FD004 trajectories" },
+    { "id": "quality_gate", "lane": "data_model", "col": 1, "type": "security", "label": "Validate + label", "sublabel": "cycle order / RUL targets" },
+    { "id": "engine_split", "lane": "data_model", "col": 2, "type": "backend", "label": "Engine-level split", "sublabel": "train / validation" },
+    { "id": "features", "lane": "data_model", "col": 3, "type": "backend", "label": "Scale + window", "sublabel": "train-only scaler / 30 cycles" },
+    { "id": "model_selection", "lane": "data_model", "col": 4, "type": "backend", "label": "Ridge / LSTM", "sublabel": "validation MAE selection" },
+    { "id": "test_eval", "lane": "evaluation_delivery", "col": 5, "type": "backend", "label": "Held-out test", "sublabel": "metrics / intervals / errors" },
+    { "id": "research_outputs", "lane": "evaluation_delivery", "col": 4, "type": "database", "label": "Research analyses", "sublabel": "transfer / PCA / life stage" },
+    { "id": "apps", "lane": "evaluation_delivery", "col": 5, "type": "frontend", "label": "Web + Streamlit", "sublabel": "figures / interactive results" },
+    { "id": "repair_data", "lane": "recovery", "col": 1, "type": "backend", "label": "Report data issue", "sublabel": "correct input, revalidate" }
+  ],
+  "edges": [
+    { "from": "cmapss", "to": "quality_gate", "role": "main" },
+    { "from": "quality_gate", "to": "engine_split", "label": "valid", "role": "main", "variant": "emphasis" },
+    { "from": "engine_split", "to": "features", "role": "main" },
+    { "from": "features", "to": "model_selection", "role": "main" },
+    { "from": "model_selection", "to": "test_eval", "label": "selected on validation", "role": "main", "variant": "emphasis" },
+    { "from": "test_eval", "to": "research_outputs", "role": "main" },
+    { "from": "research_outputs", "to": "apps", "role": "main", "variant": "emphasis" },
+    { "from": "quality_gate", "to": "repair_data", "label": "invalid", "role": "error", "variant": "security" },
+    { "from": "repair_data", "to": "engine_split", "label": "corrected", "role": "return", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Leakage Controls", "items": ["Split by engine before fitting preprocessing", "Fit scaling and sensor screening on training engines", "Choose the model with validation MAE before test scoring"] },
+    { "dot": "cyan", "title": "Research Adaptations", "items": ["Transfer between simulated C-MAPSS subsets", "PCA and sensor relevance screening", "Fractional life-stage analysis as a maintenance proxy"] },
+    { "dot": "amber", "title": "Evidence Boundary", "items": ["Paper datasets and target differ from C-MAPSS", "Subset transfer is not real fleet transfer", "No overhaul history is available for phase boundaries"] }
+  ]
+}
