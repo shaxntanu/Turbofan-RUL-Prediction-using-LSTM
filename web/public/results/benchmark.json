@@ -9,24 +9,64 @@
   },
   "datasets": {
     "FD001": {
-      "run_id": "20261011-152356",
-      "selected_model": "ridge",
+      "run_id": "20261011-154950",
+      "selected_model": "lstm",
       "test_metrics": {
-        "mae": 12.639665693056354,
-        "rmse": 16.22073252523971,
-        "r2": 0.7022456377600632,
-        "mean_error": 3.8930124187057933,
-        "median_absolute_error": 11.022541046142578,
-        "phm08_score": 47517.425378039436,
+        "mae": 10.313371856056413,
+        "rmse": 13.940157628530116,
+        "r2": 0.7800861528944184,
+        "mean_error": 1.6536633907556066,
+        "median_absolute_error": 7.753406524658203,
+        "phm08_score": 36119.725656819646,
         "n_samples": 10196
+      },
+      "model_metrics": {
+        "ridge": {
+          "mae": 12.639665693056354,
+          "rmse": 16.22073252523971,
+          "r2": 0.7022456377600632,
+          "mean_error": 3.8930124187057933,
+          "median_absolute_error": 11.022541046142578,
+          "phm08_score": 47517.425378039436,
+          "n_samples": 10196
+        },
+        "lstm": {
+          "mae": 10.313371856056413,
+          "rmse": 13.940157628530116,
+          "r2": 0.7800861528944184,
+          "mean_error": 1.6536633907556066,
+          "median_absolute_error": 7.753406524658203,
+          "phm08_score": 36119.725656819646,
+          "n_samples": 10196
+        }
+      },
+      "validation_metrics": {
+        "ridge": {
+          "mae": 12.803416470799354,
+          "rmse": 16.41497304712493,
+          "r2": 0.8456739740908189,
+          "mean_error": 1.7914930218059006,
+          "median_absolute_error": 10.662391662597656,
+          "phm08_score": 17816.750155376954,
+          "n_samples": 3524
+        },
+        "lstm": {
+          "mae": 10.541371659577637,
+          "rmse": 14.328744947703917,
+          "r2": 0.8824087168666578,
+          "mean_error": 1.126504456009145,
+          "median_absolute_error": 7.337159156799316,
+          "phm08_score": 13630.518259102902,
+          "n_samples": 3524
+        }
       },
       "uncertainty": {
         "nominal_coverage": 0.95,
-        "picp": 0.955276579050608,
-        "mpi_width_cycles": 50.73845642190113,
-        "nmpi_width": 0.42998691882967055,
-        "cwc_cycles": 50.73845642190113,
-        "interval_radius_cycles": 32.59687042236328
+        "picp": 0.9570419772459788,
+        "mpi_width_cycles": 45.91057764141641,
+        "nmpi_width": 0.38907269187641025,
+        "cwc_cycles": 45.91057764141641,
+        "interval_radius_cycles": 31.143951416015625
       },
       "dataset_summary": {
         "train_rows": 20631,
@@ -107,15 +147,15 @@
       "engine_robustness": {
         "metric": "mae",
         "engine_count": 100,
-        "mean": 11.773416031579057,
-        "median": 11.369416962787781,
-        "q1": 7.822421923223532,
-        "q3": 14.690543154705624,
-        "iqr": 6.8681212314820925,
-        "upper_tukey_fence": 24.99272500192876,
-        "outlier_engines": 3,
-        "outlier_fraction": 0.03,
-        "max": 31.7691590329434
+        "mean": 9.725281773125428,
+        "median": 9.324880572817282,
+        "q1": 6.6045413150265055,
+        "q3": 11.168554379693624,
+        "iqr": 4.564013064667119,
+        "upper_tukey_fence": 18.0145739766943,
+        "outlier_engines": 7,
+        "outlier_fraction": 0.07,
+        "max": 32.49223362131322
       },
       "life_stage_metrics": [
         {
@@ -198,7 +238,7 @@
       }
     },
     "FD002": {
-      "run_id": "20261011-152401",
+      "run_id": "20261011-155122",
       "selected_model": "ridge",
       "test_metrics": {
         "mae": 15.387019279492934,
@@ -208,6 +248,46 @@
         "median_absolute_error": 13.911369323730469,
         "phm08_score": 203993.58089241953,
         "n_samples": 26505
+      },
+      "model_metrics": {
+        "ridge": {
+          "mae": 15.387019279492934,
+          "rmse": 19.363163351717784,
+          "r2": 0.6096655226383844,
+          "mean_error": 6.118663285835984,
+          "median_absolute_error": 13.911369323730469,
+          "phm08_score": 203993.58089241953,
+          "n_samples": 26505
+        },
+        "lstm": {
+          "mae": 18.37662348722966,
+          "rmse": 22.63462355380887,
+          "r2": 0.46662722204994456,
+          "mean_error": 7.249073503944384,
+          "median_absolute_error": 14.890708923339844,
+          "phm08_score": 868826.4463669909,
+          "n_samples": 26505
+        }
+      },
+      "validation_metrics": {
+        "ridge": {
+          "mae": 16.09752651534267,
+          "rmse": 19.955102261249863,
+          "r2": 0.7709033959645608,
+          "mean_error": 0.6239805372866838,
+          "median_absolute_error": 14.326820373535156,
+          "phm08_score": 71268.63920920924,
+          "n_samples": 8950
+        },
+        "lstm": {
+          "mae": 19.80185598703736,
+          "rmse": 24.844152860049686,
+          "r2": 0.6448930914195908,
+          "mean_error": 0.5813853663439191,
+          "median_absolute_error": 15.968199729919434,
+          "phm08_score": 204591.89030629763,
+          "n_samples": 8950
+        }
       },
       "uncertainty": {
         "nominal_coverage": 0.95,
@@ -380,7 +460,7 @@
       }
     },
     "FD003": {
-      "run_id": "20261011-152408",
+      "run_id": "20261011-155557",
       "selected_model": "ridge",
       "test_metrics": {
         "mae": 11.254703483291875,
@@ -390,6 +470,46 @@
         "median_absolute_error": 8.68896484375,
         "phm08_score": 60244.11606828495,
         "n_samples": 13696
+      },
+      "model_metrics": {
+        "ridge": {
+          "mae": 11.254703483291875,
+          "rmse": 15.565148694363996,
+          "r2": 0.6572332312064955,
+          "mean_error": 4.463906228542328,
+          "median_absolute_error": 8.68896484375,
+          "phm08_score": 60244.11606828495,
+          "n_samples": 13696
+        },
+        "lstm": {
+          "mae": 9.36392544310923,
+          "rmse": 14.603878047555472,
+          "r2": 0.6982630069932172,
+          "mean_error": -0.9828664458174015,
+          "median_absolute_error": 5.009773254394531,
+          "phm08_score": 54400.77058532079,
+          "n_samples": 13696
+        }
+      },
+      "validation_metrics": {
+        "ridge": {
+          "mae": 12.255300583979206,
+          "rmse": 16.441778035886514,
+          "r2": 0.8431137273116542,
+          "mean_error": 1.5266967398890676,
+          "median_absolute_error": 9.449020385742188,
+          "phm08_score": 20725.158174243377,
+          "n_samples": 4298
+        },
+        "lstm": {
+          "mae": 13.132947067207045,
+          "rmse": 18.587111556610367,
+          "r2": 0.7995014693300141,
+          "mean_error": -1.3818391441688698,
+          "median_absolute_error": 7.962918281555176,
+          "phm08_score": 27338.491874614745,
+          "n_samples": 4298
+        }
       },
       "uncertainty": {
         "nominal_coverage": 0.95,
@@ -568,7 +688,7 @@
       }
     },
     "FD004": {
-      "run_id": "20261011-152412",
+      "run_id": "20261011-155744",
       "selected_model": "ridge",
       "test_metrics": {
         "mae": 13.078021369536282,
@@ -578,6 +698,46 @@
         "median_absolute_error": 10.708831787109375,
         "phm08_score": 4902006.028359437,
         "n_samples": 34081
+      },
+      "model_metrics": {
+        "ridge": {
+          "mae": 13.078021369536282,
+          "rmse": 18.004930020437833,
+          "r2": 0.5654570522406286,
+          "mean_error": 4.75255930805349,
+          "median_absolute_error": 10.708831787109375,
+          "phm08_score": 4902006.028359437,
+          "n_samples": 34081
+        },
+        "lstm": {
+          "mae": 13.863405612757402,
+          "rmse": 19.572834272919764,
+          "r2": 0.48648011154259907,
+          "mean_error": 1.0942284613790894,
+          "median_absolute_error": 8.883277893066406,
+          "phm08_score": 2023607.893333336,
+          "n_samples": 34081
+        }
+      },
+      "validation_metrics": {
+        "ridge": {
+          "mae": 14.563322133325746,
+          "rmse": 18.858786819556837,
+          "r2": 0.795414001585458,
+          "mean_error": -0.5892668492275817,
+          "median_absolute_error": 12.589614868164062,
+          "phm08_score": 65748.33632683089,
+          "n_samples": 10278
+        },
+        "lstm": {
+          "mae": 16.825771222065384,
+          "rmse": 22.366330207841646,
+          "r2": 0.7122350667770949,
+          "mean_error": -5.355420209619641,
+          "median_absolute_error": 12.222366333007812,
+          "phm08_score": 113246.0838776012,
+          "n_samples": 10278
+        }
       },
       "uncertainty": {
         "nominal_coverage": 0.95,
@@ -757,140 +917,160 @@
         "target_dataset": "FD001",
         "model": "ridge",
         "mae": 12.639679023170997,
-        "rmse": 16.220813011716952
+        "rmse": 16.220813011716952,
+        "n_samples": 10196
       },
       {
         "source_dataset": "FD001",
         "target_dataset": "FD002",
         "model": "ridge",
         "mae": 40.89096978760917,
-        "rmse": 61.6515679355128
+        "rmse": 61.6515679355128,
+        "n_samples": 26505
       },
       {
         "source_dataset": "FD001",
         "target_dataset": "FD003",
         "model": "ridge",
         "mae": 15.610710681877404,
-        "rmse": 29.32550935556444
+        "rmse": 29.32550935556444,
+        "n_samples": 13696
       },
       {
         "source_dataset": "FD001",
         "target_dataset": "FD004",
         "model": "ridge",
         "mae": 37.23926194631061,
-        "rmse": 61.26660810568459
+        "rmse": 61.26660810568459,
+        "n_samples": 34081
       },
       {
         "source_dataset": "FD002",
         "target_dataset": "FD001",
         "model": "ridge",
         "mae": 13.187414237404392,
-        "rmse": 20.648247534256928
+        "rmse": 20.648247534256928,
+        "n_samples": 10196
       },
       {
         "source_dataset": "FD002",
         "target_dataset": "FD002",
         "model": "ridge",
         "mae": 15.387019279492934,
-        "rmse": 19.363163351717784
+        "rmse": 19.363163351717784,
+        "n_samples": 26505
       },
       {
         "source_dataset": "FD002",
         "target_dataset": "FD003",
         "model": "ridge",
         "mae": 12.778045601376864,
-        "rmse": 25.845059221178783
+        "rmse": 25.845059221178783,
+        "n_samples": 13696
       },
       {
         "source_dataset": "FD002",
         "target_dataset": "FD004",
         "model": "ridge",
         "mae": 11.624752411249537,
-        "rmse": 22.114189267217828
+        "rmse": 22.114189267217828,
+        "n_samples": 34081
       },
       {
         "source_dataset": "FD003",
         "target_dataset": "FD001",
         "model": "ridge",
         "mae": 15.936088129509754,
-        "rmse": 19.40647571225908
+        "rmse": 19.40647571225908,
+        "n_samples": 10196
       },
       {
         "source_dataset": "FD003",
         "target_dataset": "FD002",
         "model": "ridge",
         "mae": 22.386048122046915,
-        "rmse": 38.5977557619417
+        "rmse": 38.5977557619417,
+        "n_samples": 26505
       },
       {
         "source_dataset": "FD003",
         "target_dataset": "FD003",
         "model": "ridge",
         "mae": 11.25459666007033,
-        "rmse": 15.56500966826838
+        "rmse": 15.56500966826838,
+        "n_samples": 13696
       },
       {
         "source_dataset": "FD003",
         "target_dataset": "FD004",
         "model": "ridge",
         "mae": 15.264985536704206,
-        "rmse": 31.781024261194855
+        "rmse": 31.781024261194855,
+        "n_samples": 34081
       },
       {
         "source_dataset": "FD004",
         "target_dataset": "FD001",
         "model": "ridge",
         "mae": 19.412899033796,
-        "rmse": 33.22590680140826
+        "rmse": 33.22590680140826,
+        "n_samples": 10196
       },
       {
         "source_dataset": "FD004",
         "target_dataset": "FD002",
         "model": "ridge",
         "mae": 17.33860788768113,
-        "rmse": 20.72381124471913
+        "rmse": 20.72381124471913,
+        "n_samples": 26505
       },
       {
         "source_dataset": "FD004",
         "target_dataset": "FD003",
         "model": "ridge",
         "mae": 14.750238574553872,
-        "rmse": 28.954195819522152
+        "rmse": 28.954195819522152,
+        "n_samples": 13696
       },
       {
         "source_dataset": "FD004",
         "target_dataset": "FD004",
         "model": "ridge",
         "mae": 13.078021369536282,
-        "rmse": 18.004930020437833
+        "rmse": 18.004930020437833,
+        "n_samples": 34081
       },
       {
         "source_dataset": "pooled",
         "target_dataset": "FD001",
         "model": "ridge",
         "mae": 15.6579597969998,
-        "rmse": 18.983889387155536
+        "rmse": 18.983889387155536,
+        "n_samples": 10196
       },
       {
         "source_dataset": "pooled",
         "target_dataset": "FD002",
         "model": "ridge",
         "mae": 16.603472213730726,
-        "rmse": 19.87225343220644
+        "rmse": 19.87225343220644,
+        "n_samples": 26505
       },
       {
         "source_dataset": "pooled",
         "target_dataset": "FD003",
         "model": "ridge",
         "mae": 10.984960871879183,
-        "rmse": 15.762242715686948
+        "rmse": 15.762242715686948,
+        "n_samples": 13696
       },
       {
         "source_dataset": "pooled",
         "target_dataset": "FD004",
         "model": "ridge",
         "mae": 12.044541484617522,
-        "rmse": 17.193376698797124
+        "rmse": 17.193376698797124,
+        "n_samples": 34081
       }
     ],
     "limitation": "FD001-FD004 vary simulated operating conditions and fault modes; they are proxy domains, not separate real-world engine fleets."
