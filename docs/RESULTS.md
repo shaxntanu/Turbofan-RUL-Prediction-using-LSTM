@@ -91,6 +91,44 @@ Two-sided 95% split-conformal intervals are calibrated from validation residuals
 
 *Outliers use the 1.5-IQR Tukey fence over per-engine MAE for engines with at least one complete window. Test coverage is descriptive and does not guarantee future or operational coverage.
 
+## Reliability and Robustness Extension
+
+**Run:** `20261011-211416`. Ridge results use seeds 42, 43, and 44; LSTM, MLP, and CNN challengers use seed 42 only. The table reports terminal-engine test MAE in cycles. Ridge entries are mean +/- sample standard deviation across seeds; each challenger is one run and is not a variance estimate.
+
+| Subset | Ridge clean (3 seeds) | LSTM (1 seed) | MLP summary (1 seed) | Causal CNN (1 seed) |
+|---|---:|---:|---:|---:|
+| FD001 | 11.52 +/- 0.01 | 9.92 | 9.74 | 14.97 |
+| FD002 | 13.31 +/- 0.03 | 15.85 | 11.87 | 15.96 |
+| FD003 | 12.89 +/- 0.10 | 14.68 | 10.88 | 16.59 |
+| FD004 | 16.50 +/- 0.14 | 20.37 | 12.87 | 21.01 |
+
+The MLP results are an exploratory one-seed comparison, not evidence of a stable winner. Candidate selection uses validation-engine windows; official test labels are reserved for final scoring. XGBoost was requested but unavailable because the optional `xgboost` package was not installed. The CNN completed for all four subsets.
+
+### Leave-One-Subset-Out Transfer
+
+Each model is trained and calibrated using the other three C-MAPSS subsets, without training on the target subset. Results are terminal-engine test MAE in cycles; the LSTM uses one seed.
+
+| Held-out subset | Ridge | LSTM |
+|---|---:|---:|
+| FD001 | 13.50 | 11.69 |
+| FD002 | 15.48 | 13.60 |
+| FD003 | 14.51 | 12.24 |
+| FD004 | 17.79 | 20.08 |
+
+These rows are not directly comparable to the baseline's overlapping-window metrics. FD001-FD004 are related simulator subsets, so this evaluates subset shift rather than transfer to independent fleets.
+
+### Operational Sensitivity
+
+Training a model specifically for ten observed cycles produced lower terminal MAE than truncating the normal 30-cycle model at inference in every subset: trained-versus-truncated MAE was FD001 15.57 vs. 22.93, FD002 15.02 vs. 21.00, FD003 14.97 vs. 22.16, and FD004 18.76 vs. 28.18. At a 30-cycle history, the corresponding trained-history Ridge terminal MAEs were 11.54, 13.33, 12.96, and 16.59.
+
+Changing the RUL cap from 125 to 130 cycles increased fixed-Ridge terminal MAE on all four subsets: 11.54 to 12.12 (FD001), 13.33 to 14.11 (FD002), 12.96 to 13.76 (FD003), and 16.59 to 17.55 (FD004). The engine split and feature/scaling pipeline were held fixed.
+
+The severe combined synthetic stress condition averaged two corruption scenarios. Ridge terminal MAE rose from clean values of 11.54, 13.33, 12.96, and 16.59 cycles to 37.64, 58.01, 32.19, and 57.20 cycles for FD001-FD004, respectively. These are controlled stressors, not a model of empirical failure prevalence.
+
+The onset detector achieved 100% engine detection on its validation split, with false-alarm fractions from 8.0% to 45.0% and median detection delays from 11.5 to 51 cycles across subsets. Its threshold was selected on those same validation engines, so these values are tuning diagnostics, not independent performance estimates.
+
+The run manifest and full aggregate tables are in the local `outputs/reliability/metrics/` directory; the dashboard export contains only the fields required by the web reliability view. Split-conformal coverage is descriptive under shift, corruption is synthetic, the FD subsets are related simulator domains, and N-CMAPSS was not run.
+
 ## Figures
 
 | Subset | Predicted vs. actual | Fractional-life comparison | Prediction intervals |
