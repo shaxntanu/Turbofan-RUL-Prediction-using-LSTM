@@ -24,6 +24,8 @@ def export() -> Path:
             "run_id": result["run_id"],
             "selected_model": selected,
             "test_metrics": result["test_metrics"][selected],
+            "model_metrics": result["test_metrics"],
+            "validation_metrics": result["validation_metrics"],
             "uncertainty": result.get("uncertainty_by_model", {}).get(
                 selected,
                 result["uncertainty"],
