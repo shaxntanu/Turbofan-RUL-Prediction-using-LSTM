@@ -1,0 +1,9 @@
+[build-system]
+requires = ["setuptools>=68", "wheel", "pybind11>=2.12"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "turbofan-cpp-engine"
+version = "1.0.0"
+description = "Optional C++17 PCA and K-Means kernels for C-MAPSS analysis"
+requires-python = ">=3.12"
