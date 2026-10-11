@@ -85,6 +85,8 @@ python -m src.run_cpp_benchmark --datasets FD001 FD002 FD003 FD004 --max-rows 10
 python scripts/export_web_data.py
 ```
 
+On Windows, stop Python/Streamlit processes that have already imported `turbofan_cpp` before reinstalling it; a loaded extension binary is locked by the process.
+
 The benchmark uses training-engine sensor rows and compares numerical parity and local timings with scikit-learn. PCA timings include fit plus score projection on both sides; K-Means consumes shared sklearn PCA scores. Results depend on the machine/compiler. These exploratory kernels do not affect RUL model selection, prediction, or LSTM inference. The Streamlit Research outputs tab can run the benchmark when the extension is installed.
 
 ## Evaluation Protocol
