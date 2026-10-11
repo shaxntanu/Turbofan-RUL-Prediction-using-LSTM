@@ -87,12 +87,47 @@ KMeansResult lloyd(const Matrix& values, int k, std::vector<double> centers,
   const std::size_t n = values.rows;
   const std::size_t d = values.cols;
   KMeansResult result;
+  result.labels.assign(n, 0);
   std::vector<double> sums(static_cast<std::size_t>(k) * d);
   std::vector<std::size_t> counts(static_cast<std::size_t>(k));
 
   for (int iteration = 0; iteration < max_iter; ++iteration) {
     std::fill(sums.begin(), sums.end(), 0.0);
     std::fill(counts.begin(), counts.end(), 0);
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+      std::vector<double> local_sums(static_cast<std::size_t>(k) * d, 0.0);
+      std::vector<std::size_t> local_counts(static_cast<std::size_t>(k), 0);
+#pragma omp for schedule(static)
+      for (std::int64_t row = 0; row < static_cast<std::int64_t>(n); ++row) {
+        const std::size_t i = static_cast<std::size_t>(row);
+        int best = 0;
+        double best_distance = squared_distance(
+            &values.data[i * d], centers.data(), d);
+        for (int c = 1; c < k; ++c) {
+          const double distance = squared_distance(
+              &values.data[i * d], &centers[static_cast<std::size_t>(c) * d], d);
+          if (distance < best_distance) {
+            best_distance = distance;
+            best = c;
+          }
+        }
+        result.labels[i] = best;
+        ++local_counts[static_cast<std::size_t>(best)];
+        for (std::size_t j = 0; j < d; ++j) {
+          local_sums[static_cast<std::size_t>(best) * d + j] += values(i, j);
+        }
+      }
+#pragma omp critical
+      {
+        for (std::size_t j = 0; j < sums.size(); ++j) sums[j] += local_sums[j];
+        for (int c = 0; c < k; ++c) {
+          counts[static_cast<std::size_t>(c)] += local_counts[static_cast<std::size_t>(c)];
+        }
+      }
+    }
+#else
     for (std::size_t i = 0; i < n; ++i) {
       int best = 0;
       double best_distance = squared_distance(
@@ -110,6 +145,7 @@ KMeansResult lloyd(const Matrix& values, int k, std::vector<double> centers,
         sums[static_cast<std::size_t>(best) * d + j] += values(i, j);
       }
     }
+#endif
 
     double max_shift = 0.0;
     for (int c = 0; c < k; ++c) {
