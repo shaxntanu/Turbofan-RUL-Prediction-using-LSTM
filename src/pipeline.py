@@ -55,6 +55,11 @@ def _keras_predict(model, values: np.ndarray, batch_size: int) -> np.ndarray:
     return np.asarray(model.predict(values, batch_size=batch_size, verbose=0), dtype=np.float32).ravel()
 
 
+def _bound_predictions(values: np.ndarray, config: ProjectConfig) -> np.ndarray:
+    upper = config.rul_clip_value if config.clip_rul else None
+    return np.clip(values, 0.0, upper) if upper is not None else np.maximum(values, 0.0)
+
+
 def _write_report(path: Path, result: dict) -> None:
     model_rows = [
         f"| {name} | {values['mae']:.2f} | {values['rmse']:.2f} | {values['phm08_score']:.1f} |"
@@ -198,8 +203,8 @@ def run_pipeline(
     )
 
     baseline = WindowRidgeBaseline().fit(X_train, y_train)
-    predictions_val = {"ridge": baseline.predict(X_val)}
-    predictions_test = {"ridge": baseline.predict(X_test)}
+    predictions_val = {"ridge": _bound_predictions(baseline.predict(X_val), config)}
+    predictions_test = {"ridge": _bound_predictions(baseline.predict(X_test), config)}
     model_paths = {"ridge": model_dir / "ridge_baseline.joblib"}
     baseline.save(model_paths["ridge"])
     history_data = None
@@ -213,8 +218,14 @@ def run_pipeline(
             input_shape=(config.window_size, len(feature_cols)),
         )
         history = Trainer(config).train(lstm_model, X_train, y_train, X_val, y_val)
-        predictions_val["lstm"] = _keras_predict(lstm_model.model, X_val, config.batch_size)
-        predictions_test["lstm"] = _keras_predict(lstm_model.model, X_test, config.batch_size)
+        predictions_val["lstm"] = _bound_predictions(
+            _keras_predict(lstm_model.model, X_val, config.batch_size),
+            config,
+        )
+        predictions_test["lstm"] = _bound_predictions(
+            _keras_predict(lstm_model.model, X_test, config.batch_size),
+            config,
+        )
         model_paths["lstm"] = model_dir / "lstm_model.keras"
         lstm_model.save(str(model_paths["lstm"]))
         history_data = {key: [float(value) for value in values] for key, values in history.history.items()}
