@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101917">
+  <meta name="description" content="NASA C-MAPSS remaining useful life research pipeline and evaluation protocols.">
+  <title>Turbofan RUL Research</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --page: #f4f6f3;
+      --ink: #17211f;
+      --muted: #56645f;
+      --line: #d8e0dc;
+      --accent: #087e73;
+      --surface: #fff;
+      --soft: #e7eeeb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #101715;
+        --ink: #edf3ef;
+        --muted: #a6b5ae;
+        --line: #34413c;
+        --accent: #6ac6b5;
+        --surface: #17211e;
+        --soft: #222e29;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+    a { color: inherit; }
+    .topbar { height: 62px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 max(24px, calc((100vw - 1180px) / 2)); }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; text-decoration: none; }
+    .brand-mark { width: 27px; height: 27px; border: 2px solid var(--accent); border-radius: 50%; position: relative; }
+    .brand-mark::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); left: 8px; top: 8px; }
+    nav { display: flex; gap: 23px; align-items: center; color: var(--muted); font-size: 13px; }
+    nav a { text-decoration: none; }
+    nav a:hover, .text-link:hover { color: var(--accent); }
+    main { max-width: 1180px; margin: 0 auto; padding: 24px 24px 60px; }
+    .intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin: 8px 0 18px; }
+    .eyebrow { color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 3px 0 2px; font-size: clamp(28px, 4vw, 40px); line-height: 1.14; letter-spacing: 0; }
+    .intro p { margin: 7px 0 0; color: var(--muted); max-width: 620px; }
+    .actions { display: flex; gap: 9px; flex-shrink: 0; }
+    .button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 14px; border: 1px solid var(--line); border-radius: 5px; text-decoration: none; font-size: 13px; font-weight: 650; background: var(--surface); }
+    .button-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .diagram { width: 100%; height: min(59vw, 590px); min-height: 440px; border: 1px solid var(--line); background: #101715; display: block; }
+    .diagram-link { display: flex; justify-content: space-between; align-items: center; padding: 9px 2px 0; color: var(--muted); font-size: 12px; }
+    .text-link { color: var(--accent); text-decoration: none; font-weight: 650; }
+    .details { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 22px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; }
+    h2 { font-size: 18px; margin: 0 0 8px; letter-spacing: 0; }
+    .details p { margin: 0; color: var(--muted); max-width: 610px; }
+    .links { display: flex; flex-wrap: wrap; gap: 8px 18px; align-content: start; }
+    @media (max-width: 720px) {
+      .topbar { padding: 0 18px; }
+      nav { gap: 13px; }
+      nav a:first-child { display: none; }
+      main { padding: 21px 16px 42px; }
+      .intro { display: block; }
+      .actions { margin-top: 14px; }
+      .diagram { height: 480px; min-height: 0; }
+      .details { grid-template-columns: 1fr; gap: 18px; }
+    }
+    @media (max-width: 420px) {
+      .brand { font-size: 13px; }
+      nav { gap: 10px; font-size: 12px; }
+      .diagram { height: 410px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Turbofan RUL Research home"><span class="brand-mark" aria-hidden="true"></span><span>Turbofan RUL Research</span></a>
+    <nav aria-label="Main navigation">
+      <a href="#pipeline">Pipeline</a>
+      <a href="https://turbofan-rul-prediction-lstm.streamlit.app/" target="_blank" rel="noreferrer">Open lab</a>
+      <a href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM" target="_blank" rel="noreferrer">Repository</a>
+    </nav>
+  </header>
+  <main>
+    <section class="intro" id="pipeline">
+      <div>
+        <div class="eyebrow">NASA C-MAPSS | FD001-FD004</div>
+        <h1>Remaining useful life research</h1>
+        <p>Engine-level evaluation, validation-first model selection, and reproducible robustness analysis.</p>
+      </div>
+      <div class="actions">
+        <a class="button button-primary" href="https://turbofan-rul-prediction-lstm.streamlit.app/" target="_blank" rel="noreferrer">Open Streamlit lab</a>
+        <a class="button" href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM" target="_blank" rel="noreferrer">Source code</a>
+      </div>
+    </section>
+    <iframe class="diagram" src="turbofan-pipeline.html?embed=1&amp;theme=dark" title="Interactive turbofan RUL research pipeline"></iframe>
+    <div class="diagram-link"><span>Baseline workflow | data validation through evaluation and apps</span><a class="text-link" href="turbofan-pipeline.html">Open diagram directly &gt;</a></div>
+    <section class="details" aria-label="Project resources">
+      <div>
+        <h2>Evaluation boundary</h2>
+        <p>FD001-FD004 are simulated operating-condition and fault-mode subsets, not independent real-world fleets. The research notes separate measured findings from hypotheses and synthetic stress tests.</p>
+      </div>
+      <div class="links">
+        <a class="text-link" href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/blob/main/docs/RELIABILITY_AND_ROBUSTNESS.md">Reliability protocols &gt;</a>
+        <a class="text-link" href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/blob/main/docs/RESULTS.md">Measured results &gt;</a>
+        <a class="text-link" href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/blob/main/docs/EXPERIMENTATION_AND_EVALUATION.md">Experiment guide &gt;</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
