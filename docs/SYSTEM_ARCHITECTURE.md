@@ -8,6 +8,8 @@
 
 The official test set is never used to fit the scaler or select a model. Research analyses add training-only sensor/PCA screening, polynomial trend summaries, fractional-life stage comparisons, and source-to-target/pooled transfer between FD001-FD004. Fractional life is a proxy, since C-MAPSS has no overhaul timestamps. Subset transfer is a simulated proxy-domain study, not real fleet transfer.
 
+An optional C++17/pybind11 module benchmarks PCA and K-Means sensor diagnostics against scikit-learn using training engines only. It is isolated from RUL model selection and inference; local timing results are hardware/compiler dependent.
+
 | Boundary | Current implementation |
 |---|---|
 | Configuration and paths | `src/config.py`; finds bundled data or honors `CMAPSS_DATA_DIR` |
@@ -15,6 +17,7 @@ The official test set is never used to fit the scaler or select a model. Researc
 | Split and preprocessing | `src/data_splitter.py`, `src/data_cleaner.py`, `src/normalization.py`, `src/sequence_generator.py` |
 | Models and orchestration | `src/baseline_model.py`, `src/lstm_model.py`, `src/trainer.py`, `src/pipeline.py`, `src/train_all.py` |
 | Evaluation and analysis | `src/evaluator.py`, `src/uncertainty.py`, `src/research_analysis.py`, `src/transfer_analysis.py`, `src/segmentation_analysis.py`, `src/detrending.py` |
+| Native sensor diagnostics | `cpp_engine/` and `src/cpp_bridge.py`; optional PCA/K-Means parity benchmark |
 | Figures and applications | `src/visualizer.py`, `src/streamlit_dashboard.py`, `web/src/main.jsx` |
 
 Generated model weights and experiment outputs live under `models/` and `outputs/`; both are intentionally git-ignored. The static web bundle in `web/public/results/` is refreshed by `scripts/export_web_data.py`.
