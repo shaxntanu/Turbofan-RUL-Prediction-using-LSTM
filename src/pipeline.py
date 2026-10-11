@@ -243,12 +243,23 @@ def run_pipeline(
         for name, values in predictions_test.items()
     }
     selected_model = min(validation_metrics, key=lambda name: validation_metrics[name]["mae"])
-    intervals = SplitConformalRUL(nominal_coverage=0.95).fit(y_val, predictions_val[selected_model])
+    intervals_by_model = {
+        name: SplitConformalRUL(nominal_coverage=0.95).fit(y_val, values)
+        for name, values in predictions_val.items()
+    }
+    uncertainty_by_model = {}
+    for name, intervals in intervals_by_model.items():
+        model_lower, model_upper = intervals.predict_interval(
+            predictions_test[name],
+            max_rul=config.rul_clip_value if config.clip_rul else None,
+        )
+        uncertainty_by_model[name] = intervals.metrics(y_test, model_lower, model_upper)
+    intervals = intervals_by_model[selected_model]
     lower, upper = intervals.predict_interval(
         predictions_test[selected_model],
         max_rul=config.rul_clip_value if config.clip_rul else None,
     )
-    uncertainty_metrics = intervals.metrics(y_test, lower, upper)
+    uncertainty_metrics = uncertainty_by_model[selected_model]
 
     selected_predictions = predictions_test[selected_model]
     prediction_frame = pd.DataFrame(
@@ -340,6 +351,7 @@ def run_pipeline(
         "validation_metrics": validation_metrics,
         "test_metrics": test_metrics,
         "uncertainty": uncertainty_metrics,
+        "uncertainty_by_model": uncertainty_by_model,
         "fractional_life_analysis": fractional_life_analysis,
         "sensor_screening": sensor_screening,
         "engine_robustness": robustness_summary,
