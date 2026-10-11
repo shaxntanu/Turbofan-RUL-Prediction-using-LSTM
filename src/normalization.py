@@ -28,7 +28,9 @@ class Normalizer:
         if missing:
             raise ValueError(f"Input is missing scaler features: {', '.join(missing)}")
         result = df.copy()
-        result.loc[:, feature_cols] = self.scaler.transform(result[feature_cols])
+        scaled = self.scaler.transform(result[feature_cols])
+        for index, name in enumerate(feature_cols):
+            result[name] = scaled[:, index]
         return result
 
     def save(self, path: str | Path) -> None:
