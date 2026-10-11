@@ -36,6 +36,7 @@ def run_fractional_life_analysis(
     output_dir: str | Path,
     *,
     minimum_stage_windows: int = 50,
+    max_rul: float | None = None,
 ) -> dict:
     """Compare a shared baseline with Ridge models specialized by life stage."""
     if not (len(X_train) == len(y_train) == len(train_units) == len(train_cycles)):
@@ -60,6 +61,11 @@ def run_fractional_life_analysis(
             continue
 
         shared_predictions = shared_model.predict(X_test[test_mask])
+        shared_predictions = (
+            np.clip(shared_predictions, 0.0, max_rul)
+            if max_rul is not None
+            else np.maximum(shared_predictions, 0.0)
+        )
         rows.append(
             {
                 "life_stage": stage,
@@ -73,6 +79,11 @@ def run_fractional_life_analysis(
             continue
         phase_model = WindowRidgeBaseline().fit(X_train[train_mask], y_train[train_mask])
         phase_predictions = phase_model.predict(X_test[test_mask])
+        phase_predictions = (
+            np.clip(phase_predictions, 0.0, max_rul)
+            if max_rul is not None
+            else np.maximum(phase_predictions, 0.0)
+        )
         rows.append(
             {
                 "life_stage": stage,
