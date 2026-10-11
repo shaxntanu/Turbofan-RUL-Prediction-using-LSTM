@@ -1,5 +1,7 @@
 # Experimentation, Evaluation & Reproducibility Plan
 
+> **Status note (2026-10-11):** This document began as a prospective plan and contains historical design proposals that are not all implemented. It is not the canonical description of current experiments. For measured baseline results, see [RESULTS.md](RESULTS.md); for implemented reliability protocols and the exact reproduction command, see [RELIABILITY_AND_ROBUSTNESS.md](RELIABILITY_AND_ROBUSTNESS.md). The status table and observed outcome below describe the baseline pipeline only. Aspirational thresholds and items labeled optional/future are not achieved results.
+
 ## 1. Experimental Objectives
 
 ### 1.1 Primary Objective
