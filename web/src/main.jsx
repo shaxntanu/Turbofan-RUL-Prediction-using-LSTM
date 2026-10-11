@@ -32,6 +32,7 @@ import { Bar, Line } from "react-chartjs-2";
 import "./styles.css";
 import "./model-comparison.css";
 import "./theme.css";
+import "./reliability.css";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
@@ -62,7 +63,9 @@ function getBaseOptions(theme) {
 }
 
 function format(value, digits = 2) {
-  return Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : "--";
+  return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value))
+    ? Number(value).toFixed(digits)
+    : "--";
 }
 
 function Metric({ label, value, unit, note, tone = "teal", icon: Icon }) {
@@ -354,6 +357,125 @@ function Artifacts({ data, dataset, theme }) {
   );
 }
 
+function Reliability({ data, dataset, theme }) {
+  const [selectedModel, setSelectedModel] = useState("ridge_clean");
+  const [selectedScenario, setSelectedScenario] = useState("clean");
+  const reliability = data.reliability;
+  if (!reliability || reliability.status !== "available") {
+    return <div className="empty-reliability"><ShieldCheck size={22} /><h1>Reliability study not exported</h1><p>Run the documented reliability command and export the completed aggregate tables to make this view available.</p></div>;
+  }
+
+  const tables = reliability.tables ?? {};
+  const study = reliability.study ?? {};
+  const summaries = (tables.repeated_seed_summary ?? []).filter((row) => row.dataset === dataset);
+  const modelOptions = [...new Set(summaries.map((row) => row.model))].sort();
+  const activeModel = modelOptions.includes(selectedModel) ? selectedModel : modelOptions[0] ?? "";
+  const selectedSummary = summaries.find((row) => row.model === activeModel);
+  const stressRows = (tables.sensor_stress_summary ?? []).filter((row) => row.dataset === dataset && row.model === activeModel);
+  const stressOnly = stressRows.filter((row) => row.scenario !== "clean");
+  const clean = stressRows.find((row) => row.scenario === "clean");
+  const stressData = {
+    labels: stressOnly.map((row) => `${row.corruption_type} / ${row.severity}`),
+    datasets: [{
+      label: "Terminal-engine MAE",
+      data: stressOnly.map((row) => row.terminal_engine_mae_mean),
+      backgroundColor: stressOnly.map((row) => row.severity === "severe" ? "#c85b54" : row.severity === "moderate" ? "#e68a4b" : "#17877f"),
+      borderRadius: 3,
+      maxBarThickness: 25,
+    }],
+  };
+  const historyRows = (tables.history_protocol_metrics ?? []).filter((row) => row.dataset === dataset);
+  const onsetRows = (tables.online_onset_metrics ?? []).filter((row) => row.dataset === dataset);
+  const detector = onsetRows.find((row) => row.protocol === "validation_engine_detection");
+  const onsetModels = onsetRows.filter((row) => row.protocol === "progressive_prefix_overlapping_windows");
+  const capRows = (tables.rul_cap_sensitivity ?? []).filter((row) => row.dataset === dataset);
+  const heldoutRows = (tables.leave_one_subset_out_metrics ?? []).filter((row) => row.target_dataset === dataset || row.dataset === dataset);
+  const riskScenarios = [...new Set((tables.risk_coverage ?? []).filter((row) => row.dataset === dataset && row.model === activeModel).map((row) => row.scenario))].sort();
+  const activeScenario = riskScenarios.includes(selectedScenario) ? selectedScenario : riskScenarios[0] ?? "";
+  const riskRows = (tables.risk_coverage ?? [])
+    .filter((row) => row.dataset === dataset && row.model === activeModel && row.scenario === activeScenario && row.record_type === "risk_coverage")
+    .sort((a, b) => Number(a.coverage_fraction) - Number(b.coverage_fraction));
+  const riskData = {
+    labels: riskRows.map((row) => `${Math.round(Number(row.coverage_fraction) * 100)}%`),
+    datasets: [{
+      label: "Retained prediction MAE",
+      data: riskRows.map((row) => row.retained_mae),
+      borderColor: "#17877f",
+      backgroundColor: "rgba(23, 135, 127, .12)",
+      pointRadius: 3,
+      tension: 0.2,
+      spanGaps: false,
+    }],
+  };
+  const options = getBaseOptions(theme);
+  const comparisonRows = [...summaries].sort((a, b) => Number(a.terminal_mae_mean) - Number(b.terminal_mae_mean));
+
+  return (
+    <>
+      <div className="page-intro">
+        <div><div className="eyebrow">REPEATED RUNS / CONTROLLED STRESS / DOMAIN SHIFT</div><h1>Reliability &amp; robustness</h1><p>Validation-controlled protocols with test labels reserved for final scoring.</p></div>
+        <label className="reliability-control"><span>MODEL</span><select value={activeModel} onChange={(event) => setSelectedModel(event.target.value)}>{modelOptions.map((name) => <option key={name} value={name}>{name.replaceAll("_", " ").toUpperCase()}</option>)}</select></label>
+      </div>
+      <div className="metrics-grid">
+        <Metric label="MEAN TERMINAL MAE" value={format(selectedSummary?.terminal_mae_mean)} unit="cycles" note={`${selectedSummary?.seed_count ?? 0} run(s); mean across seeds`} icon={Activity} tone="teal" />
+        <Metric label="BETWEEN-SEED SD" value={format(selectedSummary?.terminal_mae_sd)} unit="cycles" note="A single LSTM seed is not a variance estimate" icon={BarChart3} tone="orange" />
+        <Metric label="CLEAN INTERVAL COVERAGE" value={clean?.interval_coverage_mean == null ? "--" : `${format(Number(clean.interval_coverage_mean) * 100, 1)}%`} unit="" note={`${format(clean?.interval_width_mean)} cycle mean width`} icon={ShieldCheck} tone="blue" />
+        <Metric label="ONSET MEDIAN DELAY" value={format(detector?.median_detection_delay_cycles, 0)} unit="cycles" note={detector ? `${format(Number(detector.engine_detection_rate) * 100, 1)}% validation-engine detection` : "Validation detector metrics unavailable"} icon={ArrowUpRight} tone="red" />
+      </div>
+
+      <section className="section-block">
+        <SectionTitle eyebrow="REPEATED SEEDS" title="Model results by subset" detail={`Run ${study.run_id ?? "--"} | seeds ${(study.repeated_seeds ?? []).join(", ") || "--"}.`} />
+        <div className="reliability-table-wrap"><div className="reliability-table reliability-table-head"><span>MODEL</span><span>SEEDS</span><span>TERMINAL MAE</span><span>TERMINAL RMSE</span><span>PHM08 SCORE</span><span>INTERVAL COVERAGE</span></div>
+          {comparisonRows.map((row) => <div className={`reliability-table ${row.model === activeModel ? "reliability-row-active" : ""}`} key={row.model}><b>{row.model.replaceAll("_", " ")}</b><span>{row.seed_count}</span><span>{format(row.terminal_mae_mean)} +/- {format(row.terminal_mae_sd)}</span><span>{format(row.terminal_rmse_mean)} +/- {format(row.terminal_rmse_sd)}</span><span>{format(row.phm08_sum_mean, 1)}</span><span>{row.interval_coverage_mean == null ? "--" : `${format(Number(row.interval_coverage_mean) * 100, 1)}%`}</span></div>)}
+        </div>
+        <p className="table-footnote">Lower errors and PHM08 score are better. The LSTM comparison is run only on the configured seed, so its between-seed standard deviation is intentionally blank.</p>
+      </section>
+
+      <section className="section-block reliability-split">
+        <div>
+          <SectionTitle eyebrow="SYNTHETIC SENSOR STRESS" title="Error under channel corruption" detail="Controlled stressors are not an empirical sensor-failure distribution." />
+          {stressOnly.length ? <div className="chart-panel chart-panel-tall"><Bar data={stressData} options={{ ...options, indexAxis: "y", plugins: { ...options.plugins, legend: { display: false } }, scales: { x: { ...options.scales.x, beginAtZero: true, title: { display: true, text: "Terminal-engine MAE (cycles)", color: theme === "dark" ? "#a4b5af" : "#707980" } }, y: { ...options.scales.y, ticks: { ...options.scales.y.ticks, autoSkip: false } } } }} /></div> : <div className="empty-inline">No sensor-stress summary is available for this model and subset.</div>}
+        </div>
+        <div>
+          <SectionTitle eyebrow="ABSTENTION / SELECTIVE RISK" title="Error versus retained coverage" detail="Thresholds are fit on validation windows; lower coverage means more predictions withheld." />
+          <label className="reliability-control scenario-control"><span>SCENARIO</span><select value={activeScenario} onChange={(event) => setSelectedScenario(event.target.value)}>{riskScenarios.map((name) => <option key={name} value={name}>{name.replaceAll("_", " ")}</option>)}</select></label>
+          {riskRows.length ? <div className="chart-panel chart-panel-short"><Line data={riskData} options={{ ...options, plugins: { ...options.plugins, legend: { display: false } }, scales: { ...options.scales, x: { ...options.scales.x, title: { display: true, text: "Retained predictions", color: theme === "dark" ? "#a4b5af" : "#707980" } }, y: { ...options.scales.y, beginAtZero: true, title: { display: true, text: "MAE (cycles)", color: theme === "dark" ? "#a4b5af" : "#707980" } } } }} /></div> : <div className="empty-inline">No risk-coverage rows are available.</div>}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionTitle eyebrow="ONLINE AVAILABILITY" title="Progressive prefix and fault-onset results" detail="Prefix predictions use only the history observed by each cycle. The onset detector is assessed on validation engines." />
+        <div className="reliability-table-wrap"><div className="reliability-table reliability-table-head"><span>PROTOCOL</span><span>MODEL</span><span>MAE</span><span>RMSE</span><span>WINDOW F1</span><span>ENGINE DETECTION</span></div>
+          {[...onsetModels, ...(detector ? [detector] : [])].map((row) => <div className="reliability-table" key={`${row.protocol}-${row.model}`}><b>{row.protocol.replaceAll("_", " ")}</b><span>{row.model.replaceAll("_", " ")}</span><span>{format(row.mae ?? row.terminal_engine_mae)}</span><span>{format(row.rmse ?? row.terminal_engine_rmse)}</span><span>{format(row.window_f1, 3)}</span><span>{row.engine_detection_rate == null ? "--" : `${format(Number(row.engine_detection_rate) * 100, 1)}%`}</span></div>)}
+        </div>
+      </section>
+
+      <section className="section-block reliability-split">
+        <div>
+          <SectionTitle eyebrow="LIMITED HISTORY" title="Performance by observed cycles" detail="Separates models trained at each history length from inference-time truncation." />
+          <div className="reliability-table-wrap"><div className="reliability-table reliability-history-head"><span>PROTOCOL</span><span>MODEL WINDOW</span><span>OBSERVED</span><span>MAE</span><span>RMSE</span><span>COVERAGE</span></div>
+            {historyRows.map((row) => <div className="reliability-table reliability-history-row" key={`${row.model}-${row.protocol}`}><b>{row.protocol.replaceAll("_", " ")}</b><span>{row.model_window_cycles}</span><span>{row.observed_history_cycles}</span><span>{format(row.terminal_engine_mae)}</span><span>{format(row.terminal_engine_rmse)}</span><span>{row.interval_coverage == null ? "--" : `${format(Number(row.interval_coverage) * 100, 1)}%`}</span></div>)}
+          </div>
+        </div>
+        <div>
+          <SectionTitle eyebrow="LABEL-CAP SENSITIVITY" title="Fixed Ridge, changed target cap" detail="Same engine split and feature/scaling pipeline; no test-based selection." />
+          <div className="reliability-table-wrap"><div className="reliability-table cap-table-head"><span>CAP</span><span>VAL MAE</span><span>TERMINAL MAE</span><span>RMSE</span><span>PHM08</span></div>
+            {capRows.map((row) => <div className="reliability-table cap-table-row" key={row.rul_cap}><b>{row.rul_cap}</b><span>{format(row.validation_overlapping_mae)}</span><span>{format(row.terminal_engine_mae)}</span><span>{format(row.terminal_engine_rmse)}</span><span>{format(row.terminal_phm08_sum, 1)}</span></div>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionTitle eyebrow="CROSS-SUBSET HOLDOUT" title="Train on other subsets, test on this subset" detail="Related simulator subsets are proxy domains, not independent fleets." />
+        <div className="reliability-table-wrap"><div className="reliability-table heldout-table-head"><span>TRAINING SOURCES</span><span>MODEL</span><span>TEST SUBSET</span><span>MAE</span><span>RMSE</span><span>PHM08</span></div>
+          {heldoutRows.map((row, index) => <div className="reliability-table heldout-table-row" key={`${row.source_subsets}-${row.model}-${index}`}><b>{row.source_subsets ?? "--"}</b><span>{row.model}</span><span>{row.target_dataset ?? row.dataset}</span><span>{format(row.terminal_engine_mae ?? row.mae)}</span><span>{format(row.terminal_engine_rmse ?? row.rmse)}</span><span>{format(row.phm08_score_sum, 1)}</span></div>)}
+        </div>
+      </section>
+      <div className="notice-bar notice-warn"><ShieldCheck size={16} /><span>{study.domain_note ?? "C-MAPSS subsets are related simulator domains."} {study.limitations?.join(" ")}</span></div>
+    </>
+  );
+}
+
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -390,6 +512,7 @@ function App() {
     if (page === "transfer") return <Transfer data={data} dataset={dataset} theme={theme} />;
     if (page === "methods") return <Methods data={data} />;
     if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
+    if (page === "reliability") return <Reliability data={data} dataset={dataset} theme={theme} />;
     return <Overview data={data} dataset={dataset} setPage={setPage} theme={theme} />;
   }, [data, dataset, page, theme]);
 
@@ -401,7 +524,7 @@ function App() {
           <span className="brand-text"><b>AERO / RUL</b><small>RESEARCH OBSERVATORY</small></span>
         </a>
         <nav className="main-nav" aria-label="Primary">
-          {[["overview", "Overview", Activity], ["transfer", "Transfer", Workflow], ["methods", "Methods", Layers3], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
+          {[["overview", "Overview", Activity], ["transfer", "Transfer", Workflow], ["methods", "Methods", Layers3], ["reliability", "Reliability", ShieldCheck], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
         </nav>
         <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} aria-pressed={theme === "dark"} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
           {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
