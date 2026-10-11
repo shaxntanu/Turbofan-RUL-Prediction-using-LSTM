@@ -200,6 +200,7 @@ def run_pipeline(
         train_lifetimes,
         test_lifetimes,
         metrics_dir / "fractional_life",
+        max_rul=config.rul_clip_value if config.clip_rul else None,
     )
 
     baseline = WindowRidgeBaseline().fit(X_train, y_train)
