@@ -8,8 +8,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 class Evaluator:
     @staticmethod
     def phm08_score(y_true, y_pred) -> float:
-        """NASA PHM08 asymmetric score; positive error denotes under-prediction."""
-        error = np.asarray(y_true, dtype=float).ravel() - np.asarray(y_pred, dtype=float).ravel()
+        """Sum the PHM08 asymmetric penalty function over the supplied predictions."""
+        error = np.asarray(y_pred, dtype=float).ravel() - np.asarray(y_true, dtype=float).ravel()
         penalties = np.where(error < 0, np.expm1(-error / 13.0), np.expm1(error / 10.0))
         return float(np.sum(penalties))
 
