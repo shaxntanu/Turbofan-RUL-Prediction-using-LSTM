@@ -2,6 +2,8 @@
 
 An end-to-end NASA C-MAPSS benchmark for aircraft-engine remaining useful life (RUL), with an LSTM and Ridge baseline, a reproducible experiment pipeline, research analyses, Matplotlib figures, a Streamlit application, and a React results dashboard.
 
+See [measured results and research analyses](docs/RESULTS.md) for the completed FD001-FD004 comparison, transfer study, uncertainty coverage, and evaluation caveats.
+
 ## Project Contents
 
 - `Ref/CMAPSSData/`: included C-MAPSS FD001-FD004 train/test trajectories and test RUL labels.
