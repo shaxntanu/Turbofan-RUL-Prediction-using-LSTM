@@ -14,12 +14,12 @@
 | Model selection and test evaluation | Implemented and executed | Selection uses validation MAE; selected models are then scored on held-out test labels. See [RESULTS.md](RESULTS.md). |
 | Research adaptations | Implemented and executed | PCA/sensor screening, trend and fractional-life analyses, engine robustness, conformal intervals, and Ridge source/pooled transfer. |
 | Matplotlib reports | Implemented and executed | Per-subset figures are generated under ignored `outputs/`; the dashboard’s primary result figures are committed under `web/public/results/`. |
-| Streamlit application | Implemented | Interactive subset exploration, baseline and LSTM run controls, saved result display, and uploaded-window inference. |
-| React/Vite dashboard | Implemented | Overview, subset/model comparison, transfer matrix, methodology, and figure views use the committed benchmark bundle. |
+| Streamlit application | Implemented | Interactive subset exploration, baseline and LSTM run controls, saved result display, uploaded-window inference, and optional native-kernel benchmark. |
+| React/Vite dashboard | Implemented | Overview, subset/model comparison, transfer matrix, methodology, figure views, and native-kernel parity use the committed benchmark bundle. |
 | Archify workflow | Delivered and visually checked | `docs/turbofan-pipeline-showcase.workflow.json` validates; `docs/turbofan-pipeline.html` passed the Archify showcase and viewport checks. |
 | Python syntax | Verified | `compileall` is run as a syntax check; it is not a test suite. |
 | Automated tests | Not run | Unit and integration tests were not run for this delivery. |
-| C++ inference / latency benchmark | Not implemented | Not part of the delivered Python/Streamlit/web workflow; no C++ runtime claim is made. |
+| Optional C++ sensor kernels | Implemented and executed | C++17/pybind11 PCA and K-Means compared with scikit-learn on seeded 10k-row training samples from all four subsets. PCA subspaces match; PCA was slower on this host, while K-Means ranged from 1.13x to 3.20x faster. These are local microbenchmarks, not RUL/LSTM inference speedups. |
 | LaTeX manuscript | Intentionally omitted | Per request, no `.tex` file was created. |
 
 ## Measured Run
@@ -27,6 +27,8 @@
 The published snapshot uses seed 42, 30-cycle windows, a 125-cycle RUL cap, and a 20-epoch maximum for LSTM runs, with early stopping and restored best validation weights. Python 3.12.10 and TensorFlow 2.21.0 ran on CPU. The full per-model MAE/RMSE comparison, prediction intervals, research summaries, and caveats are in [RESULTS.md](RESULTS.md) and `web/public/results/benchmark.json`.
 
 The model selected by validation MAE was LSTM for FD001 and Ridge for FD002-FD004. LSTM did have a lower test MAE than Ridge on FD003, but Ridge remains the reported selection because its validation MAE was lower. No choice was made from test performance.
+
+The optional native module was built with MSVC and OpenMP. Its PCA principal subspaces matched scikit-learn on the sampled training rows; the C++ covariance/Jacobi implementation was slower than sklearn's full-SVD PCA on this host. K-Means used shared sklearn PCA scores and had high label agreement (adjusted Rand index 0.994-1.000). Timings are machine/compiler-dependent; details are in `web/public/results/benchmark.json`.
 
 ## Limitations
 
