@@ -297,6 +297,8 @@ function Artifacts({ data, dataset }) {
     ["prediction_intervals", "Conformal intervals"],
   ];
   const sensors = result.sensor_screening.top_sensors_by_absolute_pearson ?? [];
+  const native = data.cpp_engine;
+  const nativeRow = native?.datasets?.find((item) => item.dataset === dataset);
   const sensorChart = {
     labels: sensors.map((item) => item.sensor),
     datasets: [{ label: "|Pearson r|", data: sensors.map((item) => item.absolute_pearson_r), backgroundColor: CHART_COLORS, borderRadius: 3, maxBarThickness: 30 }],
@@ -321,6 +323,22 @@ function Artifacts({ data, dataset }) {
           {result.life_stage_metrics.map((row) => <div className="table-row table-row-static" key={`${row.life_stage}-${row.model_scope}`}><b>{row.life_stage}</b><span>{row.model_scope.replaceAll("_", " ")}</span><span>{Number(row.training_windows).toLocaleString()}</span><span>{Number(row.n_samples).toLocaleString()}</span><strong>{format(row.mae)}</strong><span>{format(row.rmse)}</span></div>)}
         </div>
         <p className="table-footnote">Fractional engine life is a proxy for overhaul-defined segments. C-MAPSS does not provide overhaul boundaries or maintenance history.</p>
+      </section>
+      <section className="section-block">
+        <SectionTitle eyebrow="OPTIONAL NATIVE KERNELS" title="PCA and K-Means parity" detail="C++17 sensor-analysis kernels compared with the Python reference on training engines only." />
+        {nativeRow?.pca && nativeRow?.kmeans ? (
+          <>
+            <div className="metrics-grid">
+              <Metric label="PCA RUNTIME RATIO" value={format(nativeRow.pca.speedup_x, 2)} unit="x" note={`${format(nativeRow.pca.python_ms, 2)} ms sklearn / ${format(nativeRow.pca.cpp_ms, 2)} ms C++`} icon={Cpu} tone="teal" />
+              <Metric label="PCA SUBSPACE ANGLE" value={format(nativeRow.pca.maximum_principal_angle_degrees, 6)} unit="deg" note={`${nativeRow.pca.cpp_components} retained components`} icon={Layers3} tone="blue" />
+              <Metric label="K-MEANS RUNTIME RATIO" value={format(nativeRow.kmeans.speedup_x, 2)} unit="x" note={`${format(nativeRow.kmeans.python_ms, 2)} ms sklearn / ${format(nativeRow.kmeans.cpp_ms, 2)} ms C++`} icon={Cpu} tone="orange" />
+              <Metric label="CLUSTER AGREEMENT" value={format(nativeRow.kmeans.adjusted_rand_index, 3)} unit="ARI" note="C++ labels vs scikit-learn" icon={Activity} tone="red" />
+            </div>
+            <p className="table-footnote">Seeded sample of {Number(nativeRow.n_samples).toLocaleString()} rows and {nativeRow.n_features} sensors. K-Means uses shared sklearn PCA scores. Timing is hardware/compiler dependent and is not an end-to-end RUL speedup.</p>
+          </>
+        ) : (
+          <div className="notice-bar"><Cpu size={16} /><span>{native?.reason || "Run python -m src.run_cpp_benchmark and re-export the web results to include native kernel measurements."}</span></div>
+        )}
       </section>
     </>
   );
