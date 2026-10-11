@@ -19,7 +19,7 @@
 | Archify workflow | Delivered and visually checked | `docs/turbofan-pipeline-showcase.workflow.json` validates; `docs/turbofan-pipeline.html` passed the Archify showcase and viewport checks. |
 | Python syntax | Verified | `compileall` is run as a syntax check; it is not a test suite. |
 | Automated tests | Not run | Unit and integration tests were not run for this delivery. |
-| Optional C++ sensor kernels | Implemented and executed | C++17/pybind11 PCA and K-Means compared with scikit-learn on seeded 10k-row training samples from all four subsets. PCA subspaces match; PCA was slower on this host, while K-Means ranged from 1.13x to 3.20x faster. These are local microbenchmarks, not RUL/LSTM inference speedups. |
+| Optional C++ sensor kernels | Implemented and executed | C++17/pybind11 PCA and K-Means compared with scikit-learn on seeded 10k-row training samples from all four subsets. PCA fit-plus-projection subspaces match; PCA was slower on this host, while K-Means ranged from 1.21x to 3.46x faster. These are local microbenchmarks, not RUL/LSTM inference speedups. |
 | LaTeX manuscript | Intentionally omitted | Per request, no `.tex` file was created. |
 
 ## Measured Run
@@ -28,7 +28,7 @@ The published snapshot uses seed 42, 30-cycle windows, a 125-cycle RUL cap, and 
 
 The model selected by validation MAE was LSTM for FD001 and Ridge for FD002-FD004. LSTM did have a lower test MAE than Ridge on FD003, but Ridge remains the reported selection because its validation MAE was lower. No choice was made from test performance.
 
-The optional native module was built with MSVC and OpenMP. Its PCA principal subspaces matched scikit-learn on the sampled training rows; the C++ covariance/Jacobi implementation was slower than sklearn's full-SVD PCA on this host. K-Means used shared sklearn PCA scores and had high label agreement (adjusted Rand index 0.994-1.000). Timings are machine/compiler-dependent; details are in `web/public/results/benchmark.json`.
+The optional native module was built with MSVC and OpenMP. Its PCA principal subspaces matched scikit-learn on the sampled training rows, comparing fit plus score projection on both paths; the C++ covariance/Jacobi implementation was slower than sklearn's full-SVD PCA on this host. K-Means used shared sklearn PCA scores and had high label agreement (adjusted Rand index 0.994-1.000). Timings are machine/compiler-dependent; details are in `web/public/results/benchmark.json`.
 
 ## Limitations
 
