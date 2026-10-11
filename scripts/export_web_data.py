@@ -13,16 +13,35 @@ RELIABILITY_DIR = OUTPUTS / "reliability"
 DATASETS = ("FD001", "FD002", "FD003", "FD004")
 FIGURE_NAMES = ("predicted_vs_actual", "fractional_life_metrics", "prediction_intervals")
 RELIABILITY_TABLES = {
-    "repeated_seed_metrics": "repeated_seed_metrics.csv",
     "repeated_seed_summary": "repeated_seed_summary.csv",
     "sensor_stress_summary": "sensor_stress_summary.csv",
     "risk_coverage": "risk_coverage.csv",
     "history_protocol_metrics": "history_protocol_metrics.csv",
     "online_onset_metrics": "online_onset_metrics.csv",
-    "online_stage_metrics": "online_stage_metrics.csv",
     "rul_cap_sensitivity": "rul_cap_sensitivity.csv",
     "leave_one_subset_out_metrics": "leave_one_subset_out_metrics.csv",
-    "leave_one_subset_out_stress_metrics": "leave_one_subset_out_stress_metrics.csv",
+}
+RELIABILITY_COLUMNS = {
+    "risk_coverage": [
+        "dataset", "model", "scenario", "requested_abstention_fraction",
+        "coverage_fraction", "retained_mae",
+    ],
+    "history_protocol_metrics": [
+        "dataset", "model", "protocol", "model_window_cycles", "observed_history_cycles",
+        "terminal_engine_mae", "terminal_engine_rmse", "interval_coverage",
+    ],
+    "online_onset_metrics": [
+        "dataset", "model", "protocol", "mae", "rmse", "window_f1",
+        "engine_detection_rate", "median_detection_delay_cycles",
+    ],
+    "rul_cap_sensitivity": [
+        "dataset", "rul_cap", "validation_overlapping_mae", "terminal_engine_mae",
+        "terminal_engine_rmse", "terminal_phm08_sum",
+    ],
+    "leave_one_subset_out_metrics": [
+        "dataset", "model", "source_subsets", "terminal_engine_mae",
+        "terminal_engine_rmse", "phm08_score_sum", "target_training_used",
+    ],
 }
 
 
@@ -41,6 +60,11 @@ def _read_reliability_results() -> dict | None:
                 frame = pd.read_csv(path)
             except pd.errors.EmptyDataError:
                 continue
+            if key == "risk_coverage":
+                frame = frame.loc[frame["record_type"] == "risk_coverage"]
+            columns = RELIABILITY_COLUMNS.get(key)
+            if columns:
+                frame = frame[[column for column in columns if column in frame.columns]]
             tables[key] = json.loads(frame.to_json(orient="records"))
 
     study_fields = (
