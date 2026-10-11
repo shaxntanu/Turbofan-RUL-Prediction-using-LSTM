@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from src.reliability import (
+    leave_one_subset_sources,
     phm08_contributions,
     risk_coverage_rows,
     sensor_corruption_scenarios,
@@ -32,6 +33,14 @@ def _labeled_frame() -> pd.DataFrame:
 def test_phm08_contributions_keep_asymmetric_early_and_late_penalties():
     values = phm08_contributions([20, 20], [7, 30])
     np.testing.assert_allclose(values, [np.e - 1, np.e - 1])
+
+
+def test_leave_one_subset_out_excludes_target_from_every_source_list():
+    datasets = ("FD001", "FD002", "FD003", "FD004")
+    for target in datasets:
+        sources = leave_one_subset_sources(datasets, target)
+        assert len(sources) == len(datasets) - 1
+        assert target not in sources
 
 
 def test_terminal_windows_return_only_final_complete_window_per_engine():
