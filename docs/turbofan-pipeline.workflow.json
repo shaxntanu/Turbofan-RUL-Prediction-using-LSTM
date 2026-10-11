@@ -30,7 +30,7 @@
     { "id": "model_selection", "lane": "data_model", "col": 4, "type": "backend", "label": "Ridge / LSTM", "sublabel": "validation MAE selection" },
     { "id": "test_eval", "lane": "evaluation_delivery", "col": 5, "type": "backend", "label": "Held-out test", "sublabel": "metrics / intervals / errors" },
     { "id": "research_outputs", "lane": "evaluation_delivery", "col": 4, "type": "database", "label": "Research analyses", "sublabel": "transfer / PCA / life stage" },
-    { "id": "apps", "lane": "evaluation_delivery", "col": 5, "type": "frontend", "label": "Web + Streamlit", "sublabel": "figures / interactive results" },
+    { "id": "apps", "lane": "evaluation_delivery", "col": 5, "yOffset": 66, "type": "frontend", "label": "Web + Streamlit", "sublabel": "figures / interactive results" },
     { "id": "repair_data", "lane": "recovery", "col": 1, "type": "backend", "label": "Report data issue", "sublabel": "correct input, revalidate" }
   ],
   "edges": [
