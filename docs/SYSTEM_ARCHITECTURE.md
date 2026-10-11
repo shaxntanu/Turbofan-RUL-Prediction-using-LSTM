@@ -1,5 +1,24 @@
 # System / ML Architecture
 
+> **Current implementation:** The module map and workflow below describe the code that runs today. Later detailed sections are retained as design context; where they differ, the current pipeline and [`turbofan-pipeline.html`](turbofan-pipeline.html) are authoritative.
+
+## Current Data and Application Flow
+
+`Ref/CMAPSSData/` -> `DataLoader` / `DataValidator` -> per-engine capped RUL labels -> engine-level train/validation split -> training-only constant-sensor filtering and MinMax scaling -> 30-cycle windows -> Ridge and optional TensorFlow LSTM -> validation-MAE selection -> official test metrics, conformal intervals, and error summaries -> Matplotlib figures, JSON/CSV/Markdown artifacts -> Streamlit and React dashboards.
+
+The official test set is never used to fit the scaler or select a model. Research analyses add training-only sensor/PCA screening, polynomial trend summaries, fractional-life stage comparisons, and source-to-target/pooled transfer between FD001-FD004. Fractional life is a proxy, since C-MAPSS has no overhaul timestamps. Subset transfer is a simulated proxy-domain study, not real fleet transfer.
+
+| Boundary | Current implementation |
+|---|---|
+| Configuration and paths | `src/config.py`; finds bundled data or honors `CMAPSS_DATA_DIR` |
+| Loading, targets, and validation | `src/data_loader.py`, `src/target_construction.py`, `src/data_validator.py` |
+| Split and preprocessing | `src/data_splitter.py`, `src/data_cleaner.py`, `src/normalization.py`, `src/sequence_generator.py` |
+| Models and orchestration | `src/baseline_model.py`, `src/lstm_model.py`, `src/trainer.py`, `src/pipeline.py`, `src/train_all.py` |
+| Evaluation and analysis | `src/evaluator.py`, `src/uncertainty.py`, `src/research_analysis.py`, `src/transfer_analysis.py`, `src/segmentation_analysis.py`, `src/detrending.py` |
+| Figures and applications | `src/visualizer.py`, `src/streamlit_dashboard.py`, `web/src/main.jsx` |
+
+Generated model weights and experiment outputs live under `models/` and `outputs/`; both are intentionally git-ignored. The static web bundle in `web/public/results/` is refreshed by `scripts/export_web_data.py`.
+
 ## 1. High-Level Architecture
 
 The system implements a complete machine learning pipeline for turbofan engine Remaining Useful Life (RUL) prediction using LSTM networks. The architecture follows a modular, stage-based design that transforms raw sensor time-series data into RUL predictions through a series of well-defined processing stages.
@@ -943,27 +962,19 @@ Turbofan-RUL-Prediction-using-LSTM/
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Data ingestion | Defined | NASA C-MAPSS parser |
-| Data validation | Defined | Quality checks |
-| EDA | Defined | Visualization module |
-| Data cleaning | Defined | Handle constant sensors |
-| Feature engineering | Defined | Raw sensors baseline |
-| RUL construction | Defined | Per-engine computation |
-| Normalization | Defined | MinMaxScaler |
-| Sequence generation | Defined | Sliding windows |
-| Data splitting | Defined | Engine-level split |
-| Baseline model | Defined | Linear regression |
-| LSTM model | Defined | Architecture TBD |
-| Training | Defined | Early stopping, checkpointing |
-| Validation | Defined | Loss monitoring |
-| Evaluation | Defined | MAE, RMSE |
-| Prediction | Defined | Inference pipeline |
-| Visualization | Defined | Figure generation |
-| Application | Proposed | Streamlit dashboard |
-| Orchestration | Defined | pipeline.py |
+| Data ingestion and validation | Implemented | All four subsets; schema, numeric, duplicate, and cycle-order checks |
+| Data cleaning and targets | Implemented | Training-only constant-channel removal; capped per-engine RUL |
+| Normalization and sequences | Implemented | Train-only scaler; per-engine 30-cycle windows |
+| Engine split | Implemented | Training engines split before preprocessing/model fitting |
+| Baseline and LSTM | Implemented | Window-summary Ridge and stacked many-to-one LSTM |
+| Selection and evaluation | Implemented | Validation MAE selection; official held-out test metrics |
+| Research analyses | Implemented | Conformal UQ, robustness, sensor/PCA, trend, stage, and transfer studies |
+| Visualization | Implemented | Matplotlib figures and browser dashboard charts |
+| Applications | Implemented | Streamlit and React/Vite dashboard |
+| Orchestration | Implemented | `python -m src.train_all` |
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2026-10-08  
-**Status**: Defined - Ready for implementation
+**Document Version**: 1.1  
+**Last Updated**: 2026-10-11  
+**Status**: Implemented; see the current flow and modules at the top of this document.
