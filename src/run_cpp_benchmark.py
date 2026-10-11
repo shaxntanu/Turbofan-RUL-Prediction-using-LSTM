@@ -58,9 +58,12 @@ def _sensor_matrix(dataset: str, max_rows: int, seed: int) -> tuple[np.ndarray, 
 
 def _benchmark_subset(dataset: str, max_rows: int, seed: int) -> dict:
     matrix, sensors = _sensor_matrix(dataset, max_rows, seed)
-    python_pca_factory = lambda: PCA(n_components=0.95, svd_solver="full", copy=True).fit(matrix)
-    python_pca, python_pca_ms = _timed_best(python_pca_factory)
-    python_scores = python_pca.transform(matrix)
+
+    def fit_python_pca() -> tuple[PCA, np.ndarray]:
+        model = PCA(n_components=0.95, svd_solver="full", copy=True)
+        return model, model.fit_transform(matrix)
+
+    (python_pca, python_scores), python_pca_ms = _timed_best(fit_python_pca)
 
     cpp_pca, cpp_pca_ms = _timed_best(
         lambda: pca_fit_numpy(matrix, variance_threshold=0.95)
@@ -180,7 +183,7 @@ def run_benchmark(
         "generated_local": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "engine": module_status(),
         "protocol": {
-            "pca": "sklearn full SVD vs C++ covariance/Jacobi on identical standardized sensor rows",
+            "pca": "sklearn full-SVD fit_transform vs C++ covariance/Jacobi fit plus score projection on identical standardized rows",
             "kmeans": "same sklearn PCA scores, k-means++, seed 42 by default, n_init=10",
             "timing": "one warm-up and best-of-three wall-clock measurements",
             "selection": "sensor screening and clustering are diagnostics; they do not affect RUL model selection",
