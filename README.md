@@ -30,7 +30,7 @@ python -m pip install --upgrade pip
 pip install -r requirements-training.txt
 ```
 
-`requirements.txt` is the Streamlit deployment manifest. It installs TensorFlow 2.21 on supported Python versions and skips it on Python 3.14, so a Python 3.14 deployment can still run the Ridge app. The supplied Streamlit logs show Python 3.14.8, which is why its LSTM button is disabled: TensorFlow 2.21 wheels support Python 3.10-3.13. In Streamlit Cloud, change the app's Python version to 3.12 in its settings and redeploy; the conditional dependency will then install TensorFlow and enable LSTM training. For local experiments, `requirements-training.txt` installs the training dependencies.
+`requirements.txt` is the Streamlit deployment manifest. It installs TensorFlow 2.21 on supported Python versions and skips it on Python 3.14, so a Python 3.14 deployment can still run the Ridge app. The supplied Streamlit logs show Python 3.14.8, which is why its LSTM button is disabled: TensorFlow 2.21 wheels support Python 3.10-3.13. Streamlit Community Cloud does not let you change an existing app's Python version in place. To enable LSTM on the hosted app, record its repository, branch, entrypoint, custom subdomain, and any configured secrets; then delete and redeploy it, selecting Python 3.12 in Advanced settings and reusing the same subdomain. Re-enter secrets privately in the deployment form; do not commit them. Ridge remains available in the current deployment. For local experiments, `requirements-training.txt` installs the training dependencies.
 
 The pipeline discovers the bundled data under `Ref/CMAPSSData/`. Set `CMAPSS_DATA_DIR` to use a different C-MAPSS directory.
 
