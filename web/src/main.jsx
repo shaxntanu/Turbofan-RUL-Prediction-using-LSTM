@@ -276,6 +276,65 @@ function Transfer({ data, dataset, theme }) {
   );
 }
 
+function AllSubsets({ data, theme }) {
+  const options = getBaseOptions(theme);
+  const rows = DATASETS.map((name) => ({ name, ...data.datasets[name] })).filter((row) => row.run_id);
+  const macroMae = rows.reduce((sum, row) => sum + Number(row.test_metrics.mae), 0) / rows.length;
+  const macroRmse = rows.reduce((sum, row) => sum + Number(row.test_metrics.rmse), 0) / rows.length;
+  const testEngines = rows.reduce((sum, row) => sum + Number(row.dataset_summary.test_engines), 0);
+  const testWindows = rows.reduce((sum, row) => sum + Number(row.test_metrics.n_samples), 0);
+  const scoreChart = {
+    labels: rows.map((row) => row.name),
+    datasets: [
+      { label: "MAE", data: rows.map((row) => row.test_metrics.mae), backgroundColor: "#17877f", borderRadius: 3, maxBarThickness: 34 },
+      { label: "RMSE", data: rows.map((row) => row.test_metrics.rmse), backgroundColor: "#e68a4b", borderRadius: 3, maxBarThickness: 34 },
+    ],
+  };
+  const candidates = rows.flatMap((row) => Object.entries(row.model_metrics ?? {}).map(([model, metrics]) => ({
+    subset: row.name,
+    model,
+    validationMae: row.validation_metrics?.[model]?.mae,
+    testMae: metrics.mae,
+    testRmse: metrics.rmse,
+    selected: model === row.selected_model,
+  })));
+
+  return (
+    <>
+      <div className="page-intro">
+        <div><div className="eyebrow">FD001–FD004 / COMBINED VIEW</div><h1>All-subset benchmark</h1><p>Compare selected models and every recorded candidate across four C-MAPSS conditions.</p></div>
+        <div className="protocol-pill"><Database size={15} /> {rows.length} subsets / {testEngines} test engines</div>
+      </div>
+
+      <div className="metrics-grid">
+        <Metric label="MACRO-AVERAGE MAE" value={format(macroMae)} unit="cycles" note="Equal weight per subset" icon={Activity} tone="teal" />
+        <Metric label="MACRO-AVERAGE RMSE" value={format(macroRmse)} unit="cycles" note="Equal weight per subset" icon={Gauge} tone="orange" />
+        <Metric label="TEST ENGINES" value={testEngines.toLocaleString()} unit="" note="FD001–FD004 combined" icon={Plane} tone="blue" />
+        <Metric label="LABELED WINDOWS" value={testWindows.toLocaleString()} unit="" note="Across the four test splits" icon={Layers3} tone="red" />
+      </div>
+
+      <section className="section-block">
+        <SectionTitle eyebrow="SELECTED MODELS / HELD-OUT TEST" title="Errors across all four subsets" detail="Each subset selects its model on validation MAE; test labels are used only for final scoring." />
+        <div className="chart-panel chart-panel-short"><Bar data={scoreChart} options={{ ...options, scales: { ...options.scales, y: { ...options.scales.y, title: { display: true, text: "Error (cycles)", color: theme === "dark" ? "#a4b5af" : "#707980" } } } }} /></div>
+        <div className="subset-table">
+          <div className="table-head"><span>SUBSET</span><span>CONDITIONS / FAULTS</span><span>ENGINES</span><span>SELECTED MODEL</span><span>MAE</span><span>RMSE</span></div>
+          {rows.map((row) => <div className="table-row table-row-static" key={row.name}><b>{row.name}</b><span>{TARGETS[row.name]}</span><span>{row.dataset_summary.test_engines}</span><span className="model-tag">{row.selected_model}</span><strong>{format(row.test_metrics.mae)}</strong><span>{format(row.test_metrics.rmse)}</span></div>)}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionTitle eyebrow="VALIDATION-FIRST MODEL SELECTION" title="Candidate scores by subset" detail="Validation MAE determines the selected model; test performance is shown for context, not used to choose it." />
+        <div className="subset-table">
+          <div className="table-head"><span>SUBSET</span><span>MODEL</span><span>VALIDATION MAE</span><span>TEST MAE</span><span>TEST RMSE</span><span>SELECTION</span></div>
+          {candidates.map((row) => <div className="table-row table-row-static" key={`${row.subset}-${row.model}`}><b>{row.subset}</b><span>{row.model}</span><span>{format(row.validationMae)} cycles</span><strong>{format(row.testMae)} cycles</strong><span>{format(row.testRmse)} cycles</span><span className="model-tag">{row.selected ? "selected" : "candidate"}</span></div>)}
+        </div>
+      </section>
+
+      <div className="notice-bar notice-warn"><ShieldCheck size={16} /><span>Macro-averages weight each subset equally and are not pooled-window metrics. FD001–FD004 are related simulator domains, not independent real-world fleets.</span></div>
+    </>
+  );
+}
+
 function Methods({ data }) {
   const steps = [
     { icon: Database, title: "NASA C-MAPSS", body: "Load all four train/test subsets and test RUL labels; validate engine-cycle order and sensor fields." },
@@ -512,6 +571,7 @@ function App() {
 
   const pageView = useMemo(() => {
     if (!data) return null;
+    if (page === "all-subsets") return <AllSubsets data={data} theme={theme} />;
     if (page === "transfer") return <Transfer data={data} dataset={dataset} theme={theme} />;
     if (page === "methods") return <Methods data={data} />;
     if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
@@ -527,7 +587,7 @@ function App() {
           <span className="brand-text"><b>AERO / RUL</b><small>RESEARCH OBSERVATORY</small></span>
         </a>
         <nav className="main-nav" aria-label="Primary">
-          {[["overview", "Overview", Activity], ["transfer", "Transfer", Workflow], ["methods", "Methods", Layers3], ["reliability", "Reliability", ShieldCheck], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
+          {[["overview", "Overview", Activity], ["all-subsets", "All subsets", Database], ["transfer", "Transfer", Workflow], ["methods", "Methods", Layers3], ["reliability", "Reliability", ShieldCheck], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
         </nav>
         <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} aria-pressed={theme === "dark"} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
           {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
