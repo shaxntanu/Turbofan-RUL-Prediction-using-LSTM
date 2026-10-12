@@ -1,5 +1,9 @@
 # Turbofan Remaining Useful Life Observatory
 
+[![Vercel dashboard](https://img.shields.io/badge/Vercel-Dashboard-000000?logo=vercel&logoColor=white)](https://turbofan-rul-prediction-using-lstm.vercel.app)
+[![Streamlit app](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://turbofan-rul-prediction-lstm.streamlit.app)
+[![GitHub Pages Archify pipeline](https://img.shields.io/badge/GitHub%20Pages-Archify%20Pipeline-222222?logo=githubpages&logoColor=white)](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html)
+
 An end-to-end NASA C-MAPSS benchmark for aircraft-engine remaining useful life (RUL), with an LSTM and Ridge baseline, a reproducible experiment pipeline, research analyses, Matplotlib figures, a Streamlit application, and a React results dashboard.
 
 See [measured results and research analyses](docs/RESULTS.md) for the completed FD001-FD004 comparison, transfer study, uncertainty coverage, and evaluation caveats.
@@ -12,12 +16,12 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `models/`: generated model and scaler files (not tracked).
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
 - `streamlit_app.py`: interactive data exploration and prediction interface.
-- `docs/turbofan-pipeline.html`: interactive Archify workflow diagram.
+- `docs/turbofan-pipeline.html`: interactive Archify workflow diagram, also [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
 ## Setup
 
-The base requirements support the Streamlit app and Ridge pipeline without TensorFlow. Use Python 3.12 for LSTM training:
+Use Python 3.12 for the complete training environment:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -26,7 +30,7 @@ python -m pip install --upgrade pip
 pip install -r requirements-training.txt
 ```
 
-For the TensorFlow-free Streamlit/Ridge runtime, install `requirements.txt` instead. Streamlit Community Cloud logs supplied for this app show Python 3.14.8, where TensorFlow 2.21 has no compatible wheel; the app therefore disables LSTM training when TensorFlow is absent. To enable cloud LSTM training, select Python 3.12 in the app's Advanced settings and redeploy.
+`requirements.txt` is the Streamlit deployment manifest. It installs TensorFlow 2.21 on supported Python versions and skips it on Python 3.14, so a Python 3.14 deployment can still run the Ridge app. The supplied Streamlit logs show Python 3.14.8, which is why its LSTM button is disabled: TensorFlow 2.21 wheels support Python 3.10-3.13. In Streamlit Cloud, change the app's Python version to 3.12 in its settings and redeploy; the conditional dependency will then install TensorFlow and enable LSTM training. For local experiments, `requirements-training.txt` installs the training dependencies.
 
 The pipeline discovers the bundled data under `Ref/CMAPSSData/`. Set `CMAPSS_DATA_DIR` to use a different C-MAPSS directory.
 
@@ -83,7 +87,7 @@ npm ci
 npm run dev
 ```
 
-The dashboard presents measured per-subset scores, transfer errors, figures, and methodology notes. After retraining, rerun the export command above to refresh its data bundle.
+Both apps include an all-subset view for combined FD001-FD004 selected-model scores, candidate-model comparisons, and cross-subset results. The Streamlit Reliability tab and web Reliability page read the committed aggregate study snapshot, so those views work in hosted deployments without ignored local `outputs/` files. The dashboard presents measured per-subset scores, transfer errors, figures, and methodology notes. After retraining or rerunning the reliability study, rerun the export command above to refresh its data bundle.
 
 ## Optional C++ Sensor Kernels
 
