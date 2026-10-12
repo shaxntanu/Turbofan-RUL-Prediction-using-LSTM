@@ -132,6 +132,12 @@ def _combined_model_rows(bundle: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _reliability_snapshot(metrics_dir: Path, bundle: dict) -> tuple[dict | None, dict]:
+    reliability = bundle.get("reliability", {})
+    study = _read_json(metrics_dir / "reliability_study.json") or reliability.get("study")
+    return study, reliability.get("tables", {})
+
+
 def _render_all_subsets() -> None:
     bundle = _read_dashboard_bundle()
     rows = _combined_subset_rows(bundle)
@@ -380,9 +386,7 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
 
 def _render_reliability(dataset: str, config: ProjectConfig) -> None:
     metrics_dir = config.output_dir / "reliability" / "metrics"
-    reliability = _read_dashboard_bundle().get("reliability", {})
-    study = _read_json(metrics_dir / "reliability_study.json") or reliability.get("study")
-    published_tables = reliability.get("tables", {})
+    study, published_tables = _reliability_snapshot(metrics_dir, _read_dashboard_bundle())
     if not study:
         st.info("No exported reliability study is available in this deployment.")
         st.code(
