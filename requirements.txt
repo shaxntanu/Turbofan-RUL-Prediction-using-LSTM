@@ -6,3 +6,4 @@ seaborn==0.13.2
 streamlit==1.62.0
 joblib==1.5.3
 pytest==8.4.2
+./cpp_engine
