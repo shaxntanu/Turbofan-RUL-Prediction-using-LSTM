@@ -7,4 +7,4 @@ streamlit==1.62.0
 joblib==1.5.3
 pytest==8.4.2
 ./cpp_engine
-tensorflow==2.21.0; python_version < "3.14"
+tensorflow==2.21.0; python_version >= "3.10" and python_version < "3.14"
