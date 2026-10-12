@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import io
 import json
+import sys
+from importlib.metadata import PackageNotFoundError, version as package_version
 from importlib.util import find_spec
 from pathlib import Path
 
@@ -25,12 +27,165 @@ from src.sequence_generator import SequenceGenerator
 from src.target_construction import TargetConstructor
 
 RAW_COLUMNS = DataLoader(ProjectConfig()).columns
+RESULTS_BUNDLE_PATH = Path(__file__).resolve().parents[1] / "web" / "public" / "results" / "benchmark.json"
+RELIABILITY_TABLE_KEYS = {
+    "repeated_seed_summary.csv": "repeated_seed_summary",
+    "sensor_stress_summary.csv": "sensor_stress_summary",
+    "risk_coverage.csv": "risk_coverage",
+    "history_protocol_metrics.csv": "history_protocol_metrics",
+    "online_onset_metrics.csv": "online_onset_metrics",
+    "rul_cap_sensitivity.csv": "rul_cap_sensitivity",
+    "leave_one_subset_out_metrics.csv": "leave_one_subset_out_metrics",
+}
+SUBSET_CONDITIONS = {
+    "FD001": "1 operating condition / 1 fault mode",
+    "FD002": "6 operating conditions / 1 fault mode",
+    "FD003": "1 operating condition / 2 fault modes",
+    "FD004": "6 operating conditions / 2 fault modes",
+}
 
 
 def _read_json(path: Path) -> dict | None:
     if not path.is_file():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@st.cache_data(show_spinner=False)
+def _read_dashboard_bundle() -> dict:
+    return _read_json(RESULTS_BUNDLE_PATH) or {}
+
+
+def _published_result(dataset: str, bundle: dict) -> dict | None:
+    published = bundle.get("datasets", {}).get(dataset)
+    if not published:
+        return None
+    figures = {
+        name: str(RESULTS_BUNDLE_PATH.parent / Path(url).name)
+        for name, url in published.get("figures", {}).items()
+    }
+    try:
+        tensorflow_version = package_version("tensorflow")
+    except PackageNotFoundError:
+        tensorflow_version = "not-installed"
+    return {
+        "run_id": published.get("run_id", "published benchmark"),
+        "selected_model": published.get("selected_model", "ridge"),
+        "test_metrics": published.get("model_metrics", {}),
+        "validation_metrics": published.get("validation_metrics", {}),
+        "uncertainty": published.get("uncertainty", {}),
+        "package_versions": {"tensorflow": tensorflow_version},
+        "dataset_summary": published.get("dataset_summary", {}),
+        "sensor_screening": published.get("sensor_screening", {}),
+        "engine_robustness": published.get("engine_robustness", {}),
+        "fractional_life_analysis": {
+            "metrics": published.get("life_stage_metrics", []),
+            "limitation": (
+                "Fractional engine life is a proxy for maintenance phases; C-MAPSS does not contain overhaul records."
+            ),
+        },
+        "figures": figures,
+    }
+
+
+def _combined_subset_rows(bundle: dict) -> pd.DataFrame:
+    rows = []
+    for dataset in DATASET_NAMES:
+        result = bundle.get("datasets", {}).get(dataset)
+        if not result:
+            continue
+        metrics = result.get("test_metrics", {})
+        summary = result.get("dataset_summary", {})
+        rows.append(
+            {
+                "Subset": dataset,
+                "Conditions / faults": SUBSET_CONDITIONS[dataset],
+                "Selected model": result.get("selected_model", "--"),
+                "Test engines": summary.get("test_engines"),
+                "Test windows": metrics.get("n_samples"),
+                "MAE (cycles)": metrics.get("mae"),
+                "RMSE (cycles)": metrics.get("rmse"),
+                "Interval coverage": result.get("uncertainty", {}).get("picp"),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _combined_model_rows(bundle: dict) -> pd.DataFrame:
+    rows = []
+    for dataset in DATASET_NAMES:
+        result = bundle.get("datasets", {}).get(dataset)
+        if not result:
+            continue
+        for model, metrics in result.get("model_metrics", {}).items():
+            validation = result.get("validation_metrics", {}).get(model, {})
+            rows.append(
+                {
+                    "Subset": dataset,
+                    "Model": model,
+                    "Selected on validation": model == result.get("selected_model"),
+                    "Validation MAE (cycles)": validation.get("mae"),
+                    "Test MAE (cycles)": metrics.get("mae"),
+                    "Test RMSE (cycles)": metrics.get("rmse"),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def _render_all_subsets() -> None:
+    bundle = _read_dashboard_bundle()
+    rows = _combined_subset_rows(bundle)
+    if rows.empty:
+        st.title("All-subset benchmark")
+        st.info("The committed benchmark bundle does not contain all four subset results yet.")
+        return
+
+    st.title("All-subset benchmark")
+    st.caption(
+        "FD001-FD004 results together. Each subset selects its model on validation data; "
+        "the reported aggregate is an unweighted macro-average across subsets."
+    )
+    summary = st.columns(3)
+    summary[0].metric("Macro-average MAE", f"{rows['MAE (cycles)'].mean():.2f} cycles")
+    summary[1].metric("Macro-average RMSE", f"{rows['RMSE (cycles)'].mean():.2f} cycles")
+    summary[2].metric("Test engines", f"{int(rows['Test engines'].sum()):,} across {len(rows)} subsets")
+
+    st.subheader("Selected model by subset")
+    fig, axis = plt.subplots(figsize=(10, 4.2))
+    positions = np.arange(len(rows))
+    axis.bar(positions - 0.18, rows["MAE (cycles)"], width=0.36, color="#17877f", label="MAE")
+    axis.bar(positions + 0.18, rows["RMSE (cycles)"], width=0.36, color="#e68a4b", label="RMSE")
+    axis.set_xticks(positions, rows["Subset"])
+    axis.set_ylabel("Error (cycles)")
+    axis.set_title("Held-out test error across all C-MAPSS subsets")
+    axis.set_axisbelow(True)
+    axis.yaxis.grid(color="#e8ece9", linewidth=0.8)
+    axis.spines[["top", "right"]].set_visible(False)
+    axis.legend(frameon=False, ncols=2)
+    fig.tight_layout()
+    st.pyplot(fig, width="stretch")
+    plt.close(fig)
+
+    st.dataframe(rows, hide_index=True, width="stretch")
+    st.download_button(
+        "Download all-subset scores",
+        rows.to_csv(index=False).encode("utf-8"),
+        file_name="cmapss_all_subset_scores.csv",
+        mime="text/csv",
+    )
+
+    model_rows = _combined_model_rows(bundle)
+    if not model_rows.empty:
+        st.subheader("All candidate models")
+        st.dataframe(model_rows, hide_index=True, width="stretch")
+    transfer_rows = bundle.get("transfer", {}).get("rows", [])
+    if transfer_rows:
+        st.subheader("Cross-subset transfer results")
+        st.dataframe(pd.DataFrame(transfer_rows), hide_index=True, width="stretch")
+    st.caption(
+        "Macro-averages weight each subset equally; they are not pooled-window metrics. "
+        "These four datasets are related simulator conditions, not independent fleets."
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -225,9 +380,11 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
 
 def _render_reliability(dataset: str, config: ProjectConfig) -> None:
     metrics_dir = config.output_dir / "reliability" / "metrics"
-    study = _read_json(metrics_dir / "reliability_study.json")
+    reliability = _read_dashboard_bundle().get("reliability", {})
+    study = _read_json(metrics_dir / "reliability_study.json") or reliability.get("study")
+    published_tables = reliability.get("tables", {})
     if not study:
-        st.info("No completed reliability study is available. Run the documented CLI study to populate this view.")
+        st.info("No exported reliability study is available in this deployment.")
         st.code(
             "python -m src.reliability_analysis --datasets FD001 FD002 FD003 FD004 "
             "--seeds 42 43 44 --lstm-seeds 42 --extended-models --with-cnn --epochs 20",
@@ -248,12 +405,13 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
 
     def read_table(name: str) -> pd.DataFrame:
         path = metrics_dir / name
-        if not path.is_file() or path.stat().st_size == 0:
-            return pd.DataFrame()
-        try:
-            return pd.read_csv(path)
-        except pd.errors.EmptyDataError:
-            return pd.DataFrame()
+        if path.is_file() and path.stat().st_size > 0:
+            try:
+                return pd.read_csv(path)
+            except pd.errors.EmptyDataError:
+                pass
+        key = RELIABILITY_TABLE_KEYS.get(name)
+        return pd.DataFrame(published_tables.get(key, [])) if key else pd.DataFrame()
 
     repeated = read_table("repeated_seed_summary.csv")
     if not repeated.empty:
@@ -305,7 +463,10 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
 
     risk = read_table("risk_coverage.csv")
     if not risk.empty:
-        risk = risk.loc[(risk["dataset"] == dataset) & (risk["record_type"] == "risk_coverage")]
+        if "record_type" in risk.columns:
+            risk = risk.loc[risk["record_type"] == "risk_coverage"]
+        if "dataset" in risk.columns:
+            risk = risk.loc[risk["dataset"] == dataset]
     if not risk.empty:
         st.subheader("Selective risk and coverage")
         left, right = st.columns(2)
@@ -343,12 +504,18 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
 
 def main() -> None:
     st.set_page_config(page_title="Turbofan RUL Lab", page_icon="✈", layout="wide")
-    st.sidebar.selectbox("C-MAPSS subset", DATASET_NAMES, key="dataset")
-    dataset = st.session_state.dataset
+    selection = st.sidebar.selectbox("C-MAPSS subset", ("All subsets", *DATASET_NAMES), key="dataset")
+    if selection == "All subsets":
+        _render_all_subsets()
+        return
+
+    dataset = selection
     config = ProjectConfig(dataset=dataset)
     results_dir = config.output_dir / dataset
     model_dir = config.model_dir / dataset
-    result = _read_json(results_dir / "metrics" / "results.json")
+    result = _read_json(results_dir / "metrics" / "results.json") or _published_result(
+        dataset, _read_dashboard_bundle()
+    )
     tensorflow_available = find_spec("tensorflow") is not None
 
     st.title("Turbofan RUL Lab")
@@ -373,7 +540,12 @@ def main() -> None:
             except Exception as error:
                 st.error(f"Experiment failed: {error}")
         if not tensorflow_available:
-            st.caption("LSTM training needs TensorFlow; use Python 3.12 and install requirements-training.txt.")
+            version = f"{sys.version_info.major}.{sys.version_info.minor}"
+            st.caption(
+                f"LSTM training is disabled because TensorFlow is not installed for Python {version}. "
+                "On Streamlit Cloud, set the app Python version to 3.12 and redeploy; Ridge runs without TensorFlow. "
+                "Locally, install requirements-training.txt."
+            )
 
     overview_tab, signals_tab, outputs_tab, reliability_tab, forecast_tab = st.tabs(
         ["Fleet overview", "Signals", "Research outputs", "Reliability", "Forecast"]
