@@ -547,7 +547,8 @@ def main() -> None:
             version = f"{sys.version_info.major}.{sys.version_info.minor}"
             st.caption(
                 f"LSTM training is disabled because TensorFlow is not installed for Python {version}. "
-                "On Streamlit Cloud, set the app Python version to 3.12 and redeploy; Ridge runs without TensorFlow. "
+                "Streamlit Cloud cannot change Python versions in place: note the app settings and secrets, then "
+                "delete and redeploy with Python 3.12, reusing the current subdomain. Ridge runs without TensorFlow. "
                 "Locally, install requirements-training.txt."
             )
 
