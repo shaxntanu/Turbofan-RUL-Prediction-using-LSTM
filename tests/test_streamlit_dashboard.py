@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
+
 from src.config import DATASET_NAMES
+from src import streamlit_dashboard
 from src.streamlit_dashboard import (
     _combined_model_rows,
     _combined_subset_rows,
@@ -34,6 +37,17 @@ def test_all_subset_tables_cover_each_subset_and_candidate():
     assert subset_rows["MAE (cycles)"].mean() == 2.5
     assert model_rows["Selected on validation"].all()
     assert model_rows["Subset"].tolist() == list(DATASET_NAMES)
+
+
+def test_method_animation_renders_the_bundled_mp4(monkeypatch):
+    rendered_videos = []
+    monkeypatch.setattr(streamlit_dashboard.st, "expander", lambda *args, **kwargs: nullcontext())
+    monkeypatch.setattr(streamlit_dashboard.st, "video", rendered_videos.append)
+    monkeypatch.setattr(streamlit_dashboard.st, "caption", lambda *args, **kwargs: None)
+
+    streamlit_dashboard._render_method_video()
+
+    assert rendered_videos == [str(streamlit_dashboard.METHOD_VIDEO_PATH)]
 
 
 def test_reliability_view_falls_back_to_committed_tables_when_outputs_are_absent(tmp_path):
