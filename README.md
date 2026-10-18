@@ -20,7 +20,7 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `docs/turbofan-pipeline.html`: the original baseline Archify diagram, also [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
 - `docs/reliability-pipeline.html`: a separate Archify workflow for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/reliability-pipeline.html).
 - `docs/reliability-pipeline.workflow.json`: the source workflow for the reliability diagram.
-- [Captioned RUL method animation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html): a ManimGx explainer driven by the real FD001 engine trace; source is in `animations/rul_method.py` and the rendered MP4 is in `docs/media/`.
+- [Captioned RUL method animation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html): a ManimGx explainer driven by the real FD001 engine trace. The bundled MP4 also appears in the Streamlit Fleet overview and All-subset benchmark; playback does not require ManimGx. Source is in `animations/rul_method.py` and the rendered video is in `docs/media/`.
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
 ## Setup
