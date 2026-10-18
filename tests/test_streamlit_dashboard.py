@@ -5,8 +5,11 @@ from contextlib import nullcontext
 from src.config import DATASET_NAMES
 from src import streamlit_dashboard
 from src.streamlit_dashboard import (
+    _aggregate_maintenance_scenario,
     _combined_model_rows,
     _combined_subset_rows,
+    _maintenance_capacity_curve,
+    _read_maintenance_scenarios,
     _reliability_snapshot,
 )
 
@@ -65,3 +68,41 @@ def test_reliability_view_falls_back_to_committed_tables_when_outputs_are_absent
 
     assert loaded_study == study
     assert tables["repeated_seed_summary"] == rows
+
+
+def test_maintenance_scenarios_reconcile_for_each_subset_and_all_subsets():
+    scenarios = _read_maintenance_scenarios()
+
+    assert set(scenarios["dataset"]) == set(DATASET_NAMES)
+    assert len(scenarios) == 320
+    for dataset in (*DATASET_NAMES, "All subsets"):
+        result = _aggregate_maintenance_scenario(
+            scenarios, dataset, 30, 20, "point_estimate"
+        )
+        assert result is not None
+        assert result["scheduled_engines"] <= result["slot_limit"]
+        assert result["urgent_serviced"] + result["missed_urgent"] == result["urgent_engine_count"]
+        assert result["urgent_serviced"] + result["unnecessary_service"] == result["scheduled_engines"]
+
+    combined = _aggregate_maintenance_scenario(
+        scenarios, "All subsets", 30, 20, "point_estimate"
+    )
+    assert combined["engine_count"] == 690
+    assert combined["slot_limit"] == 137
+
+
+def test_maintenance_interval_policy_and_capacity_frontier_are_consistent():
+    scenarios = _read_maintenance_scenarios()
+    point = _aggregate_maintenance_scenario(
+        scenarios, "FD001", 30, 20, "point_estimate"
+    )
+    interval = _aggregate_maintenance_scenario(
+        scenarios, "FD001", 30, 20, "conservative_interval"
+    )
+    assert interval["eligible_engines"] >= point["eligible_engines"]
+
+    curve = _maintenance_capacity_curve(
+        scenarios, "FD001", 30, "conservative_interval"
+    )
+    recall = curve["urgent_recall"].dropna()
+    assert recall.is_monotonic_increasing
