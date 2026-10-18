@@ -28,6 +28,7 @@ from src.target_construction import TargetConstructor
 
 RAW_COLUMNS = DataLoader(ProjectConfig()).columns
 RESULTS_BUNDLE_PATH = Path(__file__).resolve().parents[1] / "web" / "public" / "results" / "benchmark.json"
+METHOD_VIDEO_PATH = Path(__file__).resolve().parents[1] / "docs" / "media" / "rul-method.mp4"
 RELIABILITY_TABLE_KEYS = {
     "repeated_seed_summary.csv": "repeated_seed_summary",
     "sensor_stress_summary.csv": "sensor_stress_summary",
@@ -49,6 +50,18 @@ def _read_json(path: Path) -> dict | None:
     if not path.is_file():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _render_method_video() -> None:
+    with st.expander("Watch the RUL method animation (13 seconds)", expanded=True):
+        if METHOD_VIDEO_PATH.is_file():
+            st.video(str(METHOD_VIDEO_PATH))
+            st.caption(
+                "Measured FD001 engine trace, the 30-cycle input window, RUL target construction, "
+                "and validation-calibrated uncertainty. The regressor is schematic, not a sample-specific prediction."
+            )
+        else:
+            st.info("The bundled method animation is unavailable in this checkout.")
 
 
 @st.cache_data(show_spinner=False)
@@ -151,6 +164,7 @@ def _render_all_subsets() -> None:
         "FD001-FD004 results together. Each subset selects its model on validation data; "
         "the reported aggregate is an unweighted macro-average across subsets."
     )
+    _render_method_video()
     summary = st.columns(3)
     summary[0].metric("Macro-average MAE", f"{rows['MAE (cycles)'].mean():.2f} cycles")
     summary[1].metric("Macro-average RMSE", f"{rows['RMSE (cycles)'].mean():.2f} cycles")
@@ -556,6 +570,7 @@ def main() -> None:
         ["Fleet overview", "Signals", "Research outputs", "Reliability", "Forecast"]
     )
     with overview_tab:
+        _render_method_video()
         if result:
             summary = result["dataset_summary"]
             metrics = result["test_metrics"].get(result["selected_model"], {})
