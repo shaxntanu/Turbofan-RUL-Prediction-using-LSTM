@@ -100,8 +100,10 @@ On Windows with Python 3.14 installed, render into a temporary directory so insp
 py -3.14 -m venv "$env:TEMP\turbofan-animation-env"
 & "$env:TEMP\turbofan-animation-env\Scripts\python.exe" -m pip install -r requirements-animation.txt
 & "$env:TEMP\turbofan-animation-env\Scripts\manimgx.exe" inspect animations\rul_method.py --output "$env:TEMP\rul-method-storyboard.png"
+& "$env:TEMP\turbofan-animation-env\Scripts\manimgx.exe" inspect animations\rul_method.py --time 3.0 --output "$env:TEMP\rul-method-poster.png"
 & "$env:TEMP\turbofan-animation-env\Scripts\manimgx.exe" render animations\rul_method.py --output "$env:TEMP\rul-method.mp4" --resolution 1280x720 --fps 30 --preset veryfast --crf 27
 Copy-Item "$env:TEMP\rul-method.mp4" docs\media\rul-method.mp4
+Copy-Item "$env:TEMP\rul-method-poster.png" docs\media\rul-method-poster.png
 ```
 
 ## Optional C++ Sensor Kernels
