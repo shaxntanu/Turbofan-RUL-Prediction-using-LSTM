@@ -53,6 +53,10 @@
     h2 { font-size: 18px; margin: 0 0 8px; letter-spacing: 0; }
     .details p { margin: 0; color: var(--muted); max-width: 610px; }
     .links { display: flex; flex-wrap: wrap; gap: 8px 18px; align-content: start; }
+    .pipeline-section { margin-top: 24px; }
+    .pipeline-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin: 0 0 10px; }
+    .pipeline-heading h2 { margin: 3px 0 2px; font-size: 20px; }
+    .pipeline-heading p { margin: 5px 0 0; color: var(--muted); max-width: 680px; }
     @media (max-width: 720px) {
       .topbar { padding: 0 18px; }
       nav { gap: 13px; }
@@ -60,6 +64,7 @@
       main { padding: 21px 16px 42px; }
       .intro { display: block; }
       .actions { margin-top: 14px; }
+      .pipeline-heading { display: block; }
       .diagram { height: 480px; min-height: 0; }
       .details { grid-template-columns: 1fr; gap: 18px; }
     }
@@ -74,7 +79,8 @@
   <header class="topbar">
     <a class="brand" href="./" aria-label="Turbofan RUL Research home"><span class="brand-mark" aria-hidden="true"></span><span>Turbofan RUL Research</span></a>
     <nav aria-label="Main navigation">
-      <a href="#pipeline">Pipeline</a>
+      <a href="#baseline">Baseline pipeline</a>
+      <a href="#reliability">Reliability pipeline</a>
       <a href="https://turbofan-rul-prediction-lstm.streamlit.app/" target="_blank" rel="noreferrer">Open lab</a>
       <a href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM" target="_blank" rel="noreferrer">Repository</a>
     </nav>
@@ -91,8 +97,22 @@
         <a class="button" href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM" target="_blank" rel="noreferrer">Source code</a>
       </div>
     </section>
-    <iframe class="diagram" src="turbofan-pipeline.html?embed=1&amp;theme=dark" title="Interactive turbofan RUL research pipeline"></iframe>
-    <div class="diagram-link"><span>Baseline workflow | data validation through evaluation and apps</span><a class="text-link" href="turbofan-pipeline.html">Open diagram directly &gt;</a></div>
+    <section class="pipeline-section" id="baseline" aria-labelledby="baseline-title">
+      <div class="pipeline-heading">
+        <div><div class="eyebrow">BASELINE WORKFLOW</div><h2 id="baseline-title">RUL training and evaluation</h2><p>Data validation, engine-level splitting, model selection, test scoring, and result delivery.</p></div>
+        <a class="button" href="turbofan-pipeline.html">Open baseline diagram</a>
+      </div>
+      <iframe class="diagram" src="turbofan-pipeline.html?embed=1&amp;theme=dark" title="Interactive baseline turbofan RUL pipeline"></iframe>
+      <div class="diagram-link"><span>Baseline workflow | data validation through evaluation and apps</span><a class="text-link" href="turbofan-pipeline.html">Open diagram directly &gt;</a></div>
+    </section>
+    <section class="pipeline-section" id="reliability" aria-labelledby="reliability-title">
+      <div class="pipeline-heading">
+        <div><div class="eyebrow">RELIABILITY EXTENSION</div><h2 id="reliability-title">Shift, sensor health, and uncertainty</h2><p>Validation-calibrated reporting across terminal engines, shorter histories, synthetic sensor faults, and held-out C-MAPSS subsets.</p></div>
+        <a class="button button-primary" href="reliability-pipeline.html">Open reliability diagram</a>
+      </div>
+      <iframe class="diagram" src="reliability-pipeline.html?embed=1&amp;theme=dark" title="Interactive reliability and robustness research pipeline"></iframe>
+      <div class="diagram-link"><span>Separate research path | held-out domains, stress tests, uncertainty, and dashboards</span><a class="text-link" href="reliability-pipeline.html">Open diagram directly &gt;</a></div>
+    </section>
     <section class="details" aria-label="Project resources">
       <div>
         <h2>Evaluation boundary</h2>
