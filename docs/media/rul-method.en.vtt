@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.400
+Measured sensor_4 values from NASA C-MAPSS FD001 engine 1.
+
+00:00:02.400 --> 00:00:06.200
+The orange band follows a 30-cycle input window across the engine's 192-cycle history.
+
+00:00:06.200 --> 00:00:08.300
+The window ends at cycle 163. The recorded, capped training label is 29 remaining cycles.
+
+00:00:08.300 --> 00:00:09.500
+The model stage is schematic: 30 cycles by 18 retained features.
+
+00:00:09.500 --> 00:00:11.100
+Split conformal uses validation residuals for 95 percent nominal coverage.
+
+00:00:11.100 --> 00:00:13.100
+Coverage is not guaranteed under domain shift. No sample-specific prediction is shown.
