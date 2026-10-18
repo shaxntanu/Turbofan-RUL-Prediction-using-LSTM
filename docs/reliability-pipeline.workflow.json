@@ -29,7 +29,6 @@
   "lanes": [
     { "id": "evaluation", "label": "Engine-level fit, validation + test" },
     { "id": "robustness", "label": "Domain shift + sensor-health studies", "variant": "exception" },
-    { "id": "outputs", "label": "Exported measurements" },
     { "id": "applications", "label": "Research dashboards" }
   ],
   "mainPath": [
@@ -94,14 +93,14 @@
     {
       "id": "stress_tests",
       "lane": "robustness",
-      "col": 5,
+      "col": 4,
       "type": "backend",
       "label": "Shift + sensor stress",
       "width": 158
     },
     {
       "id": "results_export",
-      "lane": "outputs",
+      "lane": "robustness",
       "col": 5,
       "type": "database",
       "label": "Measured results",
