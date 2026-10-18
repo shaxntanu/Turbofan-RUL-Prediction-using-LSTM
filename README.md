@@ -16,7 +16,10 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `models/`: generated model and scaler files (not tracked).
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
 - `streamlit_app.py`: interactive data exploration and prediction interface.
-- `docs/turbofan-pipeline.html`: interactive Archify workflow diagram, also [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
+- `docs/index.html`: GitHub Pages landing page linking to both interactive research pipelines.
+- `docs/turbofan-pipeline.html`: the original baseline Archify diagram, also [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
+- `docs/reliability-pipeline.html`: a separate Archify workflow for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/reliability-pipeline.html).
+- `docs/reliability-pipeline.workflow.json`: the source workflow for the reliability diagram.
 - [Captioned RUL method animation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html): a ManimGx explainer driven by the real FD001 engine trace; source is in `animations/rul_method.py` and the rendered MP4 is in `docs/media/`.
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
@@ -31,7 +34,7 @@ python -m pip install --upgrade pip
 pip install -r requirements-training.txt
 ```
 
-`requirements.txt` is the Streamlit deployment manifest. It installs TensorFlow 2.21 on supported Python versions and skips it on Python 3.14, so a Python 3.14 deployment can still run the Ridge app. The supplied Streamlit logs show Python 3.14.8, which is why its LSTM button is disabled: TensorFlow 2.21 wheels support Python 3.10-3.13. Streamlit Community Cloud does not let you change an existing app's Python version in place. To enable LSTM on the hosted app, record its repository, branch, entrypoint, custom subdomain, and any configured secrets; then delete and redeploy it, selecting Python 3.12 in Advanced settings and reusing the same subdomain. Re-enter secrets privately in the deployment form; do not commit them. Ridge remains available in the current deployment. For local experiments, `requirements-training.txt` installs the training dependencies.
+`requirements.txt` is the Streamlit deployment manifest. It installs TensorFlow 2.21 on supported Python versions and skips TensorFlow on Python 3.14, so Ridge can run there while LSTM training remains unavailable. The supplied Streamlit logs showed Python 3.14.8, which has no stable TensorFlow 2.21 wheel; use Python 3.12 for the complete training app. On Streamlit Community Cloud, changing an existing app's Python version requires deleting and redeploying it; record its repository, branch, entrypoint, custom subdomain, and any secrets first, then select Python 3.12 in Advanced settings and re-enter secrets privately. See [Streamlit's Python-version instructions](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app/upgrade-python). For local experiments, `requirements-training.txt` installs the training dependencies.
 
 The pipeline discovers the bundled data under `Ref/CMAPSSData/`. Set `CMAPSS_DATA_DIR` to use a different C-MAPSS directory.
 
