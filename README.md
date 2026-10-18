@@ -69,6 +69,20 @@ python -m src.reliability_analysis --datasets FD001 FD002 FD003 FD004 --seeds 42
 
 The study writes terminal-engine and overlapping-window metrics, sensor-stress and risk-coverage tables, progressive-prefix onset results, short-history protocols, RUL-cap sensitivity, and cross-subset holdout results under `outputs/reliability/`. XGBoost is optional; install `xgboost` separately before adding `--with-xgboost`. Protocol definitions and limitations are in [Reliability and robustness](docs/RELIABILITY_AND_ROBUSTNESS.md).
 
+## Maintenance What-If Scenarios
+
+The Streamlit app includes a **Maintenance what-if** tab for each subset and for FD001-FD004 together. A Julia scenario engine compares point-estimate and interval-aware service triggers across 15, 30, 45, 60, and 90-cycle urgency cutoffs and service capacities from 0% to 100%. The selected model for each subset follows validation selection; this snapshot uses seed 42.
+
+Regenerate the committed scenario table with Julia 1.10 or newer:
+
+```powershell
+julia scripts/maintenance_what_if.jl
+```
+
+The fixed input snapshot is `data/maintenance_what_if_inputs.csv`; generated results are in `web/public/results/maintenance_what_if_scenarios.csv`. The allocation uses predicted RUL or the validation-calibrated lower interval bound. Held-out test RUL labels are used only after allocation to score urgent recall, missed urgent engines, and non-urgent services. GitHub Actions checks that the committed table matches the Julia output.
+
+This is retrospective scenario analysis on simulated C-MAPSS engines, not a field-validated maintenance policy. Service capacities and urgency cutoffs are analyst-chosen assumptions; the data contains no maintenance cost, repair duration, downtime, or post-service outcomes. The Streamlit app reads the committed summary table, so Julia is not required in the hosted app runtime.
+
 Regenerate the static dashboard bundle from the latest run:
 
 ```powershell
