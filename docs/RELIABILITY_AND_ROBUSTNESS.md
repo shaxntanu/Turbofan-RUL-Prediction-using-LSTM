@@ -36,7 +36,7 @@ Short-history results compare (1) a Ridge model trained at each shorter history 
 
 Sensor stress includes channel/group dropout, stuck values, drift, additive noise, missing blocks with training-median imputation, reduced sampling, and selected combined corruptions. Severity parameters are recorded in `configuration.json`; corruptions preserve the target when a test target exists. These are controlled synthetic interventions, not estimated field failure rates.
 
-Split-conformal absolute-residual intervals use validation engines for calibration. The study reports empirical test coverage and width, plus validation-threshold risk/coverage when abstaining on out-of-range sensor health scores. Coverage is not guaranteed under time dependence or domain shift; these are diagnostics, not deployment guarantees.
+Split-conformal absolute-residual intervals use validation engines for calibration. The study reports empirical test coverage and width, plus validation-threshold risk/coverage when abstaining on out-of-range sensor health scores. Abstention cutoffs use the lower empirical validation quantile and flag only scores strictly above the cutoff; ties at the boundary are left unflagged, so the realized rate can be below the requested rate rather than spuriously flagging every tied in-distribution engine. Coverage is not guaranteed under time dependence or domain shift; these are diagnostics, not deployment guarantees.
 
 Leave-one-subset-out runs hold one FD subset out of fitting, scaling, and calibration and use the other selected subsets as source data. FD001-FD004 differ in simulated conditions and fault modes but are not independent aircraft fleets. A pooled model that includes the target subset is not a zero-shot result.
 
