@@ -1,0 +1,149 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Reliability-Aware Turbofan RUL Research Pipeline",
+    "quality_profile": "showcase",
+    "output": "docs/reliability-pipeline.html",
+    "views": [
+      {
+        "id": "controlled-evaluation",
+        "label": "Controlled evaluation",
+        "focus": ["cmapss", "engine_split", "train_preprocess", "validation_select", "terminal_eval"],
+        "note": "Follow engine grouping, train-only preprocessing, and validation-only selection."
+      },
+      {
+        "id": "shift-and-stress",
+        "label": "Shift and sensor stress",
+        "focus": ["cmapss", "stress_tests", "validation_calibration", "results_export"],
+        "note": "Compare clean, synthetically corrupted, and held-out-subset conditions."
+      },
+      {
+        "id": "reporting",
+        "label": "Results and dashboards",
+        "focus": ["terminal_eval", "validation_calibration", "results_export", "dashboard"],
+        "note": "Inspect per-engine metrics, empirical uncertainty, and exported results."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "evaluation", "label": "Engine-level fit, validation + test" },
+    { "id": "robustness", "label": "Domain shift + sensor-health studies", "variant": "exception" },
+    { "id": "outputs", "label": "Exported measurements" },
+    { "id": "applications", "label": "Research dashboards" }
+  ],
+  "mainPath": [
+    "cmapss",
+    "engine_split",
+    "train_preprocess",
+    "validation_select",
+    "validation_calibration",
+    "terminal_eval",
+    "results_export",
+    "dashboard"
+  ],
+  "nodes": [
+    {
+      "id": "cmapss",
+      "lane": "evaluation",
+      "col": 0,
+      "type": "database",
+      "label": "NASA C-MAPSS",
+      "width": 150
+    },
+    {
+      "id": "engine_split",
+      "lane": "evaluation",
+      "col": 1,
+      "type": "security",
+      "label": "Engine-level split",
+      "width": 150
+    },
+    {
+      "id": "train_preprocess",
+      "lane": "evaluation",
+      "col": 2,
+      "type": "backend",
+      "label": "Train preprocessing",
+      "width": 150
+    },
+    {
+      "id": "validation_select",
+      "lane": "evaluation",
+      "col": 3,
+      "type": "backend",
+      "label": "Validation selection",
+      "width": 158
+    },
+    {
+      "id": "validation_calibration",
+      "lane": "evaluation",
+      "col": 4,
+      "type": "security",
+      "label": "Validation calibration",
+      "width": 158
+    },
+    {
+      "id": "terminal_eval",
+      "lane": "evaluation",
+      "col": 5,
+      "type": "backend",
+      "label": "Terminal / window eval",
+      "width": 172
+    },
+    {
+      "id": "stress_tests",
+      "lane": "robustness",
+      "col": 5,
+      "type": "backend",
+      "label": "Shift + sensor stress",
+      "width": 158
+    },
+    {
+      "id": "results_export",
+      "lane": "outputs",
+      "col": 5,
+      "type": "database",
+      "label": "Measured results",
+      "width": 150
+    },
+    {
+      "id": "dashboard",
+      "lane": "applications",
+      "col": 5,
+      "type": "frontend",
+      "label": "Web + Streamlit",
+      "width": 145
+    }
+  ],
+  "edges": [
+    { "id": "dataset-split", "from": "cmapss", "to": "engine_split", "label": "group by engine", "role": "main" },
+    { "id": "split-preprocess", "from": "engine_split", "to": "train_preprocess", "label": "fit on train only", "role": "main" },
+    { "id": "preprocess-select", "from": "train_preprocess", "to": "validation_select", "label": "shared features", "role": "main" },
+    { "id": "select-calibration", "from": "validation_select", "to": "validation_calibration", "label": "validation engines only", "role": "main" },
+    { "id": "calibration-terminal", "from": "validation_calibration", "to": "terminal_eval", "label": "freeze before test", "role": "main" },
+    { "id": "calibration-stress", "from": "validation_calibration", "to": "stress_tests", "label": "source-only calibration", "role": "branch" },
+    { "id": "terminal-results", "from": "terminal_eval", "to": "results_export", "label": "engine predictions + scores", "role": "main" },
+    { "id": "stress-results", "from": "stress_tests", "to": "results_export", "label": "shifted coverage + risk", "role": "branch" },
+    { "id": "results-dashboard", "from": "results_export", "to": "dashboard", "label": "static export", "role": "main" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Leakage boundary",
+      "items": [
+        "Engine groups stay separate across fit and validation",
+        "Official test labels are reserved for final scoring",
+        "Leave-one-out fitting excludes the target FD subset"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Interpretation limits",
+      "items": [
+        "FD subsets are related simulator domains, not real fleets",
+        "Sensor corruptions are controlled synthetic stress tests"
+      ]
+    }
+  ]
+}
