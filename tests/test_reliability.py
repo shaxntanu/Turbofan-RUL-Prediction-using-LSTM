@@ -130,3 +130,18 @@ def test_abstention_thresholds_are_validation_derived_and_report_flag_counts():
     assert rows[1]["n_flagged"] == 2
     assert rows[1]["coverage_fraction"] == 0.6
     assert rows[1]["retained_mae"] == 1.0
+
+
+def test_abstention_ties_at_validation_threshold_do_not_overflag():
+    scores = np.zeros(100, dtype=float)
+    thresholds = validation_abstention_thresholds(scores, (0.2,))
+    rows = risk_coverage_rows(
+        np.arange(100, dtype=float),
+        np.arange(100, dtype=float),
+        scores,
+        thresholds,
+    )
+
+    assert thresholds[0.2] == 0.0
+    assert rows[0]["n_flagged"] == 0
+    assert rows[0]["coverage_fraction"] == 1.0
