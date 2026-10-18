@@ -1,0 +1,35 @@
+name: Verify Julia maintenance scenarios
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/maintenance_what_if.jl"
+      - "data/maintenance_what_if_inputs.csv"
+      - "web/public/results/maintenance_what_if_scenarios.csv"
+      - ".github/workflows/julia-what-if.yml"
+  pull_request:
+    paths:
+      - "scripts/maintenance_what_if.jl"
+      - "data/maintenance_what_if_inputs.csv"
+      - "web/public/results/maintenance_what_if_scenarios.csv"
+      - ".github/workflows/julia-what-if.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-scenario-table:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.10"
+      - name: Regenerate and verify the committed table
+        run: |
+          julia scripts/maintenance_what_if.jl
+          git diff --exit-code -- web/public/results/maintenance_what_if_scenarios.csv
