@@ -1,0 +1,2 @@
+# Optional renderer for the static RUL methods video; requires Python 3.13+.
+manimgx==0.1.1
