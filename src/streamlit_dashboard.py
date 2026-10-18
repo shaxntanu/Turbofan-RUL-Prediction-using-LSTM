@@ -29,6 +29,13 @@ from src.target_construction import TargetConstructor
 RAW_COLUMNS = DataLoader(ProjectConfig()).columns
 RESULTS_BUNDLE_PATH = Path(__file__).resolve().parents[1] / "web" / "public" / "results" / "benchmark.json"
 METHOD_VIDEO_PATH = Path(__file__).resolve().parents[1] / "docs" / "media" / "rul-method.mp4"
+MAINTENANCE_SCENARIOS_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "web"
+    / "public"
+    / "results"
+    / "maintenance_what_if_scenarios.csv"
+)
 RELIABILITY_TABLE_KEYS = {
     "repeated_seed_summary.csv": "repeated_seed_summary",
     "sensor_stress_summary.csv": "sensor_stress_summary",
@@ -149,6 +156,211 @@ def _reliability_snapshot(metrics_dir: Path, bundle: dict) -> tuple[dict | None,
     reliability = bundle.get("reliability", {})
     study = _read_json(metrics_dir / "reliability_study.json") or reliability.get("study")
     return study, reliability.get("tables", {})
+
+
+@st.cache_data(show_spinner=False)
+def _read_maintenance_scenarios() -> pd.DataFrame:
+    if not MAINTENANCE_SCENARIOS_PATH.is_file():
+        return pd.DataFrame()
+    return pd.read_csv(MAINTENANCE_SCENARIOS_PATH)
+
+
+def _maintenance_scenario_rows(
+    scenarios: pd.DataFrame,
+    dataset: str,
+    threshold: int,
+    capacity_pct: int,
+    policy: str,
+) -> pd.DataFrame:
+    selected = scenarios.loc[
+        (scenarios["urgency_threshold_cycles"] == threshold)
+        & (scenarios["capacity_pct"] == capacity_pct)
+        & (scenarios["policy"] == policy)
+    ]
+    if dataset != "All subsets":
+        selected = selected.loc[selected["dataset"] == dataset]
+    return selected.copy()
+
+
+def _aggregate_maintenance_scenario(
+    scenarios: pd.DataFrame,
+    dataset: str,
+    threshold: int,
+    capacity_pct: int,
+    policy: str,
+) -> dict | None:
+    rows = _maintenance_scenario_rows(scenarios, dataset, threshold, capacity_pct, policy)
+    if rows.empty:
+        return None
+    counts = (
+        "engine_count",
+        "slot_limit",
+        "urgent_engine_count",
+        "eligible_engines",
+        "scheduled_engines",
+        "urgent_serviced",
+        "missed_urgent",
+        "unnecessary_service",
+    )
+    summary = {name: int(rows[name].sum()) for name in counts}
+    summary["urgent_recall"] = (
+        summary["urgent_serviced"] / summary["urgent_engine_count"]
+        if summary["urgent_engine_count"]
+        else None
+    )
+    summary["service_precision"] = (
+        summary["urgent_serviced"] / summary["scheduled_engines"]
+        if summary["scheduled_engines"]
+        else None
+    )
+    summary["capacity_utilization"] = (
+        summary["scheduled_engines"] / summary["slot_limit"]
+        if summary["slot_limit"]
+        else None
+    )
+    return summary
+
+
+def _maintenance_capacity_curve(
+    scenarios: pd.DataFrame,
+    dataset: str,
+    threshold: int,
+    policy: str,
+) -> pd.DataFrame:
+    selected = scenarios.loc[
+        (scenarios["urgency_threshold_cycles"] == threshold)
+        & (scenarios["policy"] == policy)
+    ]
+    if dataset != "All subsets":
+        selected = selected.loc[selected["dataset"] == dataset]
+    if selected.empty:
+        return pd.DataFrame()
+    curve = selected.groupby("capacity_pct", as_index=False).agg(
+        urgent_engine_count=("urgent_engine_count", "sum"),
+        scheduled_engines=("scheduled_engines", "sum"),
+        urgent_serviced=("urgent_serviced", "sum"),
+    )
+    curve["urgent_recall"] = curve["urgent_serviced"] / curve["urgent_engine_count"].replace(0, np.nan)
+    curve["service_precision"] = curve["urgent_serviced"] / curve["scheduled_engines"].replace(0, np.nan)
+    return curve
+
+
+def _render_maintenance_what_if(dataset: str) -> None:
+    scenarios = _read_maintenance_scenarios()
+    if scenarios.empty:
+        st.info("The committed Julia scenario results are unavailable in this deployment.")
+        return
+
+    st.title("Maintenance what-if")
+    st.caption(
+        "Benchmark-based scenario analysis. Capacity and urgency cutoffs are hypothetical; this is not a field-validated policy or ROI estimate."
+    )
+    required = {
+        "dataset",
+        "urgency_threshold_cycles",
+        "capacity_pct",
+        "policy",
+        "model",
+        "engine_count",
+        "slot_limit",
+        "urgent_engine_count",
+        "eligible_engines",
+        "scheduled_engines",
+        "urgent_serviced",
+        "missed_urgent",
+        "unnecessary_service",
+    }
+    if not required.issubset(scenarios.columns):
+        st.error("The committed maintenance scenario table has an unsupported schema.")
+        return
+
+    thresholds = sorted(int(value) for value in scenarios["urgency_threshold_cycles"].unique())
+    capacities = sorted(int(value) for value in scenarios["capacity_pct"].unique())
+    controls = st.columns(3)
+    threshold = controls[0].selectbox(
+        "Urgency cutoff (cycles)", thresholds, index=thresholds.index(30) if 30 in thresholds else 0
+    )
+    capacity_pct = controls[1].selectbox(
+        "Available service capacity", capacities, index=capacities.index(20) if 20 in capacities else 0,
+        format_func=lambda value: f"{value}% of engines",
+    )
+    policy_labels = {
+        "Point estimate": "point_estimate",
+        "Interval-aware early trigger": "conservative_interval",
+    }
+    policy_label = controls[2].selectbox("Trigger policy", list(policy_labels))
+    policy = policy_labels[policy_label]
+
+    summary = _aggregate_maintenance_scenario(
+        scenarios, dataset, int(threshold), int(capacity_pct), policy
+    )
+    if summary is None:
+        st.warning("No precomputed scenario matches these settings.")
+        return
+
+    first_row = _maintenance_scenario_rows(
+        scenarios, dataset, int(threshold), int(capacity_pct), policy
+    ).iloc[0]
+    model_note = (
+        "validation-selected model per subset" if dataset == "All subsets" else first_row["model"]
+    )
+    st.caption(
+        f"Model: {model_note} · one fixed seed (42) · "
+        f"{summary['engine_count']:,} terminal test engines"
+    )
+    metric_rows = (st.columns(3), st.columns(3))
+    metric_rows[0][0].metric("Urgent engines in benchmark", summary["urgent_engine_count"])
+    metric_rows[0][1].metric(
+        "Scheduled / available slots",
+        f"{summary['scheduled_engines']} / {summary['slot_limit']}",
+    )
+    recall = summary["urgent_recall"]
+    metric_rows[0][2].metric("Urgent recall", "N/A" if recall is None else f"{recall:.1%}")
+    metric_rows[1][0].metric("Missed urgent engines", summary["missed_urgent"])
+    metric_rows[1][1].metric("Non-urgent services", summary["unnecessary_service"])
+    precision = summary["service_precision"]
+    metric_rows[1][2].metric("Service precision", "N/A" if precision is None else f"{precision:.1%}")
+
+    curve = _maintenance_capacity_curve(scenarios, dataset, int(threshold), policy)
+    if not curve.empty:
+        figure, axis = plt.subplots(figsize=(9, 4))
+        axis.plot(
+            curve["capacity_pct"], curve["urgent_recall"] * 100,
+            marker="o", color="#17877f", label="Urgent recall",
+        )
+        axis.plot(
+            curve["capacity_pct"], curve["service_precision"] * 100,
+            marker="s", color="#e68a4b", label="Service precision",
+        )
+        axis.set(
+            xlabel="Service capacity (% of engines)",
+            ylabel="Engines (%)",
+            title=f"Capacity trade-off · {threshold}-cycle urgency cutoff",
+            ylim=(0, 100),
+        )
+        axis.set_axisbelow(True)
+        axis.yaxis.grid(color="#e8ece9", linewidth=0.8)
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.legend(frameon=False)
+        figure.tight_layout()
+        st.pyplot(figure, width="stretch")
+        plt.close(figure)
+
+    detail = _maintenance_scenario_rows(
+        scenarios, dataset, int(threshold), int(capacity_pct), policy
+    )
+    detail_columns = [
+        "dataset", "model", "slot_limit", "scheduled_engines", "urgent_engine_count",
+        "urgent_serviced", "missed_urgent", "unnecessary_service", "urgent_recall", "service_precision",
+    ]
+    st.dataframe(detail[detail_columns], hide_index=True, width="stretch")
+    with st.expander("Interpretation and limits"):
+        st.write(
+            "Julia creates the fixed scenario grid from terminal predictions. The allocation rule sees only predicted RUL "
+            "or its validation-calibrated lower interval bound; held-out RUL labels are used only to score the completed "
+            "allocation. The conformal interval is global, not engine-specific. C-MAPSS is a simulator benchmark, and "
+            "the service capacity and urgency cutoff are analyst-chosen assumptions."
+        )
 
 
 def _render_all_subsets() -> None:
@@ -524,7 +736,11 @@ def main() -> None:
     st.set_page_config(page_title="Turbofan RUL Lab", page_icon="✈", layout="wide")
     selection = st.sidebar.selectbox("C-MAPSS subset", ("All subsets", *DATASET_NAMES), key="dataset")
     if selection == "All subsets":
-        _render_all_subsets()
+        benchmark_tab, planner_tab = st.tabs(["All-subset benchmark", "Maintenance what-if"])
+        with benchmark_tab:
+            _render_all_subsets()
+        with planner_tab:
+            _render_maintenance_what_if(selection)
         return
 
     dataset = selection
@@ -566,8 +782,8 @@ def main() -> None:
                 "Locally, install requirements-training.txt."
             )
 
-    overview_tab, signals_tab, outputs_tab, reliability_tab, forecast_tab = st.tabs(
-        ["Fleet overview", "Signals", "Research outputs", "Reliability", "Forecast"]
+    overview_tab, signals_tab, outputs_tab, reliability_tab, forecast_tab, planner_tab = st.tabs(
+        ["Fleet overview", "Signals", "Research outputs", "Reliability", "Forecast", "Maintenance what-if"]
     )
     with overview_tab:
         _render_method_video()
@@ -742,3 +958,6 @@ def main() -> None:
 
     with forecast_tab:
         _render_forecast(dataset, config, model_dir, result)
+
+    with planner_tab:
+        _render_maintenance_what_if(dataset)
