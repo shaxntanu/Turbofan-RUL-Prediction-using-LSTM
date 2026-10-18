@@ -17,6 +17,7 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
 - `streamlit_app.py`: interactive data exploration and prediction interface.
 - `docs/turbofan-pipeline.html`: interactive Archify workflow diagram, also [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
+- [Captioned RUL method animation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html): a ManimGx explainer driven by the real FD001 engine trace; source is in `animations/rul_method.py` and the rendered MP4 is in `docs/media/`.
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
 ## Setup
@@ -89,6 +90,20 @@ npm run dev
 
 Both apps include an all-subset view for combined FD001-FD004 selected-model scores, candidate-model comparisons, and cross-subset results. The Streamlit Reliability tab and web Reliability page read the committed aggregate study snapshot, so those views work in hosted deployments without ignored local `outputs/` files. The dashboard presents measured per-subset scores, transfer errors, figures, and methodology notes. After retraining or rerunning the reliability study, rerun the export command above to refresh its data bundle.
 
+## Optional ManimGx Animation
+
+The static, captioned [methods explainer](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html) shows a measured FD001 sensor trace, its moving 30-cycle input window, a true training-label example, and the validation-calibrated conformal interval method. The model output is explicitly schematic; no sample-specific prediction is claimed. ManimGx is only needed to regenerate this video, not to run either app or the training pipeline. Its pinned optional dependency requires Python 3.13 or newer and stays separate from `requirements.txt` and `requirements-training.txt`.
+
+On Windows with Python 3.14 installed, render into a temporary directory so inspection storyboards do not clutter the repository:
+
+```powershell
+py -3.14 -m venv "$env:TEMP\turbofan-animation-env"
+& "$env:TEMP\turbofan-animation-env\Scripts\python.exe" -m pip install -r requirements-animation.txt
+& "$env:TEMP\turbofan-animation-env\Scripts\manimgx.exe" inspect animations\rul_method.py --output "$env:TEMP\rul-method-storyboard.png"
+& "$env:TEMP\turbofan-animation-env\Scripts\manimgx.exe" render animations\rul_method.py --output "$env:TEMP\rul-method.mp4" --resolution 1280x720 --fps 30 --preset veryfast --crf 27
+Copy-Item "$env:TEMP\rul-method.mp4" docs\media\rul-method.mp4
+```
+
 ## Optional C++ Sensor Kernels
 
 `cpp_engine/` contains optional C++17 PCA and K-Means kernels exposed to Python through pybind11. Build tools with a C++17 compiler are required:
@@ -115,4 +130,4 @@ The supplied papers study turbine gas temperature and proprietary operational or
 
 ## Stack
 
-Python, TensorFlow/Keras, scikit-learn, pandas, NumPy, Matplotlib, Seaborn, Streamlit, React, Vite, Chart.js, and Archify.
+Python, TensorFlow/Keras, scikit-learn, pandas, NumPy, Matplotlib, Seaborn, Streamlit, React, Vite, Chart.js, Archify, and optional ManimGx.
