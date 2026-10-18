@@ -93,7 +93,7 @@ Two-sided 95% split-conformal intervals are calibrated from validation residuals
 
 ## Reliability and Robustness Extension
 
-**Run:** `20261011-211416`. Ridge results use seeds 42, 43, and 44; LSTM, MLP, and CNN challengers use seed 42 only. The table reports terminal-engine test MAE in cycles. Ridge entries are mean +/- sample standard deviation across seeds; each challenger is one run and is not a variance estimate.
+**Run:** `20261018-150917`. Ridge results use seeds 42, 43, and 44; LSTM, MLP, and CNN challengers use seed 42 only. The table reports terminal-engine test MAE in cycles. Ridge entries are mean +/- sample standard deviation across seeds; each challenger is one run and is not a variance estimate.
 
 | Subset | Ridge clean (3 seeds) | LSTM (1 seed) | MLP summary (1 seed) | Causal CNN (1 seed) |
 |---|---:|---:|---:|---:|
