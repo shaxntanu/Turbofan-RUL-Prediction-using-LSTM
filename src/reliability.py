@@ -407,7 +407,7 @@ def validation_abstention_thresholds(
     if not len(scores) or not np.isfinite(scores).all():
         raise ValueError("Validation health scores must be non-empty and finite")
     return {
-        float(fraction): float(np.quantile(scores, 1.0 - fraction, method="higher"))
+        float(fraction): float(np.quantile(scores, 1.0 - fraction, method="lower"))
         if fraction
         else float("inf")
         for fraction in fractions
@@ -427,7 +427,7 @@ def risk_coverage_rows(
         raise ValueError("Risk/coverage inputs must have equal lengths")
     rows = []
     for requested, threshold in thresholds.items():
-        flagged = scores >= threshold if requested else np.zeros(len(scores), dtype=bool)
+        flagged = scores > threshold if requested else np.zeros(len(scores), dtype=bool)
         retained = ~flagged
         rows.append(
             {
