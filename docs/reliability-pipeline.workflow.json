@@ -80,7 +80,7 @@
       "lane": "evaluation",
       "col": 4,
       "type": "security",
-      "label": "Validation calibration",
+      "label": "Uncertainty calibration",
       "width": 158
     },
     {
@@ -142,7 +142,9 @@
       "title": "Interpretation limits",
       "items": [
         "FD subsets are related simulator domains, not real fleets",
-        "Sensor corruptions are controlled synthetic stress tests"
+        "Sensor corruptions are controlled synthetic stress tests",
+        "Short-history models and truncated inference are separate protocols",
+        "Coverage under shift is observed, not guaranteed"
       ]
     }
   ]
