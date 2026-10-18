@@ -1,5 +1,3 @@
-using DelimitedFiles
-
 const ROOT_DIR = normpath(joinpath(@__DIR__, ".."))
 const DEFAULT_INPUT = joinpath(ROOT_DIR, "data", "maintenance_what_if_inputs.csv")
 const DEFAULT_OUTPUT = joinpath(ROOT_DIR, "web", "public", "results", "maintenance_what_if_scenarios.csv")
@@ -19,8 +17,9 @@ end
 
 function load_predictions(path::AbstractString)
     isfile(path) || error("Prediction input not found: $path")
-    table, header = readdlm(path, ',', String; header=true)
-    names = strip.(vec(header))
+    lines = readlines(path)
+    isempty(lines) && error("Prediction input is empty: $path")
+    names = String.(strip.(split(first(lines), ',')))
     columns = Dict(name => index for (index, name) in enumerate(names))
     required = ("dataset", "model", "unit", "rul_true", "rul_predicted", "interval_lower", "interval_upper")
     missing = filter(name -> !haskey(columns, name), required)
@@ -28,14 +27,18 @@ function load_predictions(path::AbstractString)
 
     records = EnginePrediction[]
     seen = Set{Tuple{String, String, Int}}()
-    for row in eachrow(table)
-        dataset = strip(row[columns["dataset"]])
-        model = strip(row[columns["model"]])
-        unit = parse(Int, strip(row[columns["unit"]]))
-        truth = parse(Float64, strip(row[columns["rul_true"]]))
-        prediction = parse(Float64, strip(row[columns["rul_predicted"]]))
-        lower = parse(Float64, strip(row[columns["interval_lower"]]))
-        upper = parse(Float64, strip(row[columns["interval_upper"]]))
+    for (index, line) in enumerate(lines[2:end])
+        line_number = index + 1
+        isempty(strip(line)) && continue
+        fields = strip.(split(line, ','))
+        length(fields) == length(names) || error("Malformed CSV row at line $line_number")
+        dataset = String(fields[columns["dataset"]])
+        model = String(fields[columns["model"]])
+        unit = parse(Int, fields[columns["unit"]])
+        truth = parse(Float64, fields[columns["rul_true"]])
+        prediction = parse(Float64, fields[columns["rul_predicted"]])
+        lower = parse(Float64, fields[columns["interval_lower"]])
+        upper = parse(Float64, fields[columns["interval_upper"]])
         all(isfinite, (truth, prediction, lower, upper)) || error("Non-finite prediction for $dataset engine $unit")
         0 <= lower <= upper || error("Invalid interval for $dataset engine $unit")
         key = (dataset, model, unit)
@@ -94,7 +97,8 @@ function generate_scenarios(input_path::AbstractString, output_path::AbstractStr
             engines = groups[(dataset, model)]
             for threshold in URGENCY_THRESHOLDS, capacity in CAPACITY_LEVELS, policy in POLICIES
                 metrics = score_scenario(engines, threshold, capacity, policy)
-                println(file, join((dataset, model, 42, threshold, capacity, metrics...), ','), ",", policy)
+                row = (dataset, model, 42, threshold, capacity, metrics..., policy)
+                println(file, join(string.(row), ','))
             end
         end
     end
