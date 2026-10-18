@@ -916,7 +916,7 @@ def _run_in_domain(
                             **terminal_metrics(frame),
                         }
                         threshold = suite["abstention_thresholds"][0.2]
-                        flagged = anomaly >= threshold
+                        flagged = anomaly > threshold
                         row["abstention_threshold_validation_20pct"] = threshold
                         row["flagged_predictions"] = int(flagged.sum())
                         row["flagged_fraction"] = float(flagged.mean())
@@ -1210,7 +1210,7 @@ def _run_heldout_domains(
                     **terminal_metrics(frame),
                 }
                 threshold = suite["abstention_thresholds"][0.2]
-                flagged = anomaly >= threshold
+                flagged = anomaly > threshold
                 row["abstention_threshold_validation_20pct"] = threshold
                 row["flagged_predictions"] = int(flagged.sum())
                 row["flagged_fraction"] = float(flagged.mean())
