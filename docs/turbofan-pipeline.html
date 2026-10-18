@@ -3208,6 +3208,31 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       gap: 0.375rem;
       min-height: 2.75rem;
     }
+    .toolbar .method-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+      padding: 0.5rem 0.875rem;
+      border: 1px solid var(--toolbar-border);
+      border-radius: 0.625rem;
+      background: var(--toolbar-bg);
+      color: var(--toolbar-text);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-decoration: none;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+    .toolbar .method-link:hover {
+      background: var(--toolbar-hover);
+      border-color: color-mix(in srgb, var(--arrow) 62%, var(--toolbar-border));
+    }
+    .toolbar .method-link:focus-visible {
+      outline: 2px solid var(--frontend-stroke);
+      outline-offset: 2px;
+    }
     .toolbar button:hover {
       background: var(--toolbar-hover);
       border-color: color-mix(in srgb, var(--arrow) 62%, var(--toolbar-border));
@@ -4053,6 +4078,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     @media (max-width: 360px) {
       .toolbar { gap: 0.25rem; }
       .toolbar button { padding-right: 0.58rem; padding-left: 0.58rem; }
+      .toolbar .method-link { padding-right: 0.58rem; padding-left: 0.58rem; }
       .toolbar #btn-motion { min-width: 4.4rem; padding-right: 0.58rem; padding-left: 0.58rem; }
       #theme-label, #preset-label, #present-label { display: none; }
       .guided-view-handoff { max-width: 6.5rem; }
@@ -5071,6 +5097,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
       </div>
     </div>
+    <a class="method-link" href="rul-method-animation.html" aria-label="Open captioned RUL method animation" title="Open captioned RUL method animation">Methods</a>
   </div>
 
   <div class="container">
