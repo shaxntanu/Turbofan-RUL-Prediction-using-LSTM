@@ -2,7 +2,7 @@
 
 [![Vercel dashboard](https://img.shields.io/badge/Vercel-Dashboard-000000?logo=vercel&logoColor=white)](https://turbofan-rul-prediction-using-lstm.vercel.app)
 [![Streamlit app](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://turbofan-rul-prediction-lstm.streamlit.app)
-[![GitHub Pages Archify pipeline](https://img.shields.io/badge/GitHub%20Pages-Archify%20Pipeline-222222?logo=githubpages&logoColor=white)](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html)
+[![GitHub Pages project diagram](https://img.shields.io/badge/GitHub%20Pages-RUL%20Study%20Diagram-222222?logo=githubpages&logoColor=white)](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html)
 
 An end-to-end NASA C-MAPSS benchmark for aircraft-engine remaining useful life (RUL), with an LSTM and Ridge baseline, a reproducible experiment pipeline, research analyses, Matplotlib figures, a Streamlit application, and a React results dashboard.
 
@@ -16,10 +16,11 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `models/`: generated model and scaler files (not tracked).
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
 - `streamlit_app.py`: interactive data exploration and prediction interface.
-- `docs/index.html`: GitHub Pages landing page linking to both interactive research pipelines.
-- `docs/turbofan-pipeline.html`: the original baseline Archify diagram, also [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
-- `docs/reliability-pipeline.html`: a separate Archify workflow for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/reliability-pipeline.html).
-- `docs/reliability-pipeline.workflow.json`: the source workflow for the reliability diagram.
+- `docs/index.html`: GitHub Pages overview of the C-MAPSS prediction study and its reliability analyses.
+- `docs/turbofan-pipeline.html`: an interactive diagram of the project's RUL methods, research analyses, Julia maintenance scenarios, and results, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
+- `docs/reliability-pipeline.html`: a separate research diagram for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/reliability-pipeline.html).
+- `docs/turbofan-pipeline-showcase.workflow.json`: the editable source specification for the RUL study diagram.
+- `docs/reliability-pipeline.workflow.json`: the source specification for the reliability research diagram.
 - [Captioned RUL method animation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html): a ManimGx explainer driven by the real FD001 engine trace. The bundled MP4 also appears in the Streamlit Fleet overview and All-subset benchmark; playback does not require ManimGx. Source is in `animations/rul_method.py` and the rendered video is in `docs/media/`.
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
