@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
@@ -12,7 +12,10 @@ import {
   FileText,
   Gauge,
   Layers3,
+  Minus,
   Plane,
+  Plus,
+  RotateCcw,
   ShieldCheck,
   Moon,
   Sun,
@@ -540,6 +543,16 @@ function Reliability({ data, dataset, theme }) {
 }
 
 function StudyDiagram({ theme }) {
+  const frameRef = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => setReady(false), [theme]);
+
+  const controlView = (action) => {
+    const method = frameRef.current?.contentWindow?.Archify?.view?.[action];
+    if (typeof method === "function") method();
+  };
+
   return (
     <section className="study-diagram-page">
       <div className="page-intro">
@@ -552,10 +565,18 @@ function StudyDiagram({ theme }) {
           <ExternalLink size={14} /> Open full diagram
         </a>
       </div>
+      <div className="study-diagram-toolbar" role="group" aria-label="Diagram canvas controls">
+        <button className="canvas-control" type="button" title="Zoom out" aria-label="Zoom out" disabled={!ready} onClick={() => controlView("zoomOut")}><Minus size={16} /></button>
+        <button className="canvas-control" type="button" title="Zoom in" aria-label="Zoom in" disabled={!ready} onClick={() => controlView("zoomIn")}><Plus size={16} /></button>
+        <button className="canvas-control" type="button" title="Reset diagram view" aria-label="Reset diagram view" disabled={!ready} onClick={() => controlView("reset")}><RotateCcw size={15} /></button>
+      </div>
       <div className="study-diagram-frame">
         <iframe
+          key={theme}
+          ref={frameRef}
           src={`/turbofan-pipeline.html?embed=1&theme=${theme}`}
           title="Interactive NASA C-MAPSS turbofan RUL research diagram"
+          onLoad={() => setReady(Boolean(frameRef.current?.contentWindow?.Archify?.view))}
           loading="lazy"
         />
       </div>
