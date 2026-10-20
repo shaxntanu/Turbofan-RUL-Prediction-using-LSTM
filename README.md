@@ -15,12 +15,11 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `models/`: generated model and scaler files (not tracked).
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
 - `streamlit_app.py`: interactive data exploration and prediction interface.
-- `docs/index.html`: GitHub Pages overview of the C-MAPSS prediction study and its reliability analyses.
-- `docs/turbofan-pipeline.html`: an interactive diagram of the project's RUL methods, research analyses, Julia maintenance scenarios, and results, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/turbofan-pipeline.html).
-- `docs/reliability-pipeline.html`: a separate research diagram for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation, [published on GitHub Pages](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/reliability-pipeline.html).
+- `docs/turbofan-pipeline.html`: the interactive C-MAPSS research diagram, also bundled into the Vercel dashboard under **Study diagram**.
+- `docs/reliability-pipeline.html`: the source diagram for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation.
 - `docs/turbofan-pipeline-showcase.workflow.json`: the editable source specification for the RUL study diagram.
 - `docs/reliability-pipeline.workflow.json`: the source specification for the reliability research diagram.
-- [Captioned RUL method animation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html): a ManimGx explainer driven by the real FD001 engine trace. The bundled MP4 also appears in the Streamlit Fleet overview and All-subset benchmark; playback does not require ManimGx. Source is in `animations/rul_method.py` and the rendered video is in `docs/media/`.
+- `animations/rul_method.py`: the ManimGx RUL explainer source, driven by a real FD001 engine trace. Its bundled MP4 also appears in the Streamlit Fleet overview and All-subset benchmark; playback does not require ManimGx. The rendered video and captions are in `docs/media/`.
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
 ## Setup
@@ -109,7 +108,7 @@ Both apps include an all-subset view for combined FD001-FD004 selected-model sco
 
 ## Optional ManimGx Animation
 
-The static, captioned [methods explainer](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/rul-method-animation.html) shows a measured FD001 sensor trace, its moving 30-cycle input window, a true training-label example, and the validation-calibrated conformal interval method. The model output is explicitly schematic; no sample-specific prediction is claimed. ManimGx is only needed to regenerate this video, not to run either app or the training pipeline. Its pinned optional dependency requires Python 3.13 or newer and stays separate from `requirements.txt` and `requirements-training.txt`.
+The captioned methods explainer (`docs/media/rul-method.mp4`) shows a measured FD001 sensor trace, its moving 30-cycle input window, a true training-label example, and the validation-calibrated conformal interval method. The model output is explicitly schematic; no sample-specific prediction is claimed. The video is available in the Streamlit app; ManimGx is only needed to regenerate it, not to run either app or the training pipeline. Its pinned optional dependency requires Python 3.13 or newer and stays separate from `requirements.txt` and `requirements-training.txt`.
 
 On Windows with Python 3.14 installed, render into a temporary directory so inspection storyboards do not clutter the repository:
 
