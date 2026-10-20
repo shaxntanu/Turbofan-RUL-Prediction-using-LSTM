@@ -22,21 +22,21 @@
     "requiredPaths": [{ "from": "cmapss", "to": "results" }]
   },
   "nodes": [
-    { "id": "cmapss", "lane": "benchmark", "col": 0, "type": "database", "label": "NASA C-MAPSS", "sublabel": "FD001-FD004" },
-    { "id": "targets_split", "lane": "benchmark", "col": 1, "type": "security", "label": "RUL + split", "sublabel": "125-cycle cap" },
-    { "id": "windows", "lane": "benchmark", "col": 2, "width": 116, "type": "backend", "label": "Sensor windows", "sublabel": "30 cycles; train-only" },
-    { "id": "models", "lane": "benchmark", "col": 3, "width": 116, "type": "backend", "label": "Ridge + LSTM", "sublabel": "summary vs sequence" },
-    { "id": "evaluation", "lane": "benchmark", "col": 4, "width": 140, "type": "security", "label": "Validation + test", "sublabel": "val MAE; errors + UQ" },
-    { "id": "results", "lane": "benchmark", "col": 5, "width": 150, "type": "frontend", "label": "Figures + dashboards", "sublabel": "Matplotlib; Streamlit + web" },
-    { "id": "research", "lane": "research", "col": 3, "width": 132, "type": "backend", "label": "Research analyses", "sublabel": "PCA, life stages, FD transfer" },
-    { "id": "maintenance", "lane": "research", "col": 4, "width": 142, "type": "backend", "label": "Julia scenarios", "sublabel": "capacity + urgency what-if" }
+    { "id": "cmapss", "lane": "benchmark", "col": 0, "width": 130, "type": "database", "label": "NASA C-MAPSS", "sublabel": "FD001-FD004" },
+    { "id": "targets_split", "lane": "benchmark", "col": 1, "width": 116, "type": "security", "label": "RUL + split", "sublabel": "125-cycle cap" },
+    { "id": "windows", "lane": "benchmark", "col": 2, "width": 136, "type": "backend", "label": "Sensor windows", "sublabel": "30 cycles; train-only" },
+    { "id": "models", "lane": "benchmark", "col": 3, "width": 132, "type": "backend", "label": "Ridge + LSTM", "sublabel": "summary vs sequence" },
+    { "id": "evaluation", "lane": "benchmark", "col": 4, "width": 150, "type": "security", "label": "Validation + test", "sublabel": "val MAE; errors + UQ" },
+    { "id": "results", "lane": "benchmark", "col": 5, "width": 170, "type": "frontend", "label": "Figures + dashboards", "sublabel": "Matplotlib; Streamlit + web" },
+    { "id": "research", "lane": "research", "col": 3, "width": 140, "type": "backend", "label": "Research analyses", "sublabel": "PCA, life stages, FD transfer" },
+    { "id": "maintenance", "lane": "research", "col": 4, "width": 130, "type": "backend", "label": "Julia scenarios", "sublabel": "capacity + urgency what-if" }
   ],
   "edges": [
     { "from": "cmapss", "to": "targets_split", "role": "main" },
     { "from": "targets_split", "to": "windows", "role": "main", "variant": "security" },
     { "from": "windows", "to": "models", "role": "main" },
     { "from": "models", "to": "evaluation", "role": "main", "variant": "emphasis" },
-    { "from": "evaluation", "to": "results", "role": "main", "variant": "security" },
+    { "from": "evaluation", "to": "results", "role": "main", "variant": "emphasis" },
     { "from": "windows", "to": "research", "role": "branch" },
     { "from": "research", "to": "results", "role": "branch" },
     { "from": "evaluation", "to": "maintenance", "label": "predictions + UQ", "role": "branch" },
