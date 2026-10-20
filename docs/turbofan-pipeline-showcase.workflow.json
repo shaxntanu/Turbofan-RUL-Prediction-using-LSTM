@@ -5,6 +5,15 @@
     "title": "Turbofan RUL Study",
     "output": "docs/turbofan-pipeline.html",
     "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "database": { "label": "C-MAPSS data" },
+        "backend": { "label": "Models and analyses" },
+        "security": { "label": "Evaluation controls" },
+        "frontend": { "label": "Figures and apps" }
+      }
+    },
     "views": [
       { "id": "data-and-labels", "label": "Data and labels", "focus": ["cmapss", "targets_split", "windows"], "note": "See how C-MAPSS histories become leakage-safe RUL examples." },
       { "id": "models-and-evaluation", "label": "Models and evaluation", "focus": ["windows", "models", "evaluation", "results"], "note": "Compare Ridge and LSTM using validation selection and held-out test engines." },
