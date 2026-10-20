@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Cpu,
   Database,
+  ExternalLink,
   FileText,
   Gauge,
   Layers3,
@@ -538,6 +539,30 @@ function Reliability({ data, dataset, theme }) {
   );
 }
 
+function StudyDiagram({ theme }) {
+  return (
+    <section className="study-diagram-page">
+      <div className="page-intro">
+        <div>
+          <div className="eyebrow">RESEARCH MAP</div>
+          <h1>C-MAPSS RUL study</h1>
+          <p>Interactive map of the FD001-FD004 prediction study, robustness protocols, and evaluation results.</p>
+        </div>
+        <a className="outline-button" href="/turbofan-pipeline.html" target="_blank" rel="noreferrer">
+          <ExternalLink size={14} /> Open full diagram
+        </a>
+      </div>
+      <div className="study-diagram-frame">
+        <iframe
+          src={`/turbofan-pipeline.html?embed=1&theme=${theme}`}
+          title="Interactive NASA C-MAPSS turbofan RUL research diagram"
+          loading="lazy"
+        />
+      </div>
+    </section>
+  );
+}
+
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -576,6 +601,7 @@ function App() {
     if (page === "methods") return <Methods data={data} />;
     if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
     if (page === "reliability") return <Reliability data={data} dataset={dataset} theme={theme} />;
+    if (page === "study-diagram") return <StudyDiagram theme={theme} />;
     return <Overview data={data} dataset={dataset} setPage={setPage} theme={theme} />;
   }, [data, dataset, page, theme]);
 
@@ -587,7 +613,7 @@ function App() {
           <span className="brand-text"><b>AERO / RUL</b><small>RESEARCH OBSERVATORY</small></span>
         </a>
         <nav className="main-nav" aria-label="Primary">
-          {[["overview", "Overview", Activity], ["all-subsets", "All subsets", Database], ["transfer", "Transfer", Workflow], ["methods", "Methods", Layers3], ["reliability", "Reliability", ShieldCheck], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
+          {[["overview", "Overview", Activity], ["all-subsets", "All subsets", Database], ["transfer", "Transfer", ArrowDownRight], ["study-diagram", "Study diagram", Workflow], ["methods", "Methods", Layers3], ["reliability", "Reliability", ShieldCheck], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
         </nav>
         <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} aria-pressed={theme === "dark"} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
           {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
