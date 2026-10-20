@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
@@ -12,10 +12,7 @@ import {
   FileText,
   Gauge,
   Layers3,
-  Minus,
   Plane,
-  Plus,
-  RotateCcw,
   ShieldCheck,
   Moon,
   Sun,
@@ -542,17 +539,7 @@ function Reliability({ data, dataset, theme }) {
   );
 }
 
-function StudyDiagram({ theme }) {
-  const frameRef = useRef(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => setReady(false), [theme]);
-
-  const controlView = (action) => {
-    const method = frameRef.current?.contentWindow?.Archify?.view?.[action];
-    if (typeof method === "function") method();
-  };
-
+function StudyDiagram() {
   return (
     <section className="study-diagram-page">
       <div className="page-intro">
@@ -561,24 +548,24 @@ function StudyDiagram({ theme }) {
           <h1>C-MAPSS RUL study</h1>
           <p>Interactive map of the FD001-FD004 prediction study, robustness protocols, and evaluation results.</p>
         </div>
-        <a className="outline-button" href="/turbofan-pipeline.html" target="_blank" rel="noreferrer">
-          <ExternalLink size={14} /> Open full diagram
-        </a>
       </div>
-      <div className="study-diagram-toolbar" role="group" aria-label="Diagram canvas controls">
-        <button className="canvas-control" type="button" title="Zoom out" aria-label="Zoom out" disabled={!ready} onClick={() => controlView("zoomOut")}><Minus size={16} /></button>
-        <button className="canvas-control" type="button" title="Zoom in" aria-label="Zoom in" disabled={!ready} onClick={() => controlView("zoomIn")}><Plus size={16} /></button>
-        <button className="canvas-control" type="button" title="Reset diagram view" aria-label="Reset diagram view" disabled={!ready} onClick={() => controlView("reset")}><RotateCcw size={15} /></button>
-      </div>
-      <div className="study-diagram-frame">
-        <iframe
-          key={theme}
-          ref={frameRef}
-          src={`/turbofan-pipeline.html?embed=1&theme=${theme}`}
-          title="Interactive NASA C-MAPSS turbofan RUL research diagram"
-          onLoad={() => setReady(Boolean(frameRef.current?.contentWindow?.Archify?.view))}
-          loading="lazy"
-        />
+      <div className="study-diagram-card">
+        <div className="study-diagram-topline">
+          <span>ZOOM, THEN DRAG TO PAN · 0 TO RESET</span>
+          <span>TURBOFAN RUL RESEARCH WORKFLOW</span>
+        </div>
+        <div className="study-diagram-frame">
+          <iframe
+            src="/turbofan-pipeline.html?present=1&theme=dark"
+            title="Interactive NASA C-MAPSS turbofan RUL research diagram"
+            loading="lazy"
+          />
+        </div>
+        <div className="study-diagram-actions">
+          <a href="/turbofan-pipeline.html?present=1&theme=dark" target="_blank" rel="noreferrer">
+            <ExternalLink size={13} /> Open full diagram
+          </a>
+        </div>
       </div>
     </section>
   );
@@ -622,7 +609,7 @@ function App() {
     if (page === "methods") return <Methods data={data} />;
     if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
     if (page === "reliability") return <Reliability data={data} dataset={dataset} theme={theme} />;
-    if (page === "study-diagram") return <StudyDiagram theme={theme} />;
+    if (page === "study-diagram") return <StudyDiagram />;
     return <Overview data={data} dataset={dataset} setPage={setPage} theme={theme} />;
   }, [data, dataset, page, theme]);
 
