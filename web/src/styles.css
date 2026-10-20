@@ -1,11 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 
-.study-diagram-toolbar{display:flex;justify-content:flex-end;gap:5px;margin:-8px 0 8px}
-.canvas-control{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--muted);cursor:pointer}
-.canvas-control:hover:not(:disabled){color:var(--teal);background:rgba(23,135,127,.08)}
-.canvas-control:disabled{opacity:.48;cursor:default}
-.study-diagram-frame{height:min(780px,max(480px,70vh));min-height:480px;overflow:hidden;border:1px solid var(--line);border-radius:4px;background:var(--paper)}
-.study-diagram-frame iframe{display:block;width:100%;height:100%;border:0;background:var(--paper)}
+.study-diagram-card{min-width:0;overflow:hidden;border:1px solid #293633;border-radius:8px;background:#111716}
+.study-diagram-topline{display:flex;justify-content:space-between;gap:12px;padding:12px 15px;border-bottom:1px solid #293633;color:#95a29b;font:8px var(--mono);letter-spacing:.05em}
+.study-diagram-topline>span:last-child{color:#73dec8;text-align:right}
+.study-diagram-frame{height:min(780px,max(480px,70vh));min-height:480px;overflow:hidden;background:#0b1010}
+.study-diagram-frame iframe{display:block;width:100%;height:100%;border:0;background:#020617}
+.study-diagram-actions{display:flex;flex-wrap:wrap;gap:12px 17px;padding:12px 15px;border-top:1px solid #293633}
+.study-diagram-actions a{display:inline-flex;align-items:center;gap:6px;color:#73dec8;font-size:10px;text-decoration:none}
+.study-diagram-actions a:hover{text-decoration:underline}
+@media(max-width:620px){.study-diagram-topline{align-items:flex-start;flex-direction:column;gap:5px}.study-diagram-topline>span:last-child{text-align:left}}
 @media(max-width:900px){.main-nav{min-width:0;overflow-x:auto;scrollbar-width:none}.main-nav::-webkit-scrollbar{display:none}.nav-link{flex:0 0 auto;white-space:nowrap}}
 
 :root{font-family:'DM Sans',Arial,sans-serif;color:#202c30;background:#f4f6f4;font-synthesis:none;text-rendering:optimizeLegibility;font-smooth:always;font-weight:400;--ink:#202c30;--muted:#707a7e;--line:#e2e7e3;--teal:#17877f;--orange:#e68a4b;--paper:#fff;--mono:'DM Mono',monospace;--display:'Manrope','DM Sans',sans-serif}
