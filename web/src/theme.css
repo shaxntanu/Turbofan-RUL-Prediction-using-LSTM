@@ -238,8 +238,13 @@
 :root .app-shell .empty-reliability p { font-size: 12px; }
 :root .app-shell .model-compare-head { color: #52615b; font-size: 11px; }
 :root .app-shell .model-compare-row small { font-size: 11px; }
+:root .app-shell .model-tag { font-size: 11px; }
 :root .app-shell .reliability-table b { font-size: 12px; }
 :root .app-shell .reliability-table-head { color: #52615b; font-size: 11px; }
+:root .app-shell .run-summary h3 small,
+:root .app-shell .summary-line,
+:root .app-shell .summary-line b,
+:root .app-shell .transfer-summary b small { color: #52615b; }
 :root .app-shell .footer { color: #52615b; }
 
 :root[data-theme="dark"] .app-shell .brand-text small,
@@ -270,3 +275,7 @@
 :root[data-theme="dark"] .app-shell .metric:nth-child(4) { border-top-color: #35443f; }
 :root[data-theme="dark"] .app-shell .model-compare-head,
 :root[data-theme="dark"] .app-shell .reliability-table-head { color: #b7c4be; }
+:root[data-theme="dark"] .app-shell .run-summary h3 small,
+:root[data-theme="dark"] .app-shell .summary-line,
+:root[data-theme="dark"] .app-shell .summary-line b,
+:root[data-theme="dark"] .app-shell .transfer-summary b small { color: #b7c4be; }
