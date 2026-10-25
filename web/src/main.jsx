@@ -15,8 +15,10 @@ import {
   Plane,
   ShieldCheck,
   Moon,
+  Menu,
   Sun,
   Workflow,
+  X,
 } from "lucide-react";
 import {
   BarElement,
@@ -38,6 +40,15 @@ import "./reliability.css";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Legend, Filler);
 
 const DATASETS = ["FD001", "FD002", "FD003", "FD004"];
+const NAV_ITEMS = [
+  ["overview", "Overview", Activity],
+  ["all-subsets", "All subsets", Database],
+  ["transfer", "Transfer", ArrowDownRight],
+  ["study-diagram", "Study diagram", Workflow],
+  ["methods", "Methods", Layers3],
+  ["reliability", "Reliability", ShieldCheck],
+  ["artifacts", "Artifacts", BarChart3],
+];
 const TARGETS = {
   FD001: "1 operating condition / 1 fault mode",
   FD002: "6 operating conditions / 1 fault mode",
@@ -143,7 +154,15 @@ function TransferHeatmap({ rows, selectedModel, theme }) {
           </div>
         ))}
       </div>
-      <div className="heat-legend"><span>Lower error</span><i /><span>Higher error</span><small>MAE in cycles</small></div>
+      <div className="heat-legend">
+        <span>Lower error</span>
+        <span className="heat-legend-scale" role="img" aria-label="Color intensity increases with error">
+          {[0.14, 0.3, 0.46, 0.62, 0.78].map((opacity) => (
+            <span key={opacity} style={{ backgroundColor: `rgba(199, 91, 72, ${opacity})` }} />
+          ))}
+        </span>
+        <span>Higher error</span><small>MAE in cycles</small>
+      </div>
     </div>
   );
 }
@@ -576,6 +595,7 @@ function App() {
   const [error, setError] = useState("");
   const [dataset, setDataset] = useState("FD001");
   const [page, setPage] = useState("overview");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState(() => window.localStorage.getItem("aero-rul-theme") === "dark" ? "dark" : "light");
 
   useEffect(() => {
@@ -615,25 +635,83 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <a className="brand" href="#overview" onClick={() => setPage("overview")}>
-          <span className="brand-mark"><Plane size={19} fill="currentColor" /></span>
-          <span className="brand-text"><b>AERO / RUL</b><small>RESEARCH OBSERVATORY</small></span>
-        </a>
-        <nav className="main-nav" aria-label="Primary">
-          {[["overview", "Overview", Activity], ["all-subsets", "All subsets", Database], ["transfer", "Transfer", ArrowDownRight], ["study-diagram", "Study diagram", Workflow], ["methods", "Methods", Layers3], ["reliability", "Reliability", ShieldCheck], ["artifacts", "Artifacts", BarChart3]].map(([id, label, Icon]) => <button key={id} className={page === id ? "nav-link nav-active" : "nav-link"} onClick={() => setPage(id)}><Icon size={15} />{label}</button>)}
+      <aside className={`sidebar ${menuOpen ? "sidebar-open" : ""}`}>
+        <div className="sidebar-top">
+          <a className="brand" href="#overview" onClick={() => { setPage("overview"); setMenuOpen(false); }}>
+            <span className="brand-mark"><Plane size={18} fill="currentColor" /></span>
+            <span className="brand-text"><b>AERO / RUL</b><small>RESEARCH OBSERVATORY</small></span>
+          </a>
+          <button
+            className="sidebar-menu-button"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="primary-navigation"
+            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <X size={16} /> : <Menu size={16} />}
+            {menuOpen ? "Close" : "Menu"}
+          </button>
+        </div>
+        <div className="sidebar-section-label">RESEARCH</div>
+        <nav className="main-nav" id="primary-navigation" aria-label="Primary">
+          {NAV_ITEMS.map(([id, label, Icon]) => (
+            <button
+              key={id}
+              className={page === id ? "nav-link nav-active" : "nav-link"}
+              aria-current={page === id ? "page" : undefined}
+              onClick={() => { setPage(id); setMenuOpen(false); }}
+            >
+              <Icon size={17} strokeWidth={1.8} />{label}
+            </button>
+          ))}
         </nav>
-        <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} aria-pressed={theme === "dark"} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
-          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
-        <label className="dataset-control"><span>DATASET</span><select value={dataset} onChange={(event) => setDataset(event.target.value)}>{DATASETS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-      </header>
-      <main className="main-content">
-        {!data && !error && <div className="loading-state"><div className="loading-line" /><span>Loading measured experiment results...</span></div>}
-        {error && <div className="error-state">{error}</div>}
-        {data && pageView}
-      </main>
-      <footer className="footer"><div><span className="footer-mark"><Plane size={13} /></span><span>NASA C-MAPSS / TURBOFAN RUL</span></div><span>REPRODUCIBLE RESULTS · {data ? Object.keys(data.datasets).length : 0} SUBSETS</span><button onClick={() => setPage("methods")}><FileText size={13} /> METHODS & LIMITATIONS</button></footer>
+        <div className="sidebar-bottom">
+          <span className="sidebar-bottom-mark"><Activity size={17} /></span>
+          <span className="sidebar-bottom-copy">
+            <b>NASA C-MAPSS</b>
+            <span>{data ? Object.keys(data.datasets).length : DATASETS.length} benchmark subsets</span>
+          </span>
+        </div>
+      </aside>
+      <section className="workspace">
+        <header className="topbar">
+          <div className="topbar-context">
+            <span>RESEARCH WORKSPACE</span>
+            <b>NASA C-MAPSS / Turbofan RUL</b>
+          </div>
+          <div className="toolbar-controls">
+            <label className="dataset-control">
+              <span>DATASET</span>
+              <select value={dataset} onChange={(event) => setDataset(event.target.value)}>
+                {DATASETS.map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </label>
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              aria-pressed={theme === "dark"}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            >
+              {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+          </div>
+        </header>
+        <div className="page-sheet">
+          <main className="main-content">
+            {!data && !error && <div className="loading-state"><div className="loading-line" /><span>Loading measured experiment results...</span></div>}
+            {error && <div className="error-state">{error}</div>}
+            {data && pageView}
+          </main>
+          <footer className="footer">
+            <div><span className="footer-mark"><Plane size={13} /></span><span>NASA C-MAPSS / TURBOFAN RUL</span></div>
+            <span>REPRODUCIBLE RESULTS · {data ? Object.keys(data.datasets).length : 0} SUBSETS</span>
+            <button onClick={() => setPage("methods")}><FileText size={13} /> METHODS &amp; LIMITATIONS</button>
+          </footer>
+        </div>
+      </section>
     </div>
   );
 }
