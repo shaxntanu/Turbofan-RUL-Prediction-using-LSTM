@@ -53,6 +53,40 @@ SUBSET_CONDITIONS = {
 }
 
 
+def _active_theme() -> str:
+    try:
+        theme_type = st.context.theme.type
+    except (AttributeError, RuntimeError):
+        return "light"
+    return theme_type if theme_type in {"light", "dark"} else "light"
+
+
+def _render_plot(figure) -> None:
+    dark = _active_theme() == "dark"
+    background = "#1B2522" if dark else "#FFFFFF"
+    text = "#E4ECE8" if dark else "#263832"
+    muted = "#A8B7B0" if dark else "#5F6D68"
+    grid = "#35443F" if dark else "#DCE4DF"
+
+    figure.set_facecolor(background)
+    for axis in figure.axes:
+        axis.set_facecolor(background)
+        axis.tick_params(axis="both", colors=muted, labelsize=10)
+        axis.xaxis.label.set_color(muted)
+        axis.yaxis.label.set_color(muted)
+        axis.title.set_color(text)
+        for spine in axis.spines.values():
+            spine.set_color(grid)
+        for gridline in (*axis.get_xgridlines(), *axis.get_ygridlines()):
+            if gridline.get_visible():
+                gridline.set_color(grid)
+        legend = axis.get_legend()
+        if legend:
+            for label in legend.get_texts():
+                label.set_color(muted)
+    st.pyplot(figure, width="stretch")
+
+
 def _read_json(path: Path) -> dict | None:
     if not path.is_file():
         return None
@@ -343,7 +377,7 @@ def _render_maintenance_what_if(dataset: str) -> None:
         axis.spines[["top", "right"]].set_visible(False)
         axis.legend(frameon=False)
         figure.tight_layout()
-        st.pyplot(figure, width="stretch")
+        _render_plot(figure)
         plt.close(figure)
 
     detail = _maintenance_scenario_rows(
@@ -377,28 +411,30 @@ def _render_all_subsets() -> None:
         "the reported aggregate is an unweighted macro-average across subsets."
     )
     _render_method_video()
-    summary = st.columns(3)
-    summary[0].metric("Macro-average MAE", f"{rows['MAE (cycles)'].mean():.2f} cycles")
-    summary[1].metric("Macro-average RMSE", f"{rows['RMSE (cycles)'].mean():.2f} cycles")
-    summary[2].metric("Test engines", f"{int(rows['Test engines'].sum()):,} across {len(rows)} subsets")
+    with st.container(border=True):
+        summary = st.columns(3)
+        summary[0].metric("Macro-average MAE", f"{rows['MAE (cycles)'].mean():.2f} cycles")
+        summary[1].metric("Macro-average RMSE", f"{rows['RMSE (cycles)'].mean():.2f} cycles")
+        summary[2].metric("Test engines", f"{int(rows['Test engines'].sum()):,} across {len(rows)} subsets")
 
-    st.subheader("Selected model by subset")
-    fig, axis = plt.subplots(figsize=(10, 4.2))
-    positions = np.arange(len(rows))
-    axis.bar(positions - 0.18, rows["MAE (cycles)"], width=0.36, color="#17877f", label="MAE")
-    axis.bar(positions + 0.18, rows["RMSE (cycles)"], width=0.36, color="#e68a4b", label="RMSE")
-    axis.set_xticks(positions, rows["Subset"])
-    axis.set_ylabel("Error (cycles)")
-    axis.set_title("Held-out test error across all C-MAPSS subsets")
-    axis.set_axisbelow(True)
-    axis.yaxis.grid(color="#e8ece9", linewidth=0.8)
-    axis.spines[["top", "right"]].set_visible(False)
-    axis.legend(frameon=False, ncols=2)
-    fig.tight_layout()
-    st.pyplot(fig, width="stretch")
-    plt.close(fig)
+    with st.container(border=True):
+        st.subheader("Selected model by subset")
+        fig, axis = plt.subplots(figsize=(10, 4.2))
+        positions = np.arange(len(rows))
+        axis.bar(positions - 0.18, rows["MAE (cycles)"], width=0.36, color="#17877f", label="MAE")
+        axis.bar(positions + 0.18, rows["RMSE (cycles)"], width=0.36, color="#e68a4b", label="RMSE")
+        axis.set_xticks(positions, rows["Subset"])
+        axis.set_ylabel("Error (cycles)")
+        axis.set_title("Held-out test error across all C-MAPSS subsets")
+        axis.set_axisbelow(True)
+        axis.yaxis.grid(color="#e8ece9", linewidth=0.8)
+        axis.spines[["top", "right"]].set_visible(False)
+        axis.legend(frameon=False, ncols=2)
+        fig.tight_layout()
+        _render_plot(fig)
+        plt.close(fig)
 
-    st.dataframe(rows, hide_index=True, width="stretch")
+        st.dataframe(rows, hide_index=True, width="stretch")
     st.download_button(
         "Download all-subset scores",
         rows.to_csv(index=False).encode("utf-8"),
@@ -485,7 +521,7 @@ def _render_signals(dataset: str) -> None:
             axes[-1].set_xlabel("Cycle")
             fig.suptitle(f"{dataset} · engine {engine}", y=1.01)
             fig.tight_layout()
-            st.pyplot(fig, width="stretch")
+            _render_plot(fig)
             plt.close(fig)
 
         left, right = st.columns(2)
@@ -494,14 +530,14 @@ def _render_signals(dataset: str) -> None:
             sns.histplot(train_frame["RUL"], bins=40, color="#4169a1", ax=axis)
             axis.set(title="Training target distribution", xlabel="RUL (cycles)", ylabel="Cycle count")
             fig.tight_layout()
-            st.pyplot(fig, width="stretch")
+            _render_plot(fig)
             plt.close(fig)
         with right:
             fig, axis = plt.subplots(figsize=(7, 4))
             sns.heatmap(train_frame[sensors].corr(), cmap="vlag", center=0, ax=axis, cbar=False)
             axis.set(title="Sensor correlation", xlabel="Sensor", ylabel="Sensor")
             fig.tight_layout()
-            st.pyplot(fig, width="stretch")
+            _render_plot(fig)
             plt.close(fig)
         st.dataframe(engine_frame, hide_index=True, width="stretch")
     except Exception as error:
@@ -592,7 +628,7 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
         axis.set(xlabel="Cycle", ylabel="RUL (cycles)", title=f"Engine {selected_engine}")
         axis.legend(frameon=False)
         fig.tight_layout()
-        st.pyplot(fig, width="stretch")
+        _render_plot(fig)
         plt.close(fig)
         st.caption(
             "Intervals use split-conformal residuals from held-out validation engines; they are not per-prediction "
@@ -662,7 +698,7 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
         axis.invert_yaxis()
         axis.spines[["top", "right"]].set_visible(False)
         fig.tight_layout()
-        st.pyplot(fig, width="stretch")
+        _render_plot(fig)
         plt.close(fig)
         st.caption("The LSTM challenger uses one configured seed; a single run does not estimate between-seed variance.")
 
@@ -686,7 +722,7 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
             axis.invert_yaxis()
             axis.spines[["top", "right"]].set_visible(False)
             fig.tight_layout()
-            st.pyplot(fig, width="stretch")
+            _render_plot(fig)
             plt.close(fig)
             st.dataframe(selected, hide_index=True, width="stretch")
         st.caption("Corruptions are controlled synthetic stressors, not an empirical sensor-failure distribution.")
@@ -710,7 +746,7 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
         axis.set(xlabel="Retained prediction fraction", ylabel="MAE (cycles)", title=f"{dataset} / {model} / {scenario}")
         axis.spines[["top", "right"]].set_visible(False)
         fig.tight_layout()
-        st.pyplot(fig, width="stretch")
+        _render_plot(fig)
         plt.close(fig)
 
     for title, filename, subset_column in (
@@ -733,7 +769,14 @@ def _render_reliability(dataset: str, config: ProjectConfig) -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="Turbofan RUL Lab", page_icon="✈", layout="wide")
+    st.set_page_config(
+        page_title="Turbofan RUL Lab",
+        page_icon="✈",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
+    st.sidebar.title("AERO / RUL")
+    st.sidebar.caption("NASA C-MAPSS · research observatory")
     selection = st.sidebar.selectbox("C-MAPSS subset", ("All subsets", *DATASET_NAMES), key="dataset")
     if selection == "All subsets":
         benchmark_tab, planner_tab = st.tabs(["All-subset benchmark", "Maintenance what-if"])
@@ -918,7 +961,7 @@ def main() -> None:
                 axis.set(xlabel="Test engine", ylabel="MAE (cycles)", title="Per-engine test error")
                 axis.legend(frameon=False)
                 fig.tight_layout()
-                st.pyplot(fig, width="stretch")
+                _render_plot(fig)
                 plt.close(fig)
 
             figure_names = ["predicted_vs_actual", "fractional_life_metrics", "prediction_intervals", "sensor_correlation"]
