@@ -49,6 +49,15 @@ const NAV_ITEMS = [
   ["reliability", "Reliability", ShieldCheck],
   ["artifacts", "Artifacts", BarChart3],
 ];
+const PAGE_TITLES = {
+  overview: "Engine health benchmark",
+  "all-subsets": "All-subset benchmark",
+  transfer: "Cross-subset transfer",
+  "study-diagram": "C-MAPSS RUL study",
+  methods: "Methods & scope",
+  reliability: "Reliability & robustness",
+  artifacts: "Research outputs",
+};
 const TARGETS = {
   FD001: "1 operating condition / 1 fault mode",
   FD002: "6 operating conditions / 1 fault mode",
@@ -117,6 +126,20 @@ function SectionTitle({ eyebrow, title, detail, action }) {
       </div>
       {action}
     </div>
+  );
+}
+
+function LoadingState({ page }) {
+  return (
+    <section className="loading-state" aria-labelledby="loading-title">
+      <div className="eyebrow">NASA C-MAPSS / PUBLISHED RESULTS</div>
+      <h1 id="loading-title">{PAGE_TITLES[page] ?? "Turbofan RUL research"}</h1>
+      <p>The saved benchmark results are loading. No experiment is running.</p>
+      <div className="loading-status" role="status" aria-live="polite">
+        <div className="loading-line" aria-hidden="true" />
+        <span>Loading saved experiment results...</span>
+      </div>
+    </section>
   );
 }
 
@@ -701,7 +724,7 @@ function App() {
         </header>
         <div className="page-sheet">
           <main className="main-content">
-            {!data && !error && <div className="loading-state"><div className="loading-line" /><span>Loading measured experiment results...</span></div>}
+            {!data && !error && <LoadingState page={page} />}
             {error && <div className="error-state">{error}</div>}
             {data && pageView}
           </main>
