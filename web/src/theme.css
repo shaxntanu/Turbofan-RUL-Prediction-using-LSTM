@@ -237,7 +237,7 @@
 :root .app-shell .empty-inline,
 :root .app-shell .empty-reliability p { font-size: 12px; }
 :root .app-shell .model-compare-head { color: #52615b; font-size: 11px; }
-:root .app-shell .model-compare-row small { font-size: 11px; }
+:root .app-shell .model-compare-row small { color: #116a63; font-size: 11px; }
 :root .app-shell .model-tag { color: #116a63; font-size: 11px; }
 :root .app-shell .reliability-table b { font-size: 12px; }
 :root .app-shell .reliability-table-head { color: #52615b; font-size: 11px; }
@@ -275,6 +275,7 @@
 :root[data-theme="dark"] .app-shell .metric:nth-child(4) { border-top-color: #35443f; }
 :root[data-theme="dark"] .app-shell .model-compare-head,
 :root[data-theme="dark"] .app-shell .reliability-table-head { color: #b7c4be; }
+:root[data-theme="dark"] .app-shell .model-compare-row small { color: #8ad3c4; background: #263a34; }
 :root[data-theme="dark"] .app-shell .run-summary h3 small,
 :root[data-theme="dark"] .app-shell .summary-line,
 :root[data-theme="dark"] .app-shell .summary-line b,
