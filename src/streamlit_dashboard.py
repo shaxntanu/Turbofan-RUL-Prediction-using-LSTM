@@ -94,7 +94,7 @@ def _read_json(path: Path) -> dict | None:
 
 
 def _render_method_video() -> None:
-    with st.expander("Watch the RUL method animation (13 seconds)", expanded=True):
+    with st.expander("Watch the RUL method animation (13 seconds)", expanded=False):
         if METHOD_VIDEO_PATH.is_file():
             st.video(str(METHOD_VIDEO_PATH))
             st.caption(
