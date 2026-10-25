@@ -180,3 +180,93 @@
 @media (max-width: 900px) {
   :root[data-theme="dark"] .sidebar { background: #18211f; }
 }
+
+:root .app-shell .brand-text small,
+:root .app-shell .sidebar-section-label,
+:root .app-shell .topbar-context span,
+:root .app-shell .dataset-control > span,
+:root .app-shell .eyebrow,
+:root .app-shell .run-stamp,
+:root .app-shell .protocol-pill,
+:root .app-shell .metric-head,
+:root .app-shell .table-head,
+:root .app-shell .model-compare-head,
+:root .app-shell .paper-note-head,
+:root .app-shell .paper-status span,
+:root .app-shell .paper-status small,
+:root .app-shell .table-footnote,
+:root .app-shell .heat-label,
+:root .app-shell .source-label,
+:root .app-shell .heat-legend,
+:root .app-shell .study-diagram-topline,
+:root .app-shell .study-diagram-actions a,
+:root .app-shell .reliability-control > span,
+:root .app-shell .footer,
+:root .app-shell .footer button { font-size: 11px; }
+:root .app-shell .brand-text small,
+:root .app-shell .sidebar-section-label,
+:root .app-shell .topbar-context span,
+:root .app-shell .dataset-control > span,
+:root .app-shell .eyebrow,
+:root .app-shell .run-stamp,
+:root .app-shell .protocol-pill,
+:root .app-shell .metric-head,
+:root .app-shell .table-head,
+:root .app-shell .model-compare-head,
+:root .app-shell .paper-note-head,
+:root .app-shell .paper-status small,
+:root .app-shell .table-footnote,
+:root .app-shell .heat-label,
+:root .app-shell .source-label,
+:root .app-shell .heat-legend,
+:root .app-shell .study-diagram-topline,
+:root .app-shell .reliability-control > span { color: #52615b; }
+:root .app-shell .metric,
+:root .app-shell .metric-orange,
+:root .app-shell .metric-blue,
+:root .app-shell .metric-red { border-top: 1px solid #e5ebe7; }
+:root .app-shell .metric:nth-child(3),
+:root .app-shell .metric:nth-child(4) { border-top: 1px solid #e5ebe7; }
+:root .app-shell .figure-panel figcaption,
+:root .app-shell .transfer-row,
+:root .app-shell .transfer-summary > div > span:last-child,
+:root .app-shell .method-step p,
+:root .app-shell .reliability-table { font-size: 12px; }
+:root .app-shell .transfer-summary b small,
+:root .app-shell .figure-missing,
+:root .app-shell .empty-inline,
+:root .app-shell .empty-reliability p { font-size: 12px; }
+:root .app-shell .model-compare-head { color: #52615b; font-size: 11px; }
+:root .app-shell .model-compare-row small { font-size: 11px; }
+:root .app-shell .reliability-table b { font-size: 12px; }
+:root .app-shell .reliability-table-head { color: #52615b; font-size: 11px; }
+:root .app-shell .footer { color: #52615b; }
+
+:root[data-theme="dark"] .app-shell .brand-text small,
+:root[data-theme="dark"] .app-shell .sidebar-section-label,
+:root[data-theme="dark"] .app-shell .topbar-context span,
+:root[data-theme="dark"] .app-shell .dataset-control > span,
+:root[data-theme="dark"] .app-shell .eyebrow,
+:root[data-theme="dark"] .app-shell .run-stamp,
+:root[data-theme="dark"] .app-shell .protocol-pill,
+:root[data-theme="dark"] .app-shell .metric-head,
+:root[data-theme="dark"] .app-shell .table-head,
+:root[data-theme="dark"] .app-shell .model-compare-head,
+:root[data-theme="dark"] .app-shell .paper-note-head,
+:root[data-theme="dark"] .app-shell .paper-status small,
+:root[data-theme="dark"] .app-shell .table-footnote,
+:root[data-theme="dark"] .app-shell .heat-label,
+:root[data-theme="dark"] .app-shell .source-label,
+:root[data-theme="dark"] .app-shell .heat-legend,
+:root[data-theme="dark"] .app-shell .study-diagram-topline,
+:root[data-theme="dark"] .app-shell .reliability-control > span,
+:root[data-theme="dark"] .app-shell .footer,
+:root[data-theme="dark"] .app-shell .footer button { color: #b7c4be; }
+:root[data-theme="dark"] .app-shell .metric,
+:root[data-theme="dark"] .app-shell .metric-orange,
+:root[data-theme="dark"] .app-shell .metric-blue,
+:root[data-theme="dark"] .app-shell .metric-red,
+:root[data-theme="dark"] .app-shell .metric:nth-child(3),
+:root[data-theme="dark"] .app-shell .metric:nth-child(4) { border-top-color: #35443f; }
+:root[data-theme="dark"] .app-shell .model-compare-head,
+:root[data-theme="dark"] .app-shell .reliability-table-head { color: #b7c4be; }
