@@ -125,7 +125,7 @@
 :root[data-theme="dark"] .footer > div,
 :root[data-theme="dark"] .footer button { color: #bdc9c4; }
 :root[data-theme="dark"] .error-state { background: #382622; color: #ffb7a8; }
-:root[data-theme="dark"] .loading-line { background: linear-gradient(90deg, #17877f 35%, #34443f 35%); }
+:root[data-theme="dark"] .loading-line { background: #34443f; }
 :root[data-theme="dark"] .main-nav { border-color: var(--line); }
 
 .theme-toggle {
@@ -146,4 +146,37 @@
 
 @media (max-width: 620px) {
   .theme-toggle { width: 32px; height: 32px; }
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] .app-shell { background: #101614; }
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .topbar { background: #18211f; border-color: #35443f; }
+:root[data-theme="dark"] .page-sheet { background: #151e1b; border-color: #35443f; }
+:root[data-theme="dark"] .sidebar-section-label,
+:root[data-theme="dark"] .sidebar-bottom,
+:root[data-theme="dark"] .sidebar .brand-text small,
+:root[data-theme="dark"] .topbar-context span,
+:root[data-theme="dark"] .dataset-control > span { color: #a8b7b0; }
+:root[data-theme="dark"] .sidebar-bottom { border-color: #35443f; }
+:root[data-theme="dark"] .sidebar-bottom-copy b,
+:root[data-theme="dark"] .topbar-context b { color: #e4ece8; }
+:root[data-theme="dark"] .sidebar .nav-link { color: #b7c4be; }
+:root[data-theme="dark"] .sidebar .nav-link:hover { color: #e4ece8; background: #202d29; }
+:root[data-theme="dark"] .sidebar .nav-active { color: #8ad3c4; background: #233831; }
+:root[data-theme="dark"] .dataset-control select,
+:root[data-theme="dark"] .theme-toggle { color: #8ad3c4; background: #202d29; border-color: #465851; }
+:root[data-theme="dark"] .metrics-grid { background: #1b2522; border-color: #35443f; }
+:root[data-theme="dark"] .metric { border-right-color: #35443f; }
+:root[data-theme="dark"] .insight-row { background: #1a2924; border-color: #30423b; }
+:root[data-theme="dark"] .insight-icon,
+:root[data-theme="dark"] .insight-icon-orange,
+:root[data-theme="dark"] .insight-icon-blue { background: transparent; }
+:root[data-theme="dark"] .insight span:not(.insight-icon) { color: #b6c3bd; }
+:root[data-theme="dark"] .footer { background: #18211f; border-color: #35443f; }
+:root[data-theme="dark"] .sidebar-menu-button { color: #d9e5df; background: #202d29; border-color: #465851; }
+:root[data-theme="dark"] .loading-line { background: #34443f; }
+
+@media (max-width: 900px) {
+  :root[data-theme="dark"] .sidebar { background: #18211f; }
 }
