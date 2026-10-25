@@ -238,7 +238,7 @@
 :root .app-shell .empty-reliability p { font-size: 12px; }
 :root .app-shell .model-compare-head { color: #52615b; font-size: 11px; }
 :root .app-shell .model-compare-row small { font-size: 11px; }
-:root .app-shell .model-tag { font-size: 11px; }
+:root .app-shell .model-tag { color: #116a63; font-size: 11px; }
 :root .app-shell .reliability-table b { font-size: 12px; }
 :root .app-shell .reliability-table-head { color: #52615b; font-size: 11px; }
 :root .app-shell .run-summary h3 small,
