@@ -53,12 +53,27 @@ SUBSET_CONDITIONS = {
 }
 
 
-def _active_theme() -> str:
+def _context_theme() -> str:
     try:
         theme_type = st.context.theme.type
     except (AttributeError, RuntimeError):
         return "light"
     return theme_type if theme_type in {"light", "dark"} else "light"
+
+
+def _prepare_theme_for_run() -> None:
+    configured_theme = st.get_option("theme.base")
+    if "_aero_rul_theme_initialized" not in st.session_state:
+        # Streamlit can report a stale theme context during the first app render.
+        active_theme = configured_theme if configured_theme in {"light", "dark"} else _context_theme()
+        st.session_state["_aero_rul_theme_initialized"] = True
+    else:
+        active_theme = _context_theme()
+    st.session_state["_aero_rul_active_plot_theme"] = active_theme
+
+
+def _active_theme() -> str:
+    return st.session_state.get("_aero_rul_active_plot_theme", _context_theme())
 
 
 def _render_plot(figure) -> None:
@@ -775,6 +790,7 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    _prepare_theme_for_run()
     st.sidebar.title("AERO / RUL")
     st.sidebar.caption("NASA C-MAPSS · research observatory")
     selection = st.sidebar.selectbox("C-MAPSS subset", ("All subsets", *DATASET_NAMES), key="dataset")
