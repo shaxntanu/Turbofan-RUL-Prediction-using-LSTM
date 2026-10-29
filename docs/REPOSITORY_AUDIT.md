@@ -1,7 +1,8 @@
 # Repository audit
 
-**Audit date:** 2026-10-29  
-**Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)  
+**Audit date:** 2026-10-29
+
+**Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)
 **Final local revision:** see the Git history after this audit. This report does not imply a hosted CI run or deployment.
 
 ## Repository Overview
