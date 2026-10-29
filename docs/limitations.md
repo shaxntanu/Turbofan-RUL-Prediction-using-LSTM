@@ -40,6 +40,6 @@ These limitations define what the current repository's results can support. A su
 ## Security and verification limits
 
 - A repository text scan found no matches for common token/private-key patterns; this is not a complete secret-scanning guarantee.
-- Python dependency advisory scanning was unavailable because `pip-audit` was not installed. The npm advisory endpoint reset the connection during this audit, so dependency advisories could not be retrieved.
+- Python `pip-audit --local` timed out while retrieving advisories from PyPI, and the npm advisory endpoint reset its connection. Neither dependency advisory scan produced a result; no claim is made that the dependencies are vulnerability-free.
 - No external credential, production setting, or hosted-service configuration was inspected. Review GitHub, Vercel, and Streamlit account configuration separately before relying on them.
 - No physical hardware, flight system, or live maintenance workflow was available or tested.
