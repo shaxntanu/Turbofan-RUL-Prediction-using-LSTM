@@ -1,6 +1,6 @@
 # Technology Stack & Engineering Specification
 
-> **Implemented stack:** The authoritative dependencies are `requirements.txt` and `web/package.json`. The project uses TensorFlow/Keras (not PyTorch), Python 3.12 for the supported training environment, scikit-learn, pandas/NumPy, Matplotlib/Seaborn, Streamlit, and React/Vite with Chart.js. The sections below retain rationale and design notes from the initial specification; proposal labels do not imply missing implementation.
+> **Implemented stack:** The authoritative dependencies are `requirements.txt`, `requirements-dev.txt`, `requirements-training.txt`, `requirements-animation.txt`, and `web/package.json`. The project uses TensorFlow/Keras (not PyTorch), Python 3.12 for the documented full training environment, scikit-learn, pandas/NumPy, Matplotlib/Seaborn, Streamlit, and React/Vite with Chart.js. The sections below retain rationale and design notes from the initial specification; proposal labels do not imply missing implementation. See [`architecture.md`](architecture.md) for the current runtime boundaries.
 
 TensorFlow training was exercised in a Python 3.12 environment on CPU. On native Windows, TensorFlow 2.11 and later does not provide built-in CUDA GPU execution; use CPU or a supported WSL2 setup for GPU workflows.
 
