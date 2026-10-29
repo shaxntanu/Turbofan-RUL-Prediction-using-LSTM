@@ -13,6 +13,7 @@ This file records significant user-facing and reproducibility changes. Experimen
 
 ### Clarified
 
+- Kept the optional C++ native package out of the Streamlit runtime and removed the now-unused compiler install from the app container configuration.
 - The project is a simulator-based research/demo prototype; the results are not operational maintenance guidance.
 - The Streamlit upload forecast uses Ridge, while TensorFlow LSTM training is optional.
 - Included dataset and paper files have source-specific terms distinct from the MIT license for repository software.
