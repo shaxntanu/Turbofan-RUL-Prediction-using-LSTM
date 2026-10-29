@@ -1,5 +1,7 @@
 # Dataset & Data Pipeline Specification
 
+> **Current status:** This document preserves the original dataset specification and its planning notes. The live implementation and current evaluation boundary are documented in [`architecture.md`](architecture.md), [`methodology.md`](methodology.md), and [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md). Where an old proposal differs, follow those current documents and the code.
+
 ## 1. Dataset Source
 
 ### 1.1 Primary Dataset: NASA C-MAPSS
@@ -14,8 +16,8 @@
 
 **Hugging Face Version**: https://huggingface.co/datasets/SoyVitou/NASA-C-MAPSS-Turbofan-Engine
 
-**Citation**: 
-- M. Chao, C. Kulkarni, K. Goebel and O. Fink (2021). "Aircraft Engine Run-to-Failure Dataset under real flight conditions", NASA Prognostics Data Repository, NASA Ames Research Center, Moffett Field, CA
+**Reference cited by the bundled dataset readme:**
+- A. Saxena, K. Goebel, D. Simon, and N. Eklund, "Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation," Proceedings of the International Conference on Prognostics and Health Management (PHM08), Denver, Colorado, October 2008.
 
 ---
 
@@ -23,19 +25,7 @@
 
 ### 2.1 License Status
 
-**License**: Public Domain / NASA Open Data
-
-**Usage Restrictions**: None
-
-**Requirements**:
-- Citation required for academic use
-- Acknowledgment of NASA PCoE recommended
-
-**Commercial Use**: Allowed (public domain)
-
-**Modification**: Allowed
-
-**Redistribution**: Allowed
+The repository does not include a separate license statement for the bundled C-MAPSS files. The root MIT `LICENSE` covers repository software and does not establish reuse rights for NASA data or the supplied research papers. This project makes no blanket public-domain, commercial-use, or redistribution claim for those third-party files. Check the dataset source's current terms before reusing or redistributing them.
 
 ---
 
@@ -54,7 +44,7 @@ The NASA C-MAPSS dataset contains four subsets with varying complexity:
 
 ### 3.2 Selected Subset for Baseline
 
-**Primary Choice**: FD001
+**Default Single-Subset Choice**: FD001
 
 **Rationale**:
 - Simplest configuration (1 operating condition, 1 fault mode)
@@ -64,11 +54,11 @@ The NASA C-MAPSS dataset contains four subsets with varying complexity:
 
 ### 3.3 Complete Dataset Coverage
 
-**All Subsets**: The pipeline should support all four subsets (FD001, FD002, FD003, FD004)
+**Current Coverage**: The pipeline and committed results cover all four subsets (FD001, FD002, FD003, FD004). The single-run configuration defaults to FD001; `src.train_all` accepts a subset list.
 
 **Implementation Strategy**:
-- Baseline development on FD001
-- Extension to FD002, FD003, FD004 for comprehensive evaluation
+- FD001 remains the default for a single-subset invocation
+- `python -m src.train_all --datasets FD001 FD002 FD003 FD004` runs the four-subset benchmark
 - Each subset requires separate model training due to different characteristics
 - Results should be reported for all subsets to demonstrate generalization
 
