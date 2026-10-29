@@ -1,5 +1,7 @@
 # Project Requirements Specification
 
+> **Status:** This file preserves the initial requirements/planning document, including aspirational items. Do not read every listed requirement as an implemented feature. For current scope and implementation status, use [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) and [`traceability.md`](traceability.md); the source code and measured evidence remain authoritative.
+
 ## 1. Project Title
 
 Turbofan Remaining Useful Life (RUL) Prediction using LSTM
