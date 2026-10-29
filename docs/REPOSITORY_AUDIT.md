@@ -15,7 +15,7 @@ It is a software/research hybrid focused on simulated prognostics. It is not an 
 
 - The repository already had a clean, substantial implementation and 29 passing Python tests. It was not an empty scaffold and did not need a rewrite.
 - The primary workflow, research results, and dashboard artifacts existed. Core experiment outputs and model weights were git-ignored; the web app used a committed static snapshot.
-- Python dependencies were pinned, but pytest and the optional local C++ package were both in the app/runtime manifest. A standalone development dependency file did not exist.
+- Python dependencies were pinned, but pytest and the optional local C++ package were both in the app/runtime manifest. The Docker image and Streamlit system-package manifest also installed a compiler for that optional extension. A standalone development dependency file did not exist.
 - GitHub Actions contained a Julia scenario-table check but no Python test, native-extension, or web-build CI.
 - Documentation was extensive but split between current results and earlier prospective specifications. There was no single current architecture map, requirements-to-evidence matrix, maturity audit, or documentation index.
 - The dataset specification made unsupported blanket reuse claims and cited a dataset description inconsistent with the bundled dataset readme.
@@ -24,7 +24,7 @@ It is a software/research hybrid focused on simulated prognostics. It is not an 
 
 ## Major Problems Found
 
-1. Runtime and development dependencies were mixed, including an optional C++ build in the app manifest.
+1. Runtime and development dependencies were mixed, including pytest and an optional C++ build in the app manifest; the app container installed a compiler for it.
 2. No automated CI exercised the Python tests, optional C++ build, or web production build.
 3. Current architecture and historical/aspirational specifications were difficult to distinguish.
 4. Requirements, implementation, verification, and remaining gaps were not mapped in one place.
@@ -47,6 +47,7 @@ No confirmed core model defect was found in the inspected pipeline, and the exis
 
 - Moved pytest out of the Streamlit runtime manifest into `requirements-dev.txt`.
 - Removed the optional C++ package build from the app runtime manifest; CI and local contributors build it explicitly when needed.
+- Removed the now-unneeded compiler installation from the Docker and Streamlit system-package configuration.
 - Added read-only GitHub Actions CI for Python 3.12/3.14, C++ extension build on Python 3.12, and the Vite production build.
 - Added current architecture, project-scope, methodology, benchmark, limitations, traceability, roadmap, SDG, and audit documentation.
 - Added three retrospective ADRs and a documentation index.
@@ -77,6 +78,11 @@ No confirmed core model defect was found in the inspected pipeline, and the exis
 - `docs/PROJECT_REQUIREMENTS.md`
 - `docs/SYSTEM_ARCHITECTURE.md`
 - `docs/TECHNOLOGY_STACK.md`
+- `Dockerfile`
+
+## Files Removed
+
+- `packages.txt` (it installed only `build-essential`, which the app no longer needs)
 
 No model implementation, published metric, dashboard behavior, dataset, animation, or license text was changed.
 
@@ -105,6 +111,7 @@ No model implementation, published metric, dashboard behavior, dataset, animatio
 - `pip-audit --local`: inconclusive; the PyPI advisory request timed out. No dependency vulnerability-free claim is made.
 - Julia scenario generation was not run because Julia is not installed in this environment. The existing workflow and Python scenario reconciliation tests remain in place.
 - A clean Python 3.14 environment install was attempted, but package resolution stopped when the configured index could not provide `fonttools`; the 3.14 compatibility path therefore remains unverified locally.
+- The Docker CLI was installed, but the Docker daemon was unavailable; the modified image was not built.
 - The full four-subset training and reliability studies, browser interaction tests, and hosted services were not rerun.
 
 ## Security Findings
@@ -160,6 +167,7 @@ See [`traceability.md`](traceability.md). At audit completion, four requirements
 - The Python 3.14 matrix job was not fully reproduced locally because the configured package index did not provide a required wheel during the audit.
 - Dependency advisory scans need to be retried when PyPI and npm registry access is available.
 - Julia execution, browser-driven application checks, and hosted Vercel/Streamlit configuration were not verified.
+- The Docker image build needs to be run on a host with an active Docker daemon.
 - No independent operational engine data, hardware validation, or maintenance outcomes exist.
 - Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
 - Third-party dataset and paper reuse terms should be confirmed at their source before redistribution.
