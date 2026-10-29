@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem in the code or an application.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: Share enough detail to reproduce the issue. Remove secrets and private data from all examples.
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: For example, pipeline, Streamlit, web dashboard, Julia, or C++ extension.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include OS, Python/Node version, and relevant dependency versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal example and exact commands.
+      placeholder: "1. Run ...\n2. Select ...\n3. Observe ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant output
+      description: Paste a short, redacted error or attach a screenshot without private data.
+    validations:
+      required: false
