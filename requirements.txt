@@ -5,5 +5,4 @@ matplotlib==3.10.8
 seaborn==0.13.2
 streamlit==1.62.0
 joblib==1.5.3
-./cpp_engine
 tensorflow==2.21.0; python_version >= "3.10" and python_version < "3.14"
