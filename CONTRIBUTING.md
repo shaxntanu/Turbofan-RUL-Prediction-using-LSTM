@@ -13,7 +13,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements-dev.txt
 ```
 
-For the complete training and optional C++ environment, install `requirements-training.txt`. The React dashboard has a separate environment:
+For the complete TensorFlow training environment, install `requirements-training.txt`. The native C++ extension stays optional; build it separately with `python -m pip install ./cpp_engine` when working on that benchmark. The React dashboard has a separate environment:
 
 ```powershell
 cd web
