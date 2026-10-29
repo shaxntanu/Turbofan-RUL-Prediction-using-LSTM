@@ -1,6 +1,6 @@
 # System / ML Architecture
 
-> **Current implementation:** The module map and workflow below describe the code that runs today. Later detailed sections are retained as design context; where they differ, the current pipeline and [`turbofan-pipeline.html`](turbofan-pipeline.html) are authoritative.
+> **Historical architecture notes:** This document contains the initial detailed design and some aspirational module descriptions. The current, source-checked system flow and module boundaries are in [`architecture.md`](architecture.md); use it when this document differs. The interactive [`turbofan-pipeline.html`](turbofan-pipeline.html) is a project diagram, not a substitute for the code-level reference.
 
 ## Current Data and Application Flow
 
