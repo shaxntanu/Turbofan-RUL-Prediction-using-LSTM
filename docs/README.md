@@ -13,6 +13,7 @@ Use the current documents below for the implemented project. Several original sp
 - [Adaptations of supplied research papers](RESEARCH_TASK_MATRIX.md)
 - [Limitations and residual risks](limitations.md)
 - [Requirements-to-evidence traceability](traceability.md)
+- [Architecture decisions](decisions/)
 - [Repository audit and maturity assessment](REPOSITORY_AUDIT.md)
 - [Roadmap](roadmap.md)
 - [Limited SDG alignment assessment](sdg-alignment.md)
