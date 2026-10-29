@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose a focused improvement to the research workflow or applications.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: Describe the user need and how the result could be verified. Do not include private operational data.
+  - type: textarea
+    id: need
+    attributes:
+      label: Problem or user need
+      description: What task is difficult or unsupported today?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed behavior
+      description: Explain the smallest useful change.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Verification or research evidence
+      description: How could the change be checked? If it affects experiments, name the dataset and evaluation unit.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and constraints
+    validations:
+      required: false
