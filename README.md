@@ -149,3 +149,30 @@ The supplied papers study turbine gas temperature and proprietary operational or
 ## Stack
 
 Python, TensorFlow/Keras, scikit-learn, pandas, NumPy, Matplotlib, Seaborn, Streamlit, React, Vite, Chart.js, Archify, and optional ManimGx.
+
+## Documentation
+
+Start with the [documentation guide](docs/README.md). The current [project scope](docs/PROJECT_OVERVIEW.md), [architecture](docs/architecture.md), [methodology](docs/methodology.md), [measured results](docs/RESULTS.md), [limitations](docs/limitations.md), and [traceability matrix](docs/traceability.md) describe the implementation and evidence. See the [repository audit](docs/REPOSITORY_AUDIT.md) for verification status and remaining gaps.
+
+## Development checks
+
+Install the development dependencies and run the Python tests:
+
+```powershell
+pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Build the static dashboard:
+
+```powershell
+cd web
+npm ci
+npm run build
+```
+
+GitHub Actions runs these checks on Python 3.12 and 3.14 and builds the optional C++ extension on Python 3.12. The hosted workflow's first run must complete before its status can be treated as verified.
+
+## Data and result scope
+
+This project evaluates simulated C-MAPSS trajectories. Its results do not establish performance on operational aircraft and are not maintenance advice. The root MIT license applies to project software; bundled data and research papers retain source-specific terms. See [limitations](docs/limitations.md) and the [dataset note](docs/DATASET_AND_DATA_PIPELINE.md).
