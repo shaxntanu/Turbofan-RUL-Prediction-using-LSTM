@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below. Cite the original NASA C-MAPSS source separately when using its data."
+title: "Turbofan Remaining Useful Life Observatory"
+type: software
+authors:
+  - name: Shantanu
+repository-code: "https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM"
+license: MIT
+keywords:
+  - remaining useful life
+  - turbofan
+  - prognostics
+  - NASA C-MAPSS
+  - reliability
+abstract: >-
+  A research-oriented Python benchmark and dashboard project for turbofan remaining
+  useful life prediction on simulated NASA C-MAPSS trajectories. It includes a
+  Ridge baseline, optional TensorFlow LSTM, reliability analyses, and static results
+  applications. It is not validated for operational maintenance decisions.
