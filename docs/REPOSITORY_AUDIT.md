@@ -85,9 +85,12 @@ No model implementation, published metric, dashboard behavior, dataset, animatio
 - `npm run build` from `web/`.
 - `python -m pip check`.
 - Built the optional C++ wheel with `python -m pip wheel --no-deps --wheel-dir <temporary-directory> ./cpp_engine`.
+- Scanned 78 relative Markdown links across 28 tracked Markdown files; every target resolved.
+- Parsed the CI and Julia workflows, issue forms, and `CITATION.cff` as YAML and checked expected top-level fields.
 - Inspected source for TODO/FIXME markers, dynamic evaluation, unsafe HTML insertion, subprocess/system calls, broad exception handling, and debug configuration.
 - Scanned tracked text files for common credential and private-key patterns; no matches were reported.
-- Reviewed CI workflow permissions and setup steps. `actionlint` was not installed, and the workflow has not run on GitHub.
+- Reviewed CI workflow permissions and setup steps. `actionlint` was not installed, so GitHub Actions-specific semantics were not linted and the workflow has not run on GitHub.
+- Reviewed the Mermaid source in the current architecture diagrams; no Mermaid renderer/parser was available for rendered validation.
 
 ## Test Results
 
@@ -156,6 +159,7 @@ See [`traceability.md`](traceability.md). At audit completion, four requirements
 - Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
 - Third-party dataset and paper reuse terms should be confirmed at their source before redistribution.
 - The Python dependency set is not transitively locked, no automated end-to-end pipeline smoke test exists, and no SBOM is generated.
+- The new Mermaid diagrams were reviewed as source but not rendered or parser-validated.
 
 ## Initial Maturity Score
 
