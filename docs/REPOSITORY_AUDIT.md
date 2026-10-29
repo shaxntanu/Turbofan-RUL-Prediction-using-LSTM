@@ -1,0 +1,198 @@
+# Repository audit
+
+**Audit date:** 2026-10-29  
+**Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)  
+**Final local revision:** see the Git history after this audit. This report does not imply a hosted CI run or deployment.
+
+## Repository Overview
+
+The repository is a research-oriented turbofan Remaining Useful Life (RUL) benchmark and demonstration project. It combines a modular Python pipeline, NASA C-MAPSS FD001-FD004 data, an optional TensorFlow LSTM, a Ridge baseline, research/reliability analyses, Matplotlib outputs, Streamlit, a static React/Vite dashboard, an optional C++ sensor-kernel benchmark, a Julia what-if analysis, and a ManimGx animation source.
+
+It is a software/research hybrid focused on simulated prognostics. It is not an embedded system, aircraft integration, or operational maintenance product. The root MIT license applies to project software; included data and papers have separate source-specific terms.
+
+## Initial Condition
+
+- The repository already had a clean, substantial implementation and 29 passing Python tests. It was not an empty scaffold and did not need a rewrite.
+- The primary workflow, research results, and dashboard artifacts existed. Core experiment outputs and model weights were git-ignored; the web app used a committed static snapshot.
+- Python dependencies were pinned, but pytest was in the app/runtime manifest. A standalone development dependency file did not exist.
+- GitHub Actions contained a Julia scenario-table check but no Python test, native-extension, or web-build CI.
+- Documentation was extensive but split between current results and earlier prospective specifications. There was no single current architecture map, requirements-to-evidence matrix, maturity audit, or documentation index.
+- The dataset specification made unsupported blanket reuse claims and cited a dataset description inconsistent with the bundled dataset readme.
+- The repository had no contributor, security-reporting, code-of-conduct, changelog, citation, or issue/PR templates.
+- The initial revision was `17bc488`, on `main`, clean and synced with `origin/main`; the local history contained 260 commits and no tags. This audit did not inspect GitHub Releases or account settings.
+
+## Major Problems Found
+
+1. Runtime and development dependencies were mixed.
+2. No automated CI exercised the Python tests, optional C++ build, or web production build.
+3. Current architecture and historical/aspirational specifications were difficult to distinguish.
+4. Requirements, implementation, verification, and remaining gaps were not mapped in one place.
+5. Dataset license/usage assertions exceeded the evidence included in the repository.
+6. No maintainer-facing security reporting or community contribution guidance existed.
+7. The Streamlit upload forecast uses Ridge even when an LSTM comparison is available; this behavior was not prominent in the project documentation.
+8. The npm and Python advisory sources could not be reached from the audit environment, leaving dependency vulnerability status unresolved.
+
+No confirmed core model defect was found in the inspected pipeline, and the existing test suite passed. That is not proof of correctness for every full experiment, upload, or hosted deployment.
+
+## Architecture Findings
+
+- The Python pipeline is modular across configuration, data loading/validation, targets, engine splitting, preprocessing, sequence construction, models, evaluation, analyses, and visualization.
+- The standard run separates fit and validation engines before preprocessing, selects the model on validation MAE, and reports official test metrics afterwards. The reliability study distinguishes terminal-engine from overlapping-window evaluation.
+- The Streamlit app can run supported local experiments and uses saved Ridge artifacts for uploaded-history forecasts. The web app is a static results viewer; it fetches committed bundle data rather than calling an inference service.
+- Julia, C++, and ManimGx serve separate analysis/diagnostic/media roles and are optional for core Ridge and static dashboard use.
+- Generated `outputs/` and `models/` remain local; the static web export can become stale until regenerated and committed.
+
+## Improvements Implemented
+
+- Moved pytest out of the Streamlit runtime manifest into `requirements-dev.txt`.
+- Added read-only GitHub Actions CI for Python 3.12/3.14, C++ extension build on Python 3.12, and the Vite production build.
+- Added current architecture, project-scope, methodology, benchmark, limitations, traceability, roadmap, SDG, and audit documentation.
+- Added three retrospective ADRs and a documentation index.
+- Added contributor setup, security-reporting, code-of-conduct, changelog, and software-citation files, plus issue and PR templates.
+- Clarified historic planning documents and corrected dataset scope, citation, and third-party rights language without changing `LICENSE`.
+- Updated the root README with current documentation and verification links; no contribution section was added.
+- Kept all changes as separate commits authored as Shantanu. No push or deployment was performed because the supplied master prompt prohibits automatic pushing.
+
+## Files Added
+
+- `.github/workflows/ci.yml`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/ISSUE_TEMPLATE/bug_report.yml`
+- `.github/ISSUE_TEMPLATE/feature_request.yml`
+- `requirements-dev.txt`
+- `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `CITATION.cff`
+- `docs/README.md`, `docs/PROJECT_OVERVIEW.md`, `docs/architecture.md`, `docs/methodology.md`, `docs/benchmarks.md`, `docs/limitations.md`, `docs/traceability.md`, `docs/roadmap.md`, `docs/sdg-alignment.md`
+- `docs/decisions/ADR-001-engine-level-validation.md`
+- `docs/decisions/ADR-002-static-results-dashboard.md`
+- `docs/decisions/ADR-003-isolate-optional-tooling.md`
+- `docs/REPOSITORY_AUDIT.md`
+
+## Files Modified
+
+- `README.md`
+- `requirements.txt`
+- `docs/DATASET_AND_DATA_PIPELINE.md`
+- `docs/PROJECT_REQUIREMENTS.md`
+- `docs/SYSTEM_ARCHITECTURE.md`
+- `docs/TECHNOLOGY_STACK.md`
+
+No model implementation, published metric, dashboard behavior, dataset, animation, or license text was changed.
+
+## Testing Performed
+
+- `python -m pytest -q` using the repository Python 3.12.10 environment.
+- `python -m compileall -q src scripts tests animations`.
+- `npm run build` from `web/`.
+- `python -m pip check`.
+- Built the optional C++ wheel with `python -m pip wheel --no-deps --wheel-dir <temporary-directory> ./cpp_engine`.
+- Inspected source for TODO/FIXME markers, dynamic evaluation, unsafe HTML insertion, subprocess/system calls, broad exception handling, and debug configuration.
+- Scanned tracked text files for common credential and private-key patterns; no matches were reported.
+- Reviewed CI workflow permissions and setup steps. `actionlint` was not installed, and the workflow has not run on GitHub.
+
+## Test Results
+
+- Python suite: **29 passed**, one expected scikit-learn convergence warning from a test that deliberately limits an MLP to three iterations.
+- Python compilation: passed.
+- Web production build: passed; Vite emitted the expected `dist/` bundle.
+- Dependency consistency: `pip check` reported no broken requirements.
+- C++ package build: wheel built successfully for CPython 3.12 on Windows; the repository tests passed with the native module available.
+- `npm audit --omit=dev`: inconclusive; the npm advisory endpoint reset the connection.
+- `pip-audit --local`: inconclusive; the PyPI advisory request timed out. No dependency vulnerability-free claim is made.
+- Julia scenario generation was not run because Julia is not installed in this environment. The existing workflow and Python scenario reconciliation tests remain in place.
+- The full four-subset training and reliability studies, browser interaction tests, and hosted services were not rerun.
+
+## Security Findings
+
+- No common API-key, token, or private-key patterns were found in the tracked text scan. The scan is not a complete secret-detection guarantee.
+- The new CI workflow requests `contents: read`, does not publish packages/releases, and has no deployment credentials.
+- Streamlit parses user-uploaded CSV/TXT in memory. The app is intended for trusted demonstration use and does not provide a hardened multi-tenant boundary.
+- The static dashboard has no prediction API or account system. Hosted service settings and secrets were not inspected.
+- No license was changed. Dataset and research papers are documented as third-party material with source-specific terms.
+- Python and npm advisory checks could not reach their vulnerability databases. Review them again from an environment with registry access.
+
+## Dependency Findings
+
+- Direct Python, web, animation, and C++ dependencies are separated across manifests; `requirements.txt` now excludes pytest.
+- `pip check` found no installed dependency conflicts.
+- The optional C++ package wheel built successfully. The repository root is an application/research project rather than a distributable Python package, so no root package metadata was added.
+- The web application has a lockfile. Python dependencies are directly pinned but lack a full transitive lockfile.
+- No SBOM is checked in. There is no root release/package build, and the project spans separate deployed, training, animation, native, and web dependency environments. A generated environment snapshot would not stay current. Revisit CycloneDX/SPDX generation if a release or artifact-distribution process is introduced.
+- Vulnerability advisories remain unverified because the registry endpoints timed out/reset.
+
+## Documentation Improvements
+
+- Added a source-checked system architecture and repository map.
+- Separated current project scope from historical aspirations, with explicit implemented/optional/out-of-scope behavior.
+- Documented labels, split boundaries, preprocessing, model selection, metrics, uncertainty, reproducibility, and research adaptations.
+- Added limitations for simulator external validity, metric units, synthetic stress, maintenance what-if assumptions, upload security, and stale static bundles.
+- Added evidence-backed benchmarks, traceability statuses, retrospective ADRs, roadmap, and a restrained SDG 9.5 assessment.
+- Corrected the bundled dataset readme reference and removed unsupported blanket license claims.
+
+## Research Improvements
+
+- Marked current versus retrospective, synthetic, and proxy analyses directly in the architecture/methods documentation.
+- Identified which results are one-seed, multi-seed, window-level, terminal-engine, or local microbenchmark outputs.
+- Clarified that supplied papers' datasets, targets, and numerical results are not reproduced.
+- Made the validation and test-label boundary explicit and mapped each objective to evidence.
+
+## Reproducibility Improvements
+
+- Added development-only test dependencies and an automated CI configuration for both the Python fallback and full training Python paths.
+- Added exact local test/build commands to the root README and contributor guide.
+- Documented result regeneration, optional tool setup, environment limitations, and the need to refresh static exports explicitly.
+- Recorded that the first hosted CI run, Julia regeneration, and full model studies remain pending.
+
+## Traceability Status
+
+See [`traceability.md`](traceability.md). At audit completion, four requirements have direct passing test/build evidence, eight are partially verified, the new hosted CI workflow is untested, and production maintenance recommendations are not applicable/out of scope. “Verified” applies only to the named check, not an entire subsystem.
+
+## Remaining Limitations
+
+- No full training or reliability study was rerun; published metrics remain the dated snapshots in `docs/RESULTS.md`.
+- No GitHub-hosted CI run has validated the new workflow. Changes are local commits and have not been pushed.
+- Dependency advisory scans need to be retried when PyPI and npm registry access is available.
+- Julia execution, browser-driven application checks, and hosted Vercel/Streamlit configuration were not verified.
+- No independent operational engine data, hardware validation, or maintenance outcomes exist.
+- Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
+- Third-party dataset and paper reuse terms should be confirmed at their source before redistribution.
+- The Python dependency set is not transitively locked, no automated end-to-end pipeline smoke test exists, and no SBOM is generated.
+
+## Initial Maturity Score
+
+The scores below use the prompt's weighted dimensions. They are an internal engineering rubric, not an external certification.
+
+| Dimension | Weight | Initial | Evidence at `17bc488` |
+|---|---:|---:|---|
+| Architecture & Modularity | 15 | 11 | Strong module separation and current diagrams, but no single canonical architecture reference. |
+| Documentation | 15 | 9 | Extensive docs, mixed with older prospective requirements and no index/traceability. |
+| Code Quality | 15 | 11 | Modular, functioning source; development/test dependency boundary was unclear. |
+| Testing | 15 | 9 | 29 tests passed locally; no general Python/web CI or end-to-end experiment test. |
+| Security | 10 | 7 | No obvious secrets found in a simple scan; no security policy and upload boundary undocumented. |
+| Reproducibility | 10 | 7 | Pinned direct dependencies and dated results; no general CI or canonical current method page. |
+| Open Source Governance | 10 | 3 | MIT license existed; contributor, security, citation, conduct, and templates were absent. |
+| Research Rigor & Traceability | 10 | 7 | Strong protocols/results, but no integrated requirement-to-evidence matrix or audit. |
+| **Total** | **100** | **64** | |
+
+## Final Maturity Score
+
+| Dimension | Weight | Final | Evidence and remaining gap |
+|---|---:|---:|---|
+| Architecture & Modularity | 15 | 13 | Current diagrams and boundaries documented; no API or deployment integration test. |
+| Documentation | 15 | 14 | Canonical index, methods, limitations, and audit added; historical source documents remain. |
+| Code Quality | 15 | 12 | Runtime/dev dependencies separated and boundaries explicit; no linter/type-check policy. |
+| Testing | 15 | 11 | 29 tests pass, build and wheel succeed, CI configured; hosted CI and end-to-end studies are pending. |
+| Security | 10 | 7 | Reporting and least-privilege guidance added; advisory scans and hosted settings remain unverified. |
+| Reproducibility | 10 | 8 | CI paths and commands documented; Python transitive lock and repeated independent full runs are absent. |
+| Open Source Governance | 10 | 8 | Contributor, security, conduct, citation, changelog, issue, and PR guidance added; no release process. |
+| Research Rigor & Traceability | 10 | 9 | Evidence matrix and claim boundaries added; no independent fleet data or full fresh study run. |
+| **Total** | **100** | **82** | |
+
+## Recommended Next Actions
+
+1. Push the local commits when ready and review the first Python/web CI run; build failures should be fixed before treating CI as verified.
+2. Retry Python and npm advisory scans on a working network and resolve findings through reviewed dependency changes.
+3. Run Julia generation on a supported environment and confirm the committed CSV remains reproducible.
+4. Add a bounded end-to-end Ridge smoke test and an upload-forecast contract test.
+5. Verify current Vercel/Streamlit deployments and configuration manually; record the deployed revision.
+6. Confirm reuse terms for every third-party dataset and paper before further redistribution.
+7. Pursue independent operational data and external validation before making maintenance or safety claims.
