@@ -28,6 +28,7 @@ from src.target_construction import TargetConstructor
 
 RAW_COLUMNS = DataLoader(ProjectConfig()).columns
 RESULTS_BUNDLE_PATH = Path(__file__).resolve().parents[1] / "web" / "public" / "results" / "benchmark.json"
+RELIABILITY_BUNDLE_DIRECTORY = RESULTS_BUNDLE_PATH.parent / "reliability"
 METHOD_VIDEO_PATH = Path(__file__).resolve().parents[1] / "docs" / "media" / "rul-method.mp4"
 MAINTENANCE_SCENARIOS_PATH = (
     Path(__file__).resolve().parents[1]
@@ -122,7 +123,31 @@ def _render_method_video() -> None:
 
 @st.cache_data(show_spinner=False)
 def _read_dashboard_bundle() -> dict:
-    return _read_json(RESULTS_BUNDLE_PATH) or {}
+    bundle = _read_json(RESULTS_BUNDLE_PATH) or {}
+    if bundle.get("reliability"):
+        return bundle
+
+    snapshots = [
+        _read_json(RELIABILITY_BUNDLE_DIRECTORY / f"{dataset.lower()}.json")
+        for dataset in DATASET_NAMES
+    ]
+    snapshots = [snapshot for snapshot in snapshots if snapshot]
+    if not snapshots:
+        return bundle
+
+    available = [snapshot for snapshot in snapshots if snapshot.get("status") == "available"]
+    tables: dict[str, list] = {}
+    for snapshot in available:
+        for name, rows in snapshot.get("tables", {}).items():
+            tables.setdefault(name, []).extend(rows)
+
+    merged = dict(bundle)
+    merged["reliability"] = {
+        "status": "available" if available else "not_exported",
+        "study": available[0].get("study", {}) if available else {},
+        "tables": tables,
+    }
+    return merged
 
 
 def _published_result(dataset: str, bundle: dict) -> dict | None:
