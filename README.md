@@ -105,7 +105,7 @@ npm ci
 npm run dev
 ```
 
-Both apps include an all-subset view for combined FD001-FD004 selected-model scores, candidate-model comparisons, and cross-subset results. The Streamlit Reliability tab and web Reliability page read the committed aggregate study snapshot, so those views work in hosted deployments without ignored local `outputs/` files. The dashboard presents measured per-subset scores, transfer errors, figures, and methodology notes. After retraining or rerunning the reliability study, rerun the export command above to refresh its data bundle.
+Both apps include an all-subset view for combined FD001-FD004 selected-model scores, candidate-model comparisons, and cross-subset results. The web dashboard loads the small core benchmark bundle first, then fetches only the selected subset's reliability snapshot when its Reliability page is opened. Streamlit merges those same committed snapshots for its Reliability tab. This keeps the initial web request small while both hosted apps work without ignored local `outputs/` files. After retraining or rerunning the reliability study, rerun the export command above to refresh the core and subset-specific JSON files under `web/public/results/`.
 
 ## Optional ManimGx Animation
 
