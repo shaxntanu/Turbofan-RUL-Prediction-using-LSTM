@@ -1,7 +1,8 @@
 # Experimental Results
 
-**Snapshot:** 2026-10-11  
-**Run IDs:** FD001 `20261011-161939`; FD002 `20261011-162103`; FD003 `20261011-162613`; FD004 `20261011-162754`.  
+**Snapshot:** 2026-10-31
+
+**Run IDs:** FD001 `20261031-002409`; FD002 `20261031-002605`; FD003 `20261031-003010`; FD004 `20261031-003157`. Reliability run `20261030-231526`; source-to-target run `20261031-004445`.
 The core dashboard data is [`web/public/results/benchmark.json`](../web/public/results/benchmark.json). Reliability tables are published as subset-specific snapshots under [`web/public/results/reliability/`](../web/public/results/reliability/) and loaded on demand by the Vercel app. Detailed local JSON, CSV, model, and report artifacts are regenerated under ignored `outputs/` and `models/` directories.
 
 ## Protocol
@@ -65,6 +66,17 @@ Entries are target test MAE in cycles; rows are target subsets and columns are t
 
 Source-specific scaling is retained, without refitting on target test data. The pooled model sees training data from each target subset, so pooled results are not zero-shot transfer to an unseen domain. All FD subsets are simulated variants of C-MAPSS, not independent real-world fleets.
 
+The separate 10-unit LSTM transfer sweep from run `20261031-004445` is shown below. Each source model is trained on source training engines and evaluated on all four official target test subsets. The diagonal is an in-domain reference; off-diagonal cells are cross-subset transfer. The pooled model uses all four training subsets.
+
+| Target | FD001 source | FD002 source | FD003 source | FD004 source | Pooled |
+|---|---:|---:|---:|---:|---:|
+| FD001 | 11.25 | 14.04 | 14.88 | 31.45 | 14.33 |
+| FD002 | 81.12 | 17.02 | 64.39 | 31.74 | 16.34 |
+| FD003 | 40.87 | 13.10 | 10.96 | 32.44 | 11.61 |
+| FD004 | 86.77 | 12.13 | 69.89 | 33.53 | 13.36 |
+
+This is a compact 10-unit transfer model, distinct from the 64/32-unit in-domain LSTM benchmark. Its high off-diagonal errors for some pairs show that an LSTM trained on one simulated subset does not reliably transfer to every other subset. Pooled training includes target-subset training engines and is not a zero-shot result.
+
 ### Optional Native Sensor Kernels
 
 The C++17/pybind11 PCA and K-Means kernels were compared with scikit-learn using a seeded sample of 10,000 standardized training rows per subset. PCA timings include sklearn `fit_transform` and the equivalent native fit plus score projection; K-Means uses shared sklearn PCA scores, `k=4`, and ten initializations. Timings are best-of-three after one warm-up on this Windows/MSVC/OpenMP host.
@@ -93,7 +105,7 @@ Two-sided 95% split-conformal intervals are calibrated from validation residuals
 
 ## Reliability and Robustness Extension
 
-**Run:** `20261018-150917`. Ridge results use seeds 42, 43, and 44; LSTM, MLP, and CNN challengers use seed 42 only. The table reports terminal-engine test MAE in cycles. Ridge entries are mean +/- sample standard deviation across seeds; each challenger is one run and is not a variance estimate.
+**Run:** `20261030-231526`. Ridge results use seeds 42, 43, and 44; LSTM, MLP, and CNN challengers use seed 42 only. The table reports terminal-engine test MAE in cycles. Ridge entries are mean +/- sample standard deviation across seeds; each challenger is one run and is not a variance estimate.
 
 | Subset | Ridge clean (3 seeds) | LSTM (1 seed) | MLP summary (1 seed) | Causal CNN (1 seed) |
 |---|---:|---:|---:|---:|
