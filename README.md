@@ -20,7 +20,7 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `docs/turbofan-pipeline-showcase.workflow.json`: the editable source specification for the RUL study diagram.
 - `docs/reliability-pipeline.workflow.json`: the source specification for the reliability research diagram.
 - `animations/rul_method.py`: the ManimGx RUL explainer source, driven by a real FD001 engine trace. Its bundled MP4 appears in Streamlit's Fleet overview and All-subset benchmark and the Vercel dashboard's Methods page; playback does not require ManimGx. The rendered video and captions are in `docs/media/`.
-- `docs/figures/conformal-calibration.svg`: an interactive, data-linked explanation of how validation residuals set the 95% RUL interval radius, available on the Vercel Methods page.
+- `docs/figures/conformal-calibration.svg`: a static preview of the interactive, data-linked explanation on the Vercel Methods page, where validation residuals set the 95% RUL interval radius.
 - `Ref/*.pdf`: supplied research papers used to scope methodological adaptations.
 
 ## Setup
