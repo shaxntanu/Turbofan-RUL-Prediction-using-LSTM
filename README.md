@@ -38,6 +38,17 @@ pip install -r requirements-training.txt
 
 The pipeline discovers the bundled data under `Ref/CMAPSSData/`. Set `CMAPSS_DATA_DIR` to use a different C-MAPSS directory.
 
+### Run the Streamlit app with Docker
+
+With Docker Desktop or another Docker Engine running, build and start the app from the repository root:
+
+```powershell
+docker build -t turbofan-rul .
+docker run --rm -p 8501:8501 turbofan-rul
+```
+
+Open [http://localhost:8501](http://localhost:8501). The image uses Python 3.12; `.dockerignore` keeps local environments, generated outputs, and model files out of the build context. GitHub Actions builds the image and checks that Streamlit responds on both its health endpoint and dashboard route. The workflow does not publish the image.
+
 ## Run Experiments
 
 Run all four subsets with the LSTM and Ridge comparison (early stopping is enabled):
