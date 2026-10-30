@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from contextlib import nullcontext
 
 from src.config import DATASET_NAMES
@@ -10,6 +11,7 @@ from src.streamlit_dashboard import (
     _combined_subset_rows,
     _maintenance_capacity_curve,
     _read_maintenance_scenarios,
+    _read_dashboard_bundle,
     _reliability_snapshot,
 )
 
@@ -68,6 +70,44 @@ def test_reliability_view_falls_back_to_committed_tables_when_outputs_are_absent
 
     assert loaded_study == study
     assert tables["repeated_seed_summary"] == rows
+
+
+def test_dashboard_bundle_merges_subset_reliability_snapshots(tmp_path, monkeypatch):
+    core_path = tmp_path / "benchmark.json"
+    core_path.write_text(json.dumps({"datasets": {"FD001": {}}}), encoding="utf-8")
+    reliability_dir = tmp_path / "reliability"
+    reliability_dir.mkdir()
+    study = {"run_id": "split-study", "datasets": ["FD001", "FD002"]}
+    for dataset in ("FD001", "FD002"):
+        (reliability_dir / f"{dataset.lower()}.json").write_text(
+            json.dumps(
+                {
+                    "status": "available",
+                    "study": study,
+                    "tables": {
+                        "repeated_seed_summary": [
+                            {"dataset": dataset, "model": "ridge_clean"}
+                        ]
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+    monkeypatch.setattr(streamlit_dashboard, "RESULTS_BUNDLE_PATH", core_path)
+    monkeypatch.setattr(streamlit_dashboard, "RELIABILITY_BUNDLE_DIRECTORY", reliability_dir)
+    _read_dashboard_bundle.clear()
+
+    try:
+        bundle = _read_dashboard_bundle()
+    finally:
+        _read_dashboard_bundle.clear()
+
+    assert bundle["reliability"]["status"] == "available"
+    assert bundle["reliability"]["study"] == study
+    assert bundle["reliability"]["tables"]["repeated_seed_summary"] == [
+        {"dataset": "FD001", "model": "ridge_clean"},
+        {"dataset": "FD002", "model": "ridge_clean"},
+    ]
 
 
 def test_maintenance_scenarios_reconcile_for_each_subset_and_all_subsets():
