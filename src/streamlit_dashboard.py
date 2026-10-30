@@ -528,11 +528,69 @@ def _read_upload(uploaded_file) -> pd.DataFrame:
     ):
         if column in frame:
             frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    if "rul" in frame:
+        frame["rul"] = pd.to_numeric(frame["rul"], errors="coerce")
     return frame.sort_values(["unit", "cycle"]).reset_index(drop=True)
 
 
 def _run_experiment(dataset: str, *, train_lstm: bool) -> dict:
     return run_pipeline(dataset, ProjectConfig(dataset=dataset), train_lstm=train_lstm)
+
+
+def _build_uploaded_forecast(
+    uploaded: pd.DataFrame,
+    config: ProjectConfig,
+    model_dir: Path,
+    result: dict | None,
+) -> tuple[pd.DataFrame | None, dict | None]:
+    feature_data = _read_json(model_dir / "feature_columns.json")
+    feature_columns = feature_data["features"]
+    DataCleaner.align_features(uploaded, feature_columns)
+    normalizer = Normalizer(config).load(model_dir / "scaler.joblib")
+    scaled = normalizer.transform(uploaded, feature_columns)
+    sequences, _, units, cycles = SequenceGenerator(config).generate_with_metadata(
+        scaled,
+        feature_columns,
+    )
+    if not len(sequences):
+        return None, None
+
+    model = WindowRidgeBaseline.load(model_dir / "ridge_baseline.joblib")
+    predictions = np.maximum(model.predict(sequences), 0.0)
+    if config.clip_rul:
+        predictions = np.minimum(predictions, float(config.rul_clip_value))
+    ridge_uncertainty = (result or {}).get("uncertainty_by_model", {}).get("ridge", {})
+    if not ridge_uncertainty and (result or {}).get("selected_model") == "ridge":
+        ridge_uncertainty = (result or {}).get("uncertainty", {})
+    radius = float(ridge_uncertainty.get("interval_radius_cycles", 0.0))
+    lower = np.maximum(0.0, predictions - radius)
+    upper = predictions + radius
+    if config.clip_rul:
+        upper = np.minimum(float(config.rul_clip_value), upper)
+
+    prediction_frame = pd.DataFrame(
+        {
+            "unit": units,
+            "cycle": cycles,
+            "rul_predicted": predictions,
+            "interval_lower": lower,
+            "interval_upper": np.maximum(lower, upper),
+        }
+    )
+    observed_metrics = None
+    if "rul" in uploaded:
+        actual_values = uploaded.sort_values(["unit", "cycle"])["rul"].to_numpy(dtype=np.float32)
+        labeled = scaled.assign(RUL=actual_values)
+        _, observed, _, _ = SequenceGenerator(config).generate_with_metadata(
+            labeled,
+            feature_columns,
+            target_col="RUL",
+        )
+        if len(observed) == len(prediction_frame):
+            prediction_frame["rul_observed"] = observed
+            observed_metrics = Evaluator.compute_metrics(observed, predictions)
+
+    return prediction_frame, observed_metrics
 
 
 def _render_signals(dataset: str) -> None:
@@ -611,43 +669,17 @@ def _render_forecast(dataset: str, config: ProjectConfig, model_dir: Path, resul
         if not st.button("Generate RUL forecast", type="primary"):
             return
 
-        feature_data = _read_json(model_dir / "feature_columns.json")
-        feature_columns = feature_data["features"]
-        DataCleaner.align_features(uploaded, feature_columns)
-        normalizer = Normalizer(config).load(model_dir / "scaler.joblib")
-        scaled = normalizer.transform(uploaded, feature_columns)
-        sequences, targets, units, cycles = SequenceGenerator(config).generate_with_metadata(
-            scaled,
-            feature_columns,
+        prediction_frame, observed_metrics = _build_uploaded_forecast(
+            uploaded,
+            config,
+            model_dir,
+            result,
         )
-        if not len(sequences):
+        if prediction_frame is None:
             st.warning(f"Each engine needs at least {config.window_size} cycles.")
             return
-
-        model = WindowRidgeBaseline.load(model_dir / "ridge_baseline.joblib")
-        predictions = model.predict(sequences)
-        ridge_uncertainty = (result or {}).get("uncertainty_by_model", {}).get("ridge", {})
-        if not ridge_uncertainty and (result or {}).get("selected_model") == "ridge":
-            ridge_uncertainty = (result or {}).get("uncertainty", {})
-        radius = float(ridge_uncertainty.get("interval_radius_cycles", 0.0))
-        lower = np.maximum(0, predictions - radius)
-        upper = np.minimum(config.rul_clip_value, predictions + radius)
-        prediction_frame = pd.DataFrame(
-            {
-                "unit": units,
-                "cycle": cycles,
-                "rul_predicted": predictions,
-                "interval_lower": lower,
-                "interval_upper": np.maximum(lower, upper),
-            }
-        )
-        if "RUL" in uploaded:
-            actual_values = uploaded.sort_values(["unit", "cycle"])["RUL"].to_numpy()
-            labeled = scaled.assign(RUL=actual_values)
-            _, observed, _, _ = SequenceGenerator(config).generate_with_metadata(labeled, feature_columns)
-            if len(observed) == len(prediction_frame):
-                prediction_frame["rul_observed"] = observed
-                st.write(Evaluator.compute_metrics(observed, predictions))
+        if observed_metrics is not None:
+            st.write(observed_metrics)
 
         latest = prediction_frame.groupby("unit", sort=False).tail(1)
         st.dataframe(latest, hide_index=True, width="stretch")
