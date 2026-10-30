@@ -26,6 +26,7 @@ Use the current documents below for the implemented project. Several original sp
 - [Original experimentation specification](EXPERIMENTATION_AND_EVALUATION.md)
 - [Interactive C-MAPSS methods diagram](turbofan-pipeline.html)
 - [Interactive reliability diagram](reliability-pipeline.html)
+- [Interactive split-conformal RUL calibration explainer](https://turbofan-rul-prediction-using-lstm.vercel.app/conformal-calibration.html), with its [generator](figures/build_conformal_calibration.mjs) and [static SVG](figures/conformal-calibration.svg)
 - [RUL methods animation](media/rul-method.mp4)
 
 The Vercel dashboard and Streamlit application links are in the root [README](../README.md).
