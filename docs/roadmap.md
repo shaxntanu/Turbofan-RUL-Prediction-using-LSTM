@@ -9,14 +9,12 @@ This roadmap separates completed repository work from possible follow-up researc
 - [x] Document the current architecture, objectives, methods, benchmark evidence, limitations, traceability, and verification status.
 - [x] Add contributor, security, citation, and repository governance guidance.
 - [x] Clarify which existing planning documents are historical and which are current references.
-- [x] Review hosted CI across Python 3.12/3.14, the optional C++ wheel, and the Vite build; all jobs passed for `6d99649`.
+- [x] Review hosted CI across Python 3.12/3.14, the optional C++ wheel, Vite, and dependency audits; all jobs passed for `8944fe1`.
 - [x] Add a bounded real-data Ridge pipeline smoke test with artifact and engine-split checks.
 - [x] Add upload-forecast contract coverage for validation, cycle metadata, and bounded predictions.
 - [x] Run the Julia scenario generator in hosted CI and verify its regenerated CSV matches the committed snapshot.
-
-## Short-term engineering work
-
-- [ ] Complete Python and npm dependency advisory scans in an environment with registry access, then review findings before changing pinned dependencies.
+- [x] Review Python and npm advisories, patch affected dependencies, and verify clean point-in-time scans.
+- [x] Add recurring Python and production npm dependency audits to CI.
 
 ## Medium-term research work
 
