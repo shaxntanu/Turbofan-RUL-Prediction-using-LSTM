@@ -492,10 +492,31 @@ function Artifacts({ data, dataset, theme }) {
   );
 }
 
-function Reliability({ data, dataset, theme }) {
+function Reliability({ reliability, dataset, theme, loading, error }) {
   const [selectedModel, setSelectedModel] = useState("ridge_clean");
   const [selectedScenario, setSelectedScenario] = useState("clean");
-  const reliability = data.reliability;
+  if (loading) {
+    return (
+      <section className="loading-state" aria-labelledby="reliability-loading-title">
+        <div className="eyebrow">NASA C-MAPSS / RELIABILITY STUDY</div>
+        <h1 id="reliability-loading-title">Loading reliability results</h1>
+        <p>Only the selected subset's study tables are being loaded.</p>
+        <div className="loading-status" role="status" aria-live="polite">
+          <div className="loading-line" aria-hidden="true" />
+          <span>Loading {dataset} reliability data...</span>
+        </div>
+      </section>
+    );
+  }
+  if (error) {
+    return (
+      <div className="empty-reliability" role="alert">
+        <ShieldCheck size={22} />
+        <h1>Reliability results unavailable</h1>
+        <p>{error}</p>
+      </div>
+    );
+  }
   if (!reliability || reliability.status !== "available") {
     return <div className="empty-reliability"><ShieldCheck size={22} /><h1>Reliability study not exported</h1><p>Run the documented reliability command and export the completed aggregate tables to make this view available.</p></div>;
   }
@@ -649,6 +670,9 @@ function StudyDiagram() {
 function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [reliability, setReliability] = useState(null);
+  const [reliabilityError, setReliabilityError] = useState("");
+  const [reliabilityLoading, setReliabilityLoading] = useState(false);
   const [dataset, setDataset] = useState("FD001");
   const [page, setPage] = useState("overview");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -673,6 +697,30 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (page !== "reliability") return undefined;
+
+    const controller = new AbortController();
+    setReliability(null);
+    setReliabilityError("");
+    setReliabilityLoading(true);
+    fetch(`/results/reliability/${dataset.toLowerCase()}.json`, { signal: controller.signal })
+      .then((response) => {
+        if (response.status === 404) return { status: "not_exported", study: {}, tables: {} };
+        if (!response.ok) throw new Error(`Could not load ${dataset} reliability data (HTTP ${response.status}).`);
+        return response.json();
+      })
+      .then((snapshot) => setReliability(snapshot))
+      .catch((reason) => {
+        if (reason.name !== "AbortError") setReliabilityError(reason.message || "Could not load reliability results.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setReliabilityLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [page, dataset]);
+
+  useEffect(() => {
     const handleDataset = (event) => setDataset(event.detail);
     window.addEventListener("dataset-select", handleDataset);
     return () => window.removeEventListener("dataset-select", handleDataset);
@@ -684,10 +732,20 @@ function App() {
     if (page === "transfer") return <Transfer data={data} dataset={dataset} theme={theme} />;
     if (page === "methods") return <Methods data={data} dataset={dataset} theme={theme} />;
     if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
-    if (page === "reliability") return <Reliability data={data} dataset={dataset} theme={theme} />;
+    if (page === "reliability") {
+      return (
+        <Reliability
+          reliability={reliability}
+          dataset={dataset}
+          theme={theme}
+          loading={reliabilityLoading}
+          error={reliabilityError}
+        />
+      );
+    }
     if (page === "study-diagram") return <StudyDiagram />;
     return <Overview data={data} dataset={dataset} setPage={setPage} theme={theme} />;
-  }, [data, dataset, page, theme]);
+  }, [data, dataset, page, theme, reliability, reliabilityError, reliabilityLoading]);
 
   return (
     <div className="app-shell">
