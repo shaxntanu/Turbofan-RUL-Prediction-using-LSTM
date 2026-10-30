@@ -1,9 +1,11 @@
 # Repository audit
 
-**Audit date:** 2026-10-29
+**Audit date:** 2026-10-30
 
 **Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)
-**Final local revision:** see the Git history after this audit. This report does not imply a hosted CI run or deployment.
+**Implementation revision before this report update:** `1759605` (`main`, pushed to `origin/main`)
+
+This report records local checks and the hosted CI and Vercel observations listed below. A successful push does not verify deployment settings or the Streamlit service.
 
 ## Repository Overview
 
@@ -54,7 +56,7 @@ No confirmed core model defect was found in the inspected pipeline, and the exis
 - Added contributor setup, security-reporting, code-of-conduct, changelog, and software-citation files, plus issue and PR templates.
 - Clarified historic planning documents and corrected dataset scope, citation, and third-party rights language without changing `LICENSE`.
 - Updated the root README with current documentation and verification links; no contribution section was added.
-- Kept all changes as separate commits authored as Shantanu. No push or deployment was performed because the supplied master prompt prohibits automatic pushing.
+- Kept the implementation and documentation changes in individual commits authored as Shantanu and pushed them to `origin/main`, following the user's explicit instruction. The latest hosted CI run and live Vercel check are recorded below.
 
 ## Files Added
 
@@ -84,7 +86,13 @@ No confirmed core model defect was found in the inspected pipeline, and the exis
 
 - `packages.txt` (it installed only `build-essential`, which the app no longer needs)
 
-No model implementation, published metric, dashboard behavior, dataset, animation, or license text was changed.
+The underlying models, published metric snapshots, dataset, and license remain unchanged. Subsequent Methods-page work adds explanatory and media UI without changing how model outputs are produced.
+
+## Subsequent Dashboard Integration
+
+- The Vercel Methods page now embeds the data-linked split-conformal calibration explainer and a collapsed, captioned ManimGx video player.
+- `docs/figures/build_conformal_calibration.mjs` generates the static SVG preview and the standalone interactive page bundled at `web/public/conformal-calibration.html`.
+- The root README, methodology, and documentation index link to the figure and interactive page. The root README retains only the Vercel and Streamlit badges and has no Contributions section.
 
 ## Testing Performed
 
@@ -97,7 +105,7 @@ No model implementation, published metric, dashboard behavior, dataset, animatio
 - Parsed the CI and Julia workflows, issue forms, and `CITATION.cff` as YAML and checked expected top-level fields.
 - Inspected source for TODO/FIXME markers, dynamic evaluation, unsafe HTML insertion, subprocess/system calls, broad exception handling, and debug configuration.
 - Scanned tracked text files for common credential and private-key patterns; no matches were reported.
-- Reviewed CI workflow permissions and setup steps. `actionlint` was not installed, so GitHub Actions-specific semantics were not linted and the workflow has not run on GitHub.
+- Reviewed CI workflow permissions and setup steps. `actionlint` was not installed, so GitHub Actions-specific semantics were not linted locally; the hosted workflow result is recorded below.
 - Reviewed the Mermaid source in the current architecture diagrams; no Mermaid renderer/parser was available for rendered validation.
 
 ## Test Results
@@ -112,7 +120,17 @@ No model implementation, published metric, dashboard behavior, dataset, animatio
 - Julia scenario generation was not run because Julia is not installed in this environment. The existing workflow and Python scenario reconciliation tests remain in place.
 - A clean Python 3.14 environment install was attempted, but package resolution stopped when the configured index could not provide `fonttools`; the 3.14 compatibility path therefore remains unverified locally.
 - The Docker CLI was installed, but the Docker daemon was unavailable; the modified image was not built.
-- The full four-subset training and reliability studies, browser interaction tests, and hosted services were not rerun.
+- The full four-subset training and reliability studies were not rerun. Browser checks cover the Vercel Methods and calibration views; the Streamlit deployment could not be accessed.
+
+## Verification Update (2026-10-30)
+
+- Repository `.venv` Python 3.12.10: `python -m pytest -q` — **29 passed**, with one expected scikit-learn convergence warning from the deliberately three-iteration MLP test; `compileall` and `pip check` passed.
+- System Python 3.14.7: `pytest` — **27 passed, 2 skipped**, with the same expected convergence warning; `compileall` and `pip check` passed. `pip check` printed an ignored invalid `~treamlit` distribution warning in the user-level site-packages directory, then reported no broken requirements.
+- `npm run build` passed. Vite emitted the MP4, poster, external VTT captions, interactive calibration page, and dashboard bundles.
+- The latest GitHub Actions run, [Repository checks for `1759605`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41005793081), completed successfully: Python 3.12 tests/compile/C++ wheel, Python 3.14 tests/compile, and the Vite production build all passed. The optional C++ build is skipped on Python 3.14 by design.
+- Browser inspection of the live Vercel dashboard confirmed that the Methods calibration iframe loads, reports FD001's saved q95 and observed coverage, and that the video plays with its caption visible. The standalone calibration page also loaded with working controls. Local interaction checks confirmed subset and light/dark synchronization, including FD004.
+- Responsive review of the dashboard at 1440, 768, and 390 pixels found **0 FAIL**. The design inspector reported two warnings (remote IBM Plex font fallback in its inspection browser and a high share of small dashboard labels); its source lint reported no FAIL and 21 heuristic warnings for section kickers and the ordered method-step labels.
+- The public Streamlit URL redirected to Streamlit's “You do not have access to this app or it does not exist” page. This session could not verify its hosted app or settings; the message does not distinguish access restrictions from a missing deployment.
 
 ## Security Findings
 
@@ -153,20 +171,20 @@ No model implementation, published metric, dashboard behavior, dataset, animatio
 - Added development-only test dependencies and an automated CI configuration for both the Python fallback and full training Python paths.
 - Added exact local test/build commands to the root README and contributor guide.
 - Documented result regeneration, optional tool setup, environment limitations, and the need to refresh static exports explicitly.
-- Recorded that the first hosted CI run, Julia regeneration, and full model studies remain pending.
-- A local Python 3.14 dependency installation needs a working package index before that fallback path can be verified.
+- Recorded the successful hosted CI run; Julia regeneration and full model studies remain pending.
+- The configured package index previously lacked `fonttools`, so a clean local Python 3.14 install remains unverified; the hosted Python 3.14 CI install, compile, and tests passed.
 
 ## Traceability Status
 
-See [`traceability.md`](traceability.md). At audit completion, four requirements have direct passing test/build evidence, eight are partially verified, the new hosted CI workflow is untested, and production maintenance recommendations are not applicable/out of scope. “Verified” applies only to the named check, not an entire subsystem.
+See [`traceability.md`](traceability.md). At the original audit completion, four requirements had direct passing test/build evidence, eight were partially verified, and production maintenance recommendations were not applicable/out of scope. The subsequent Python/web and hosted CI results are listed above. “Verified” applies only to the named check, not an entire subsystem.
 
 ## Remaining Limitations
 
 - No full training or reliability study was rerun; published metrics remain the dated snapshots in `docs/RESULTS.md`.
-- No GitHub-hosted CI run has validated the new workflow. Changes are local commits and have not been pushed.
-- The Python 3.14 matrix job was not fully reproduced locally because the configured package index did not provide a required wheel during the audit.
+- The hosted CI workflow passed for revision `1759605`; future pushes have their own CI runs.
+- A clean local Python 3.14 environment install previously stopped when the configured package index did not provide `fonttools`; the hosted Python 3.14 CI install and test job has since passed.
 - Dependency advisory scans need to be retried when PyPI and npm registry access is available.
-- Julia execution, browser-driven application checks, and hosted Vercel/Streamlit configuration were not verified.
+- Julia execution remains unverified. The Vercel dashboard and calibration page were checked live, but deployment settings were not inspected. The Streamlit URL currently returns an access/not-found page, so that deployment remains unverified.
 - The Docker image build needs to be run on a host with an active Docker daemon.
 - No independent operational engine data, hardware validation, or maintenance outcomes exist.
 - Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
@@ -197,7 +215,7 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 | Architecture & Modularity | 15 | 13 | Current diagrams and boundaries documented; no API or deployment integration test. |
 | Documentation | 15 | 14 | Canonical index, methods, limitations, and audit added; historical source documents remain. |
 | Code Quality | 15 | 12 | Runtime/dev dependencies separated and boundaries explicit; no linter/type-check policy. |
-| Testing | 15 | 11 | 29 tests pass, build and wheel succeed, CI configured; hosted CI and end-to-end studies are pending. |
+| Testing | 15 | 11 | 29 Python 3.12 tests pass; Python 3.12/3.14 and web CI jobs pass; full studies and hosted Streamlit remain unverified. |
 | Security | 10 | 7 | Reporting and least-privilege guidance added; advisory scans and hosted settings remain unverified. |
 | Reproducibility | 10 | 8 | CI paths and commands documented; Python transitive lock and repeated independent full runs are absent. |
 | Open Source Governance | 10 | 8 | Contributor, security, conduct, citation, changelog, issue, and PR guidance added; no release process. |
@@ -206,10 +224,10 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 
 ## Recommended Next Actions
 
-1. Push the local commits when ready and review the first Python/web CI run; build failures should be fixed before treating CI as verified.
+1. Monitor future Python/web CI runs and fix any regressions.
 2. Retry Python and npm advisory scans on a working network and resolve findings through reviewed dependency changes.
 3. Run Julia generation on a supported environment and confirm the committed CSV remains reproducible.
 4. Add a bounded end-to-end Ridge smoke test and an upload-forecast contract test.
-5. Verify current Vercel/Streamlit deployments and configuration manually; record the deployed revision.
+5. Restore or confirm the Streamlit deployment and its access settings; the Vercel dashboard was verified live, but its deployment settings were not inspected.
 6. Confirm reuse terms for every third-party dataset and paper before further redistribution.
 7. Pursue independent operational data and external validation before making maintenance or safety claims.
