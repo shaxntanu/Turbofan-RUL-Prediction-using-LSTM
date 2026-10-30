@@ -54,7 +54,7 @@ The primary run reports window-level test metrics. The reliability study also re
 | Evaluation and analyses | Error metrics, intervals, sensor screening, life-stage proxy, transfer and reliability protocols | `src/evaluator.py`, `src/uncertainty.py`, `src/research_analysis.py`, `src/segmentation_analysis.py`, `src/transfer_analysis.py`, `src/reliability_analysis.py` |
 | Visualization | Matplotlib figures for outputs and dashboards | `src/visualizer.py` |
 | Streamlit application | Explore data, run Ridge/LSTM experiments when dependencies permit, inspect artifacts, and forecast uploaded histories with Ridge | `src/streamlit_dashboard.py` |
-| Static results export | Convert local outputs to portable dashboard JSON and figures | `scripts/export_web_data.py` |
+| Static results export | Convert local outputs to a compact core benchmark JSON, per-subset reliability JSON, and figures | `scripts/export_web_data.py` |
 | Web application | Browse committed benchmark, transfer, reliability, maintenance scenario, and methods views | `web/src/main.jsx`, `web/public/results/` |
 | Maintenance scenario engine | Recompute assumed service-allocation scenarios from a fixed input snapshot | `scripts/maintenance_what_if.jl` |
 | Optional native diagnostics | C++17/pybind11 PCA and K-Means parity/timing experiment; separate from RUL inference | `cpp_engine/`, `src/cpp_bridge.py`, `src/run_cpp_benchmark.py` |
@@ -87,14 +87,14 @@ The onset detector uses a capped-RUL-derived proxy label, fractional-life analys
 flowchart LR
     A[Developer experiment] --> B[outputs/ and models/<br/>ignored local artifacts]
     B --> C[scripts/export_web_data.py]
-    C --> D[web/public/results/<br/>tracked static snapshot]
+    C --> D[web/public/results/<br/>core bundle + subset reliability snapshots]
     D --> E[Vercel static React dashboard]
     F[Repository + C-MAPSS files] --> G[Streamlit app]
     G --> H[Local or Streamlit-hosted execution]
     I[Dockerfile] --> H
 ```
 
-The source includes deployment entry points and public app links, but this repository audit does not inspect Vercel or Streamlit account settings, secrets, or live service health. Generated training weights and `outputs/` are git-ignored. Dashboard snapshots are refreshed explicitly with `python scripts/export_web_data.py` after experiments.
+The core benchmark bundle is loaded at initial dashboard startup; the Vercel Reliability view requests only the selected subset's JSON snapshot when opened. Streamlit merges the same four snapshots locally for its Reliability tab. Generated training weights and `outputs/` are git-ignored. Dashboard snapshots are refreshed explicitly with `python scripts/export_web_data.py` after experiments. Deployment account settings and secrets are outside this repository architecture.
 
 ## Repository map
 
