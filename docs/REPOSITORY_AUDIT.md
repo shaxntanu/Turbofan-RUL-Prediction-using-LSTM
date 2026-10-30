@@ -1,9 +1,9 @@
 # Repository audit
 
-**Audit date:** 2026-10-30
+**Audit date:** 2026-10-31
 
 **Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)
-**Implementation revision covered by this follow-up:** `8944fe1` (`main`, pushed to `origin/main`)
+**Implementation revision covered by this follow-up:** `8fdfa8e` (`main`, pushed to `origin/main`)
 
 This report records local checks and the hosted CI and Vercel observations listed below. A successful push does not verify deployment settings or the Streamlit service.
 
@@ -214,17 +214,17 @@ See [`traceability.md`](traceability.md). At the original audit completion, four
 
 ## Remaining Limitations
 
-- No full training run or fresh reliability study was rerun during this audit. Published benchmark metrics remain the dated snapshots in `docs/RESULTS.md`; the existing reliability artifacts are from run `20261018-150917` and were checked for all four subsets.
-- Hosted Python/web CI passed for `04dacab`; the hosted Julia scenario reconciliation passed for `6d99649`. Future pushes have their own CI runs.
+- Fresh full-subset baseline runs completed for FD001-FD004 with IDs `20261031-002409`, `20261031-002605`, `20261031-003010`, and `20261031-003157`. Reliability run `20261030-231526` and source-to-target run `20261031-004445` also completed; results and exports are listed in `docs/RESULTS.md`.
+- Hosted Python/web CI passed for `560cf9d`; the hosted Julia scenario reconciliation passed for `6d99649`. Future pushes have their own CI runs.
 - A clean local Python 3.14 environment install previously stopped when the configured package index did not provide `fonttools`; the hosted Python 3.14 CI install and test job has since passed.
 - The post-update Python scan reported no known vulnerabilities across 95 installed packages, and npm production dependencies reported zero. CI now repeats both scans; deployment settings were not inspected.
 - Local Julia is unavailable, but the hosted Julia workflow regenerated and verified its committed scenario CSV. The Vercel dashboard and calibration page were checked live. At the last direct Streamlit URL check, Streamlit returned an access/not-found page, so the hosted deployment remains unverified.
-- The Docker image build needs to be run on a host with an active Docker daemon.
+- The local Windows Docker Engine currently fails before creating its engine pipe. The hosted Docker build and Streamlit health/root HTTP checks passed; local Docker Desktop remains unverified until its service starts.
 - No independent operational engine data, hardware validation, or maintenance outcomes exist.
 - Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
 - Third-party dataset and paper reuse terms should be confirmed at their source before redistribution.
-- The Python dependency set is not transitively locked, and no SBOM is generated. Bounded end-to-end Ridge and upload-contract tests now exist, but full model training and a fresh reliability-study run remain unverified.
-- The new Mermaid diagrams were reviewed as source but not rendered or parser-validated.
+- The Python dependency set is not transitively locked, and no SBOM is generated. Bounded end-to-end Ridge and upload-contract tests exist; repeated CI runs and the fresh experiments above cover additional paths.
+- The 16 Mermaid blocks across the architecture and study documents were rendered and checked as SVGs on 2026-10-31.
 
 ## Initial Maturity Score
 
@@ -244,16 +244,18 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 
 ## Final Maturity Score
 
+This 84/100 score is the previously recorded assessment at `04dacab`, not a newly recalculated score. The later full runs, Mermaid rendering, hosted Docker smoke check, and responsive figure review are recorded in the 2026-10-31 verification update below.
+
 | Dimension | Weight | Final | Evidence and remaining gap |
 |---|---:|---:|---|
 | Architecture & Modularity | 15 | 13 | Current diagrams and boundaries documented; no API or deployment integration test. |
 | Documentation | 15 | 14 | Canonical index, methods, limitations, and audit added; historical source documents remain. |
 | Code Quality | 15 | 12 | Runtime/dev dependencies separated and boundaries explicit; no linter/type-check policy. |
-| Testing | 15 | 12 | 33 Python 3.12 tests pass, including a bounded real-data pipeline smoke test and upload contract; Python 3.12/3.14 and web CI jobs pass; fresh full training/reliability runs and hosted Streamlit remain unverified. |
+| Testing | 15 | 12 | 33 Python 3.12 tests pass, including a bounded real-data pipeline smoke test and upload contract; Python 3.12/3.14 and web CI jobs pass; fresh full training and reliability CLI runs now pass, while hosted Streamlit remains unverified. |
 | Security | 10 | 8 | Reporting guidance and recurring Python/npm CI scans added; no hosted-settings review exists. |
 | Reproducibility | 10 | 8 | CI paths and commands documented; Python transitive lock and repeated independent full runs are absent. |
 | Open Source Governance | 10 | 8 | Contributor, security, conduct, citation, changelog, issue, and PR guidance added; no release process. |
-| Research Rigor & Traceability | 10 | 9 | Evidence matrix and claim boundaries added; no independent fleet data or full fresh study run. |
+| Research Rigor & Traceability | 10 | 9 | Evidence matrix and claim boundaries added; no independent fleet data or external operational validation. |
 | **Total** | **100** | **84** | |
 
 ## Recommended Next Actions
@@ -263,3 +265,14 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 3. Restore or confirm the Streamlit deployment and its access settings; the Vercel dashboard was verified live, but deployment settings were not inspected.
 4. Confirm reuse terms for every third-party dataset and paper before further redistribution.
 5. Pursue independent operational data and external validation before making maintenance or safety claims.
+
+## Final Verification Update (2026-10-31)
+
+- Full FD001-FD004 baselines were retrained with TensorFlow 2.21 on Python 3.12.10. The committed result document and web benchmark bundle point to run IDs `20261031-002409`, `20261031-002605`, `20261031-003010`, and `20261031-003157`.
+- Reliability run `20261030-231526` completed the documented CLI study across all four subsets. Its four subset snapshots were regenerated individually; source-to-target Ridge and 10-unit LSTM results from `20261031-004445` are included in the benchmark bundle.
+- The repository checks for commit `560cf9d` passed Python 3.12 and 3.14, the optional C++ wheel, dependency scans, and the web production build: [run 41108973945](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41108973945). The hosted Docker image build and HTTP 200 health/root smoke checks passed: [run 41107892668](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41107892668).
+- All 16 Mermaid blocks rendered successfully. The existing interactive conformal-calibration figure was checked at desktop and mobile widths, in both themes, and with keyboard interaction; it uses the saved project results. No duplicate illustration was added.
+- The project-level Archify pipeline diagram remains embedded in the Vercel app and explains the C-MAPSS data-to-RUL analysis, not the Archify authoring workflow. The project also retains the ManimGx explainer, the combined FD001-FD004 views, and the Julia maintenance what-if analysis.
+- Vercel had previously been checked live. The Streamlit public URL still returned the service's access/not-found page, so hosted Streamlit deployment settings and interaction remain unverified.
+- Local Docker Desktop remains unresolved: the Windows backend errors while cleaning up its Docker inference/secrets socket, before the engine pipe is available. The hosted CI result shows the repository image itself builds and serves Streamlit. No Docker data reset or deletion was performed.
+- Independent operational engine/fleet measurements and maintenance outcomes remain absent. Transfer and maintenance what-if findings use related simulated C-MAPSS subsets and are not field validation.
