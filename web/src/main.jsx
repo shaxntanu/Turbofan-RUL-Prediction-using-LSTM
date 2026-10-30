@@ -32,6 +32,9 @@ import {
   Tooltip,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
+import methodVideoUrl from "../../docs/media/rul-method.mp4?url";
+import methodPosterUrl from "../../docs/media/rul-method-poster.png?url";
+import methodCaptionsUrl from "../../docs/media/rul-method-captions.vtt?url&no-inline";
 import "./styles.css";
 import "./model-comparison.css";
 import "./theme.css";
@@ -378,7 +381,8 @@ function AllSubsets({ data, theme }) {
   );
 }
 
-function Methods({ data }) {
+function Methods({ data, dataset, theme }) {
+  const calibrationSrc = `${import.meta.env.BASE_URL}conformal-calibration.html?${new URLSearchParams({ dataset, theme })}`;
   const steps = [
     { icon: Database, title: "NASA C-MAPSS", body: "Load all four train/test subsets and test RUL labels; validate engine-cycle order and sensor fields." },
     { icon: Layers3, title: "Engine-level validation", body: "Split training engines before fitting preprocessing. Cap targets at 125 cycles for the benchmark." },
@@ -393,6 +397,35 @@ function Methods({ data }) {
       <section className="section-block">
         <SectionTitle eyebrow="PIPELINE" title="From trajectories to RUL metrics" detail="Preprocessing is isolated from test labels; each reported test result is computed after model selection." />
         <div className="method-list">{steps.map(({ icon: Icon, title, body }, index) => <article className="method-step" key={title}><div className="step-number">{String(index + 1).padStart(2, "0")}</div><div className="step-icon"><Icon size={18} /></div><div><h3>{title}</h3><p>{body}</p></div><ChevronRight size={16} className="step-chevron" /></article>)}</div>
+      </section>
+      <section className="section-block">
+        <SectionTitle eyebrow="UNCERTAINTY CALIBRATION" title="How validation residuals become an interval" detail={`Interactive 95% split-conformal calibration for the selected ${dataset} snapshot.`} />
+        <div className="method-visual-panel">
+          <iframe
+            src={calibrationSrc}
+            title={`Interactive split-conformal RUL calibration for ${dataset}`}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+          <p className="method-visual-caption">The selected subset controls the saved q95 radius and observed test coverage. Rank pegs are a schematic ordering aid, not individual residuals; the prediction centre is illustrative. Test coverage is descriptive and does not establish coverage under engine or condition shift.</p>
+        </div>
+        <details className="method-video-disclosure">
+          <summary><span>Play the 13-second methods animation</span><span>English captions available</span></summary>
+          <figure className="method-video-figure">
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              poster={methodPosterUrl}
+              aria-label="Methods animation showing a measured FD001 engine trace, its 30-cycle input window, the RUL label, and validation-calibrated interval method."
+            >
+              <source src={methodVideoUrl} type="video/mp4" />
+              <track kind="captions" src={methodCaptionsUrl} srcLang="en" label="English" default />
+              Your browser does not support embedded video. <a href={methodVideoUrl}>Open the MP4 directly</a>.
+            </video>
+            <figcaption>A measured FD001 trace and training-label example explain the method. The illustrated model output is schematic, not a sample-specific prediction.</figcaption>
+          </figure>
+        </details>
       </section>
       <section className="section-block paper-grid">
         <article className="paper-note"><div className="paper-note-head"><FileText size={17} /><span>REFERENCE PAPER 01</span></div><h3>Predictive turbofan health model</h3><p>The paper predicts turbine gas temperature on proprietary engine-health records. This project adapts its feature screening, trend/phase analysis, error summaries, and interval reporting to NASA C-MAPSS RUL labels.</p><div className="paper-status"><span>ADAPTED</span><small>not a numerical reproduction</small></div></article>
@@ -649,7 +682,7 @@ function App() {
     if (!data) return null;
     if (page === "all-subsets") return <AllSubsets data={data} theme={theme} />;
     if (page === "transfer") return <Transfer data={data} dataset={dataset} theme={theme} />;
-    if (page === "methods") return <Methods data={data} />;
+    if (page === "methods") return <Methods data={data} dataset={dataset} theme={theme} />;
     if (page === "artifacts") return <Artifacts data={data} dataset={dataset} theme={theme} />;
     if (page === "reliability") return <Reliability data={data} dataset={dataset} theme={theme} />;
     if (page === "study-diagram") return <StudyDiagram />;
