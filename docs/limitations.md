@@ -5,6 +5,15 @@ These limitations define what the current repository's results can support. A su
 ## Data and external validity
 
 - The only included measurements are simulated NASA C-MAPSS FD001-FD004 trajectories. There are no flight records, maintenance logs, independent fleets, or N-CMAPSS data in the repository.
+- An external-data check on 2026-10-30 found no directly comparable, reusable public turbofan
+  fleet dataset. NASA's separate "real flight conditions" run-to-failure release is still generated
+  with C-MAPSS ([NASA NTRS record](https://ntrs.nasa.gov/citations/20205001125)). The public NGAFID
+  aviation-maintenance dataset contains real general-aviation flight records, but its paper frames
+  RUL as the probability that a part remains useful beyond two days, not cycle-level turbofan-engine
+  RUL ([dataset](https://zenodo.org/records/6624956), [paper](https://arxiv.org/abs/2210.07317)).
+  Zenodo's record does not display a license in its Rights section, so this repository does not
+  download, redistribute, or treat it as a comparable benchmark. Independent validation still needs
+  a turbofan run-to-failure dataset with documented reuse rights and aligned engine-level labels.
 - The four subsets share simulator provenance. Leave-one-subset-out scores measure a shift among related simulated conditions, not transfer to an unseen aircraft fleet.
 - C-MAPSS has no maintenance action, cost, repair duration, downtime, overhaul date, or post-service outcome. Fractional-life thirds are not observed maintenance phases.
 - The included train/test partitions and one fixed validation-engine split provide limited evidence about variation across engines, data sources, and time.
