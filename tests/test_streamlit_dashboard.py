@@ -3,15 +3,23 @@ from __future__ import annotations
 import json
 from contextlib import nullcontext
 
-from src.config import DATASET_NAMES
+import pandas as pd
+
+from src.baseline_model import WindowRidgeBaseline
+from src.config import DATASET_NAMES, ProjectConfig
 from src import streamlit_dashboard
+from src.data_loader import DataLoader
+from src.normalization import Normalizer
+from src.sequence_generator import SequenceGenerator
 from src.streamlit_dashboard import (
     _aggregate_maintenance_scenario,
+    _build_uploaded_forecast,
     _combined_model_rows,
     _combined_subset_rows,
     _maintenance_capacity_curve,
     _read_maintenance_scenarios,
     _read_dashboard_bundle,
+    _read_upload,
     _reliability_snapshot,
 )
 
@@ -146,3 +154,69 @@ def test_maintenance_interval_policy_and_capacity_frontier_are_consistent():
     )
     recall = curve["urgent_recall"].dropna()
     assert recall.is_monotonic_increasing
+
+
+def test_uploaded_ridge_forecast_parses_labels_and_bounds_prediction_intervals(tmp_path):
+    config = ProjectConfig(dataset="FD001", window_size=30, output_dir=tmp_path / "outputs")
+    raw_columns = DataLoader(config).columns
+    uploaded_frame = pd.DataFrame(
+        {
+            "unit": [7] * 40,
+            "cycle": list(range(1, 41)),
+            "setting_1": [0.1] * 40,
+            "setting_2": [0.2] * 40,
+            "setting_3": [0.3] * 40,
+            **{
+                f"sensor_{sensor}": [float(cycle * sensor) for cycle in range(1, 41)]
+                for sensor in range(1, 22)
+            },
+            "RUL": [125.0 - cycle for cycle in range(1, 41)],
+        }
+    )[raw_columns + ["RUL"]]
+    csv_bytes = uploaded_frame.to_csv(index=False).encode("utf-8")
+
+    class UploadedFile:
+        name = "history.csv"
+
+        def getvalue(self):
+            return csv_bytes
+
+    uploaded = _read_upload(UploadedFile())
+    feature_columns = [column for column in raw_columns if column not in {"unit", "cycle"}]
+    training = uploaded.iloc[:35].copy()
+    training["RUL"] = 250.0 - training["cycle"]
+    normalizer = Normalizer(config).fit(training, feature_columns)
+    scaled = normalizer.transform(training, feature_columns)
+    sequences, targets, _, _ = SequenceGenerator(config).generate_with_metadata(
+        scaled,
+        feature_columns,
+        target_col="RUL",
+    )
+    model = WindowRidgeBaseline().fit(sequences, targets)
+    model_dir = tmp_path / "FD001"
+    model_dir.mkdir()
+    normalizer.save(model_dir / "scaler.joblib")
+    model.save(model_dir / "ridge_baseline.joblib")
+    (model_dir / "feature_columns.json").write_text(
+        json.dumps({"features": feature_columns}),
+        encoding="utf-8",
+    )
+
+    forecast, observed_metrics = _build_uploaded_forecast(
+        uploaded,
+        config,
+        model_dir,
+        {"uncertainty_by_model": {"ridge": {"interval_radius_cycles": 12.0}}},
+    )
+
+    assert "rul" in uploaded
+    assert forecast is not None
+    assert observed_metrics is not None
+    assert len(forecast) == 11
+    assert forecast["cycle"].tolist() == list(range(30, 41))
+    assert forecast["unit"].unique().tolist() == [7]
+    assert forecast["rul_observed"].tolist() == [125.0 - cycle for cycle in range(30, 41)]
+    assert forecast["rul_predicted"].between(0, config.rul_clip_value).all()
+    assert (forecast["interval_lower"] <= forecast["rul_predicted"]).all()
+    assert (forecast["rul_predicted"] <= forecast["interval_upper"]).all()
+    assert (forecast["interval_upper"] <= config.rul_clip_value).all()
