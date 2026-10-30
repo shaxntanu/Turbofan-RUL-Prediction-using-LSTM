@@ -455,7 +455,7 @@ def _render_all_subsets() -> None:
         summary = st.columns(3)
         summary[0].metric("Macro-average MAE", f"{rows['MAE (cycles)'].mean():.2f} cycles")
         summary[1].metric("Macro-average RMSE", f"{rows['RMSE (cycles)'].mean():.2f} cycles")
-        summary[2].metric("Test engines", f"{int(rows['Test engines'].sum()):,} across {len(rows)} subsets")
+        summary[2].metric("Test engines", f"{int(rows['Test engines'].sum()):,}")
 
     with st.container(border=True):
         st.subheader("Selected model by subset")
@@ -845,10 +845,10 @@ def main() -> None:
         page_title="Turbofan RUL Lab",
         page_icon="✈",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="auto",
     )
     _prepare_theme_for_run()
-    st.sidebar.title("AERO / RUL")
+    st.sidebar.subheader("AERO / RUL")
     st.sidebar.caption("NASA C-MAPSS · research observatory")
     selection = st.sidebar.selectbox("C-MAPSS subset", ("All subsets", *DATASET_NAMES), key="dataset")
     if selection == "All subsets":
