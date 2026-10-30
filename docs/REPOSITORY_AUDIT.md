@@ -3,7 +3,7 @@
 **Audit date:** 2026-10-30
 
 **Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)
-**Implementation revision covered by this follow-up:** `4813ee4` (`main`, pushed to `origin/main`)
+**Implementation revision covered by this follow-up:** `8944fe1` (`main`, pushed to `origin/main`)
 
 This report records local checks and the hosted CI and Vercel observations listed below. A successful push does not verify deployment settings or the Streamlit service.
 
@@ -141,6 +141,7 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - The deployed results fetch issue was traced to the original 3.67 MB `benchmark.json`, which included all reliability tables. The main snapshot is now about 45 KB; four reliability snapshots load on demand by subset. Streamlit merges those snapshots into its expected in-memory bundle. The live Vercel dashboard and Reliability view loaded the four subsets and FD001 reliability metrics.
 - The standalone split-conformal calibration page exposes working subset and illustrative-prediction controls and reports saved benchmark calibration metrics. Its interactive figure is generated from project-owned source; the diagram's rank pegs are schematic, while q95 and observed coverage come from the selected stored run.
 - The production dashboard passed the responsive design inspector at 1440, 768, and 390 pixels with **0 FAIL**. It reported one remaining heuristic warning: a high share of small secondary labels in this dense research dashboard.
+
 ## Verification Update at `4813ee4` (2026-10-30)
 
 - Reinstalled the declared Python dependencies and reran the full Python suite: **33 passed**, with one expected scikit-learn convergence warning from the deliberately three-iteration MLP test. `compileall`, `pip check`, and the Vite production build passed.
@@ -149,6 +150,11 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - `pip-audit` scanned 95 installed Python packages after the updates and reported **0 known vulnerabilities**. The npm production-dependency scan (`npm audit --omit=dev`) also reported **0 vulnerabilities**. These are point-in-time checks, not continuous monitoring.
 - The local C++ wheel was produced after installing patched setuptools `84.2.1`; the hosted CI wheel job also passed. A first local isolated-build attempt timed out fetching build dependencies from PyPI, so the local retry used the already installed, patched build backend.
 
+## Verification Update at `8944fe1` (2026-10-30)
+
+- [Repository checks for `8944fe1`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41081964087) passed Python 3.12/3.14 tests and compile checks, the optional C++ wheel, the Vite production build, and the dependency audits.
+- CI now runs `pip-audit --local` in both Python jobs and `npm audit --omit=dev` in the web job on pushes and pull requests. All three hosted audit steps passed.
+
 ## Security Findings
 
 - No common API-key, token, or private-key patterns were found in the tracked text scan. The scan is not a complete secret-detection guarantee.
@@ -156,7 +162,7 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - Streamlit parses user-uploaded CSV/TXT in memory. The app is intended for trusted demonstration use and does not provide a hardened multi-tenant boundary.
 - The static dashboard has no prediction API or account system. Hosted service settings and secrets were not inspected.
 - No license was changed. Dataset and research papers are documented as third-party material with source-specific terms.
-- Point-in-time Python and npm advisory scans are clear after the reviewed dependency updates; no automated recurring advisory scanner is configured.
+- Python and npm advisory scans are clear after the reviewed dependency updates; CI repeats them on pushes and pull requests. Hosted deployment settings remain unverified.
 
 ## Dependency Findings
 
@@ -165,7 +171,7 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - The optional C++ package wheel built successfully. The repository root is an application/research project rather than a distributable Python package, so no root package metadata was added.
 - The web application has a lockfile. Python dependencies are directly pinned but lack a full transitive lockfile.
 - No SBOM is checked in. There is no root release/package build, and the project spans separate deployed, training, animation, native, and web dependency environments. A generated environment snapshot would not stay current. Revisit CycloneDX/SPDX generation if a release or artifact-distribution process is introduced.
-- Point-in-time advisory review found and fixed affected declared packages; post-update scans reported no known vulnerabilities in 95 installed Python packages and no production npm findings. Python dependencies still lack a full transitive lockfile, so results can change as package advisories are published.
+- Advisory review found and fixed affected declared packages; post-update scans reported no known vulnerabilities in 95 installed Python packages and no production npm findings. CI repeats the checks, while Python dependencies still lack a full transitive lockfile.
 
 ## Documentation Improvements
 
@@ -200,7 +206,7 @@ See [`traceability.md`](traceability.md). At the original audit completion, four
 - No full training or reliability study was rerun; published metrics remain the dated snapshots in `docs/RESULTS.md`.
 - The latest hosted Python/web CI and Julia scenario checks passed for code revision `6d99649`; future pushes have their own CI runs.
 - A clean local Python 3.14 environment install previously stopped when the configured package index did not provide `fonttools`; the hosted Python 3.14 CI install and test job has since passed.
-- The post-update Python scan reported no known vulnerabilities across 95 installed packages, and npm production dependencies reported zero. These checks do not replace recurring scans; deployment settings were not inspected.
+- The post-update Python scan reported no known vulnerabilities across 95 installed packages, and npm production dependencies reported zero. CI now repeats both scans; deployment settings were not inspected.
 - Local Julia is unavailable, but the hosted Julia workflow regenerated and verified its committed scenario CSV. The Vercel dashboard and calibration page were checked live. At the last direct Streamlit URL check, Streamlit returned an access/not-found page, so the hosted deployment remains unverified.
 - The Docker image build needs to be run on a host with an active Docker daemon.
 - No independent operational engine data, hardware validation, or maintenance outcomes exist.
@@ -233,7 +239,7 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 | Documentation | 15 | 14 | Canonical index, methods, limitations, and audit added; historical source documents remain. |
 | Code Quality | 15 | 12 | Runtime/dev dependencies separated and boundaries explicit; no linter/type-check policy. |
 | Testing | 15 | 12 | 33 Python 3.12 tests pass, including a bounded real-data pipeline smoke test and upload contract; Python 3.12/3.14 and web CI jobs pass; full studies and hosted Streamlit remain unverified. |
-| Security | 10 | 8 | Reporting guidance added and point-in-time Python/npm scans are clear after dependency fixes; no recurring scanner or hosted-settings review exists. |
+| Security | 10 | 8 | Reporting guidance and recurring Python/npm CI scans added; no hosted-settings review exists. |
 | Reproducibility | 10 | 8 | CI paths and commands documented; Python transitive lock and repeated independent full runs are absent. |
 | Open Source Governance | 10 | 8 | Contributor, security, conduct, citation, changelog, issue, and PR guidance added; no release process. |
 | Research Rigor & Traceability | 10 | 9 | Evidence matrix and claim boundaries added; no independent fleet data or full fresh study run. |
@@ -242,7 +248,7 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 ## Recommended Next Actions
 
 1. Monitor future Python/web CI runs and fix any regressions.
-2. Add recurring Python/npm advisory checks and refresh dependency pins when fixes are published.
+2. Keep the recurring dependency audits green and refresh pins when new advisories are published.
 3. Restore or confirm the Streamlit deployment and its access settings; the Vercel dashboard was verified live, but deployment settings were not inspected.
 4. Confirm reuse terms for every third-party dataset and paper before further redistribution.
 5. Pursue independent operational data and external validation before making maintenance or safety claims.
