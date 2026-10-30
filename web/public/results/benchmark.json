@@ -9,7 +9,7 @@
   },
   "datasets": {
     "FD001": {
-      "run_id": "20261011-161939",
+      "run_id": "20261031-002409",
       "selected_model": "lstm",
       "test_metrics": {
         "mae": 10.313371856056413,
@@ -238,7 +238,7 @@
       }
     },
     "FD002": {
-      "run_id": "20261011-162103",
+      "run_id": "20261031-002605",
       "selected_model": "ridge",
       "test_metrics": {
         "mae": 15.387019279492934,
@@ -460,7 +460,7 @@
       }
     },
     "FD003": {
-      "run_id": "20261011-162613",
+      "run_id": "20261031-003010",
       "selected_model": "ridge",
       "test_metrics": {
         "mae": 11.254703483291875,
@@ -688,7 +688,7 @@
       }
     },
     "FD004": {
-      "run_id": "20261011-162754",
+      "run_id": "20261031-003157",
       "selected_model": "ridge",
       "test_metrics": {
         "mae": 13.078021369536282,
@@ -945,6 +945,38 @@
         "n_samples": 34081
       },
       {
+        "source_dataset": "FD001",
+        "target_dataset": "FD001",
+        "model": "lstm_10",
+        "mae": 11.246805866637292,
+        "rmse": 14.858874591392542,
+        "n_samples": 10196
+      },
+      {
+        "source_dataset": "FD001",
+        "target_dataset": "FD002",
+        "model": "lstm_10",
+        "mae": 81.12471032334237,
+        "rmse": 86.68204662541922,
+        "n_samples": 26505
+      },
+      {
+        "source_dataset": "FD001",
+        "target_dataset": "FD003",
+        "model": "lstm_10",
+        "mae": 40.86803070372232,
+        "rmse": 55.014333556311854,
+        "n_samples": 13696
+      },
+      {
+        "source_dataset": "FD001",
+        "target_dataset": "FD004",
+        "model": "lstm_10",
+        "mae": 86.77153931482273,
+        "rmse": 90.82724955782874,
+        "n_samples": 34081
+      },
+      {
         "source_dataset": "FD002",
         "target_dataset": "FD001",
         "model": "ridge",
@@ -974,6 +1006,38 @@
         "model": "ridge",
         "mae": 11.624752411249537,
         "rmse": 22.114189267217828,
+        "n_samples": 34081
+      },
+      {
+        "source_dataset": "FD002",
+        "target_dataset": "FD001",
+        "model": "lstm_10",
+        "mae": 14.03583588072626,
+        "rmse": 21.020625336219325,
+        "n_samples": 10196
+      },
+      {
+        "source_dataset": "FD002",
+        "target_dataset": "FD002",
+        "model": "lstm_10",
+        "mae": 17.020736293508474,
+        "rmse": 21.498042689524272,
+        "n_samples": 26505
+      },
+      {
+        "source_dataset": "FD002",
+        "target_dataset": "FD003",
+        "model": "lstm_10",
+        "mae": 13.104082870984746,
+        "rmse": 24.91231833137435,
+        "n_samples": 13696
+      },
+      {
+        "source_dataset": "FD002",
+        "target_dataset": "FD004",
+        "model": "lstm_10",
+        "mae": 12.128682687064927,
+        "rmse": 21.643388651420125,
         "n_samples": 34081
       },
       {
@@ -1009,6 +1073,38 @@
         "n_samples": 34081
       },
       {
+        "source_dataset": "FD003",
+        "target_dataset": "FD001",
+        "model": "lstm_10",
+        "mae": 14.875672797962189,
+        "rmse": 18.285885865728808,
+        "n_samples": 10196
+      },
+      {
+        "source_dataset": "FD003",
+        "target_dataset": "FD002",
+        "model": "lstm_10",
+        "mae": 64.3915558993288,
+        "rmse": 70.12521580731415,
+        "n_samples": 26505
+      },
+      {
+        "source_dataset": "FD003",
+        "target_dataset": "FD003",
+        "model": "lstm_10",
+        "mae": 10.961096643635605,
+        "rmse": 14.856549975934266,
+        "n_samples": 13696
+      },
+      {
+        "source_dataset": "FD003",
+        "target_dataset": "FD004",
+        "model": "lstm_10",
+        "mae": 69.8892638803994,
+        "rmse": 74.32610790703826,
+        "n_samples": 34081
+      },
+      {
         "source_dataset": "FD004",
         "target_dataset": "FD001",
         "model": "ridge",
@@ -1041,6 +1137,38 @@
         "n_samples": 34081
       },
       {
+        "source_dataset": "FD004",
+        "target_dataset": "FD001",
+        "model": "lstm_10",
+        "mae": 31.45207062680472,
+        "rmse": 34.21164069629807,
+        "n_samples": 10196
+      },
+      {
+        "source_dataset": "FD004",
+        "target_dataset": "FD002",
+        "model": "lstm_10",
+        "mae": 31.735639009186063,
+        "rmse": 34.72454398414192,
+        "n_samples": 26505
+      },
+      {
+        "source_dataset": "FD004",
+        "target_dataset": "FD003",
+        "model": "lstm_10",
+        "mae": 32.44325936341954,
+        "rmse": 34.64444635600259,
+        "n_samples": 13696
+      },
+      {
+        "source_dataset": "FD004",
+        "target_dataset": "FD004",
+        "model": "lstm_10",
+        "mae": 33.528885774407314,
+        "rmse": 35.5531789332282,
+        "n_samples": 34081
+      },
+      {
         "source_dataset": "pooled",
         "target_dataset": "FD001",
         "model": "ridge",
@@ -1070,6 +1198,38 @@
         "model": "ridge",
         "mae": 12.044541484617522,
         "rmse": 17.193376698797124,
+        "n_samples": 34081
+      },
+      {
+        "source_dataset": "pooled",
+        "target_dataset": "FD001",
+        "model": "lstm_10",
+        "mae": 14.32802467301295,
+        "rmse": 18.888595028503737,
+        "n_samples": 10196
+      },
+      {
+        "source_dataset": "pooled",
+        "target_dataset": "FD002",
+        "model": "lstm_10",
+        "mae": 16.3350684295306,
+        "rmse": 20.1247476889232,
+        "n_samples": 26505
+      },
+      {
+        "source_dataset": "pooled",
+        "target_dataset": "FD003",
+        "model": "lstm_10",
+        "mae": 11.614075841886974,
+        "rmse": 15.893916299412489,
+        "n_samples": 13696
+      },
+      {
+        "source_dataset": "pooled",
+        "target_dataset": "FD004",
+        "model": "lstm_10",
+        "mae": 13.363579164105806,
+        "rmse": 18.628799408250263,
         "n_samples": 34081
       }
     ],
