@@ -8,6 +8,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = ROOT / "outputs"
 DESTINATION = ROOT / "web" / "public" / "results" / "benchmark.json"
+RELIABILITY_DESTINATION = DESTINATION.parent / "reliability"
 CPP_BENCHMARK = OUTPUTS / "benchmarks" / "cpp_engine_benchmark.json"
 RELIABILITY_DIR = OUTPUTS / "reliability"
 DATASETS = ("FD001", "FD002", "FD003", "FD004")
@@ -91,6 +92,35 @@ def _read_reliability_results() -> dict | None:
     }
 
 
+def _reliability_snapshot_for_dataset(reliability: dict | None, dataset: str) -> dict:
+    if reliability is None:
+        return {"status": "not_exported", "study": {}, "tables": {}}
+
+    tables = {
+        name: [row for row in rows if row.get("dataset") == dataset]
+        for name, rows in reliability.get("tables", {}).items()
+    }
+    return {
+        "status": reliability.get("status", "available"),
+        "study": reliability.get("study", {}),
+        "tables": tables,
+    }
+
+
+def _write_reliability_snapshots(reliability: dict | None) -> list[Path]:
+    RELIABILITY_DESTINATION.mkdir(parents=True, exist_ok=True)
+    destinations = []
+    for dataset in DATASETS:
+        path = RELIABILITY_DESTINATION / f"{dataset.lower()}.json"
+        snapshot = _reliability_snapshot_for_dataset(reliability, dataset)
+        path.write_text(
+            json.dumps(snapshot, separators=(",", ":"), allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        destinations.append(path)
+    return destinations
+
+
 def export() -> Path:
     datasets = {}
     for name in DATASETS:
@@ -139,8 +169,6 @@ def export() -> Path:
         }
     )
 
-    reliability = _read_reliability_results()
-
     payload = {
         "schema_version": 1,
         "protocol": {
@@ -163,10 +191,9 @@ def export() -> Path:
         },
         "cpp_engine": cpp_benchmark,
     }
-    if reliability is not None:
-        payload["reliability"] = reliability
     DESTINATION.parent.mkdir(parents=True, exist_ok=True)
     DESTINATION.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    _write_reliability_snapshots(_read_reliability_results())
     return DESTINATION
 
 
