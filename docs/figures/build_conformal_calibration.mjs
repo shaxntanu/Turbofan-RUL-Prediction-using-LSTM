@@ -298,11 +298,22 @@ function buildHtml() {
       #interval-summary{grid-column:1/-1;margin:0;color:var(--anatomy-strong);font-family:var(--anatomy-mono);font-size:12px}
       #snapshot-summary{grid-column:1/-1;margin:-9px 0 0;color:var(--anatomy-muted);font-size:11px}
       [data-standalone-only][hidden]{display:none}
+      body.embedded .iso-page{width:100%;margin:0}
+      body.embedded .iso-figure{margin:0}
+      body.embedded .iso-plate{padding:16px 20px}
+      body.embedded .iso-plate-corner[data-corner="fig"],
+      body.embedded .iso-plate-corner[data-corner="hint"]{display:none}
+      body.embedded .calibration-controls{grid-template-columns:1fr;gap:8px;margin:10px 0 0;padding:10px 14px}
+      body.embedded #interval-summary,
+      body.embedded #snapshot-summary{grid-column:1;margin:0}
       @media(max-width:560px){.calibration-controls{grid-template-columns:1fr;gap:12px;padding:13px}.calibration-controls label{font-size:11px}#interval-summary,#snapshot-summary{grid-column:1}}
+      @media(max-width:560px){body.embedded .iso-plate{padding:14px 8px 10px}body.embedded .iso-plate-corner[data-corner="title"]{font-size:9px;letter-spacing:.05em}body.embedded .calibration-controls{padding:10px}}
     </style>`;
   const live = `
     const DATA = ${dataJson};
     const params = new URLSearchParams(location.search);
+    const embedded = window.parent !== window;
+    document.body.classList.toggle("embedded", embedded);
     const requestedTheme = params.get("theme");
     document.body.dataset.theme = requestedTheme === "light" || requestedTheme === "dark"
       ? requestedTheme
@@ -394,7 +405,7 @@ function buildHtml() {
     }
     if (subset) {
       subset.value = dataset;
-      if (window.parent !== window) subset.closest("label").hidden = true;
+      if (embedded) subset.closest("label").hidden = true;
       subset.addEventListener("change", () => setDataset(subset.value));
     }
     slider.addEventListener("input", () => steer(slider.value));
@@ -414,7 +425,7 @@ function buildHtml() {
       visible = entries[entries.length - 1].isIntersecting;
       if (visible) run();
     }, { rootMargin: "100px 0px" }).observe(stage);
-    if (subset && window.parent !== window) subset.closest("label").hidden = true;
+    if (subset && embedded) subset.closest("label").hidden = true;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     reduced.addEventListener?.("change", (event) => { touring = !event.matches; run(); });
     paint();
