@@ -58,6 +58,8 @@ Both candidates are scored on validation windows. The model with the lower valid
 - **Split-conformal intervals:** Use the empirical quantile of absolute validation residuals at 95% nominal coverage. Coverage and interval width on the test set are descriptive. Overlapping windows are dependent, and exchangeability or coverage under simulator/domain shift is not established.
 - **Robustness summaries:** Include repeated Ridge seeds, single-seed optional challenger comparisons, synthetic sensor corruptions, short histories, capped-label onset proxies, and leave-one-subset-out evaluation. Each protocol's assumptions are documented in [`RELIABILITY_AND_ROBUSTNESS.md`](RELIABILITY_AND_ROBUSTNESS.md).
 
+The [calibration figure](figures/conformal-calibration.svg) illustrates how the selected snapshot's validation q95 radius bounds an illustrative prediction centre, with the interval clipped to 0–125 cycles. Its rank pegs are schematic; saved q95 and observed test coverage are data-linked, while the prediction centre is not a sample-specific model output. [Open the interactive explainer in the Vercel dashboard](https://turbofan-rul-prediction-using-lstm.vercel.app/conformal-calibration.html).
+
 ## Research-paper adaptations
 
 The supplied papers study different targets and proprietary engine-health records. Implemented adaptations include sensor/PCA screening, polynomial trend and fractional-life summaries, model comparisons, prediction intervals, transfer tables, and error analyses. The repository does not claim to reproduce the papers' dataset, complete models, or numerical findings. Details and the novelty boundary are recorded in [`RESEARCH_TASK_MATRIX.md`](RESEARCH_TASK_MATRIX.md) and [`RELIABILITY_AND_ROBUSTNESS.md`](RELIABILITY_AND_ROBUSTNESS.md).
