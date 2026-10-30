@@ -2,7 +2,7 @@
 
 **Snapshot:** 2026-10-11  
 **Run IDs:** FD001 `20261011-161939`; FD002 `20261011-162103`; FD003 `20261011-162613`; FD004 `20261011-162754`.  
-The downloadable dashboard data is [`web/public/results/benchmark.json`](../web/public/results/benchmark.json); detailed local JSON, CSV, model, and report artifacts are regenerated under ignored `outputs/` and `models/` directories.
+The core dashboard data is [`web/public/results/benchmark.json`](../web/public/results/benchmark.json). Reliability tables are published as subset-specific snapshots under [`web/public/results/reliability/`](../web/public/results/reliability/) and loaded on demand by the Vercel app. Detailed local JSON, CSV, model, and report artifacts are regenerated under ignored `outputs/` and `models/` directories.
 
 ## Protocol
 
