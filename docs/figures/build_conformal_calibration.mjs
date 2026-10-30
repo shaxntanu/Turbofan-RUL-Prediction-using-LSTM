@@ -9,16 +9,16 @@ Sorted validation absolute residuals set q95; a caliper places the same radius
 around an illustrative prediction and physically stops at the RUL bounds.
 This is a visualization of software over simulated C-MAPSS data, not hardware.
 
-Figure parts list (73 purposeful solids):
-  Base: plate, four feet, four foot pads, eight corner fasteners, inset seam,
-        engraved name plate, percentile ruler, q ruler, and RUL ruler.
-  Calibration rack: tray, two feet, two guide rails, eight equal rank pegs,
-        eight peg caps, two end stops, selector carriage, comb, and handle.
-  Quantile gauge: two supports, back plate, q track, sliding q carriage,
-        pointer plate, two carriage guides, and four small fasteners.
-  Interval comparator: two guide rails, four supports, two end stops,
-        two stop caps, two moving jaws, two jaw teeth, prediction carriage,
-        prediction post, and four carriage fasteners.
+Figure parts list (62 purposeful solids):
+  Base (13): plate, four feet, four foot pads, engraved name plate, and three
+        rulers for percentile rank, q radius, and RUL cycles.
+  Calibration rack (23): tray, two guide rails, two supports, eight equal rank
+        pegs, eight peg caps, and a selector carriage with comb.
+  Quantile gauge (7): two supports, back plate, q track, and a three-piece
+        sliding carriage with pointer.
+  Interval comparator (19): two guide rails, four supports, two end stops with
+        two caps, two three-piece moving jaws, and a three-piece prediction
+        carriage.
 
 The pegs are an ordering analogy, not individual observations or a sample
 count. Only values in web/public/results/benchmark.json are shown as results.
@@ -273,7 +273,7 @@ function buildHtml() {
       { mark: "raised", label: "Caliper limits: clamp ŷ ± q95 to 0–125 cycles" },
     ],
     caption:
-      "q95 is the finite-sample rank of validation absolute residuals. Move the illustrative ŷ to see [max(0, ŷ−q95), min(125, ŷ+q95)]. The selected model's q95 and observed test coverage come from the committed benchmark snapshot; coverage is not a guarantee.",
+      "Conceptual software bench for simulated C-MAPSS, not aircraft hardware. q95 is the k-th sorted validation absolute residual, with k = min(ceil((n+1) × 0.95), n). Move illustrative ŷ to see [max(0, ŷ−q95), min(125, ŷ+q95)]. Saved q95 and observed test coverage come from the selected benchmark run; coverage is not a guarantee.",
     body: `<div class="iso-stage" data-stage tabindex="0" role="slider" aria-label="Illustrative RUL prediction centre. Use arrow keys or move the pointer to inspect the conformal interval." aria-valuemin="0" aria-valuemax="125" aria-valuenow="${DEFAULT_CENTER}">${svg}</div>`,
   });
   const dataJson = JSON.stringify(SNAPSHOT);
