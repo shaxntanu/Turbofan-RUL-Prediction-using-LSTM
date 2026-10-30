@@ -1,0 +1,83 @@
+name: Docker image check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .dockerignore
+      - Dockerfile
+      - requirements*.txt
+      - streamlit_app.py
+      - src/**
+      - Ref/CMAPSSData/**
+      - data/**
+      - docs/media/**
+      - web/public/results/**
+      - .github/workflows/docker.yml
+  pull_request:
+    paths:
+      - .dockerignore
+      - Dockerfile
+      - requirements*.txt
+      - streamlit_app.py
+      - src/**
+      - Ref/CMAPSSData/**
+      - data/**
+      - docs/media/**
+      - web/public/results/**
+      - .github/workflows/docker.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Build and smoke-test Streamlit image
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Build image
+        run: docker build --pull --tag turbofan-rul:ci .
+
+      - name: Start image and verify Streamlit responds
+        run: |
+          docker run --detach --name turbofan-rul-ci --publish 127.0.0.1:18501:8501 turbofan-rul:ci
+          python - <<'PY'
+          import time
+          import urllib.error
+          import urllib.request
+
+          endpoints = (
+              "http://127.0.0.1:18501/_stcore/health",
+              "http://127.0.0.1:18501/",
+          )
+          deadline = time.monotonic() + 120
+          last_error = "container did not become ready before the deadline"
+          while time.monotonic() < deadline:
+              try:
+                  for endpoint in endpoints:
+                      with urllib.request.urlopen(endpoint, timeout=4) as response:
+                          if response.status != 200:
+                              raise RuntimeError(f"{endpoint} returned HTTP {response.status}")
+                  print("Streamlit health endpoint and dashboard returned HTTP 200.")
+                  break
+              except (OSError, urllib.error.URLError, RuntimeError) as exc:
+                  last_error = str(exc)
+                  time.sleep(2)
+          else:
+              raise SystemExit(f"Streamlit container smoke test failed: {last_error}")
+          PY
+
+      - name: Show container logs and remove it
+        if: always()
+        run: |
+          docker logs turbofan-rul-ci || true
+          docker rm --force turbofan-rul-ci || true
