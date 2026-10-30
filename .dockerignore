@@ -1,0 +1,34 @@
+# Git and local developer state
+.git
+**/.git
+.venv
+**/.venv
+venv
+env
+__pycache__
+**/__pycache__
+.pytest_cache
+**/.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+.tox
+
+# Generated training artifacts and user-local datasets
+outputs
+models
+data/processed
+data/*.txt
+tmp
+
+# Web build and installed packages
+web/node_modules
+web/dist
+web/.vite
+
+# Local editor and operating-system files
+.vscode
+.idea
+Thumbs.db
+.DS_Store
