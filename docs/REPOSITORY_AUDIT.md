@@ -155,6 +155,11 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - [Repository checks for `8944fe1`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41081964087) passed Python 3.12/3.14 tests and compile checks, the optional C++ wheel, the Vite production build, and the dependency audits.
 - CI now runs `pip-audit --local` in both Python jobs and `npm audit --omit=dev` in the web job on pushes and pull requests. All three hosted audit steps passed.
 
+## Verification Update at `04dacab` (2026-10-30)
+
+- [Repository checks for `04dacab`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41082526123) passed the Python 3.12 and 3.14 jobs, including tests, compilation, dependency audits, and the optional C++ wheel on Python 3.12; the web production build and npm audit also passed.
+- The four committed web subset snapshots under `web/public/results/reliability/` report `status: available`, point to run `20261018-150917`, and each contain seven exported reliability tables. This confirms the saved results are present and consistent; the study was not freshly recomputed in this audit. The full report under `outputs/reliability/` is a local generated artifact, not part of the committed web bundle.
+
 ## Security Findings
 
 - No common API-key, token, or private-key patterns were found in the tracked text scan. The scan is not a complete secret-detection guarantee.
@@ -182,6 +187,12 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - Added evidence-backed benchmarks, traceability statuses, retrospective ADRs, roadmap, and a restrained SDG 9.5 assessment.
 - Corrected the bundled dataset readme reference and removed unsupported blanket license claims.
 
+## Diagram Design Review (2026-10-30)
+
+- Installed `cathrynlavery/diagram-design` in the user-level agent skills directory and reviewed its design, selection, and validation guidance.
+- No new Diagram Design figure was added: the current Mermaid architecture and supporting-study flow are maintainable source diagrams, the two standalone Archify pages already explain the project and reliability analysis, and the calibration figure already has its own interactive treatment. A new editorial diagram would repeat those explanations rather than clarify a missing concept.
+- The skill was not used to generate or render a new figure. Existing Mermaid diagrams remain documented as source-reviewed but not rendered or parser-validated; no new visual validation is claimed.
+
 ## Research Improvements
 
 - Marked current versus retrospective, synthetic, and proxy analyses directly in the architecture/methods documentation.
@@ -194,7 +205,7 @@ The underlying models, published metric snapshots, dataset, and license remain u
 - Added development-only test dependencies and an automated CI configuration for both the Python fallback and full training Python paths.
 - Added exact local test/build commands to the root README and contributor guide.
 - Documented result regeneration, optional tool setup, environment limitations, and the need to refresh static exports explicitly.
-- Recorded successful hosted CI and Julia scenario regeneration; full model/reliability studies remain pending.
+- Recorded successful hosted CI and Julia scenario regeneration; a full fresh model run and reliability-study rerun remain pending. The existing reliability snapshot is available for all four subsets, as recorded above.
 - The configured package index previously lacked `fonttools`, so a clean local Python 3.14 install remains unverified; the hosted Python 3.14 CI install, compile, and tests passed.
 
 ## Traceability Status
@@ -203,8 +214,8 @@ See [`traceability.md`](traceability.md). At the original audit completion, four
 
 ## Remaining Limitations
 
-- No full training or reliability study was rerun; published metrics remain the dated snapshots in `docs/RESULTS.md`.
-- The latest hosted Python/web CI and Julia scenario checks passed for code revision `6d99649`; future pushes have their own CI runs.
+- No full training run or fresh reliability study was rerun during this audit. Published benchmark metrics remain the dated snapshots in `docs/RESULTS.md`; the existing reliability artifacts are from run `20261018-150917` and were checked for all four subsets.
+- Hosted Python/web CI passed for `04dacab`; the hosted Julia scenario reconciliation passed for `6d99649`. Future pushes have their own CI runs.
 - A clean local Python 3.14 environment install previously stopped when the configured package index did not provide `fonttools`; the hosted Python 3.14 CI install and test job has since passed.
 - The post-update Python scan reported no known vulnerabilities across 95 installed packages, and npm production dependencies reported zero. CI now repeats both scans; deployment settings were not inspected.
 - Local Julia is unavailable, but the hosted Julia workflow regenerated and verified its committed scenario CSV. The Vercel dashboard and calibration page were checked live. At the last direct Streamlit URL check, Streamlit returned an access/not-found page, so the hosted deployment remains unverified.
@@ -212,7 +223,7 @@ See [`traceability.md`](traceability.md). At the original audit completion, four
 - No independent operational engine data, hardware validation, or maintenance outcomes exist.
 - Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
 - Third-party dataset and paper reuse terms should be confirmed at their source before redistribution.
-- The Python dependency set is not transitively locked, and no SBOM is generated. Bounded end-to-end Ridge and upload-contract tests now exist, but full model/reliability runs remain unverified.
+- The Python dependency set is not transitively locked, and no SBOM is generated. Bounded end-to-end Ridge and upload-contract tests now exist, but full model training and a fresh reliability-study run remain unverified.
 - The new Mermaid diagrams were reviewed as source but not rendered or parser-validated.
 
 ## Initial Maturity Score
@@ -238,7 +249,7 @@ The scores below use the prompt's weighted dimensions. They are an internal engi
 | Architecture & Modularity | 15 | 13 | Current diagrams and boundaries documented; no API or deployment integration test. |
 | Documentation | 15 | 14 | Canonical index, methods, limitations, and audit added; historical source documents remain. |
 | Code Quality | 15 | 12 | Runtime/dev dependencies separated and boundaries explicit; no linter/type-check policy. |
-| Testing | 15 | 12 | 33 Python 3.12 tests pass, including a bounded real-data pipeline smoke test and upload contract; Python 3.12/3.14 and web CI jobs pass; full studies and hosted Streamlit remain unverified. |
+| Testing | 15 | 12 | 33 Python 3.12 tests pass, including a bounded real-data pipeline smoke test and upload contract; Python 3.12/3.14 and web CI jobs pass; fresh full training/reliability runs and hosted Streamlit remain unverified. |
 | Security | 10 | 8 | Reporting guidance and recurring Python/npm CI scans added; no hosted-settings review exists. |
 | Reproducibility | 10 | 8 | CI paths and commands documented; Python transitive lock and repeated independent full runs are absent. |
 | Open Source Governance | 10 | 8 | Contributor, security, conduct, citation, changelog, issue, and PR guidance added; no release process. |
