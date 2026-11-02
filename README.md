@@ -168,7 +168,7 @@ Python, TensorFlow/Keras, scikit-learn, pandas, NumPy, Matplotlib, Seaborn, Stre
 
 ## Documentation
 
-Start with the [documentation guide](docs/README.md). The current [project scope](docs/PROJECT_OVERVIEW.md), [architecture](docs/architecture.md), [methodology](docs/methodology.md), [measured results](docs/RESULTS.md), [limitations](docs/limitations.md), and [traceability matrix](docs/traceability.md) describe the implementation and evidence. See the [repository audit](docs/REPOSITORY_AUDIT.md) for verification status and remaining gaps.
+Start with the [documentation guide](docs/README.md). The current [project scope](docs/PROJECT_OVERVIEW.md), [architecture](docs/architecture.md), [methodology](docs/methodology.md), [measured results](docs/RESULTS.md), [limitations](docs/limitations.md), and [traceability matrix](docs/traceability.md) describe the implementation and evidence. The guide also indexes the [research sources](docs/research-sources.md), [runtime compatibility](docs/compatibility.md), [generated artifact provenance](docs/generated-artifacts.md), and [AI skills registry](docs/AI_SKILLS_REFERENCE.md). See the [repository audit](docs/REPOSITORY_AUDIT.md) for verification status and remaining gaps.
 
 ## Development checks
 

@@ -11,6 +11,10 @@ Use the current documents below for the implemented project. Several original sp
 - [Benchmark protocol and local C++ timings](benchmarks.md)
 - [Reliability and robustness protocols](RELIABILITY_AND_ROBUSTNESS.md)
 - [Adaptations of supplied research papers](RESEARCH_TASK_MATRIX.md)
+- [Research sources and data provenance](research-sources.md)
+- [Runtime and platform compatibility](compatibility.md)
+- [Generated artifact provenance](generated-artifacts.md)
+- [AI skills and specialized tool registry](AI_SKILLS_REFERENCE.md)
 - [Limitations and residual risks](limitations.md)
 - [Requirements-to-evidence traceability](traceability.md)
 - [Architecture decisions](decisions/)
@@ -29,4 +33,4 @@ Use the current documents below for the implemented project. Several original sp
 - [Interactive split-conformal RUL calibration explainer](https://turbofan-rul-prediction-using-lstm.vercel.app/conformal-calibration.html), with its [generator](figures/build_conformal_calibration.mjs) and [static SVG](figures/conformal-calibration.svg)
 - [RUL methods animation](media/rul-method.mp4)
 
-The Vercel dashboard and Streamlit application links are in the root [README](../README.md).
+The Vercel dashboard and Streamlit application links are in the root [README](../README.md). The repository audit records verification scope, maturity scoring, and open limitations.

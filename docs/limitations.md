@@ -46,7 +46,21 @@ These limitations define what the current repository's results can support. A su
 - ManimGx is needed only to render a new animation; the included video is a static artifact.
 - The current tests exercise helpers and dashboard data behavior. They do not run every full multi-subset training and reliability study on every commit.
 
+## Material assumptions and failure modes
+
+| Assumption or condition | Failure mode | Existing evidence or response |
+|---|---|---|
+| Simulated C-MAPSS trajectories are a useful research benchmark. | Model performance may not transfer to in-service engines, another fleet, or actual failure patterns. | Results and UI identify the data as simulated. No operational data or external fleet validation is available. |
+| The 125-cycle target cap and 30-cycle history are appropriate for the reported baseline. | Different caps, history lengths, preprocessing, or engine partitions may change the ranking and errors. | The configuration is recorded. The reliability study includes cap and history sensitivity results. |
+| Validation residuals are informative about future residuals. | Dependence, drift, or domain shift can invalidate nominal split-conformal coverage. | Coverage and interval widths are reported descriptively. The intervals are not safety guarantees or individual failure probabilities. |
+| Overlapping test windows are suitable for the main aggregate benchmark. | Adjacent windows share observations, so window-level metrics can understate uncertainty about engine-level performance. | The results name window-level aggregation and report terminal-engine results separately in the reliability study. |
+| Analyst-selected urgency thresholds and service capacities describe a useful what-if range. | A schedule may be misleading when real costs, service time, downtime, and post-service outcomes differ. | The Julia output is labeled retrospective scenario analysis. No validated maintenance policy is claimed. |
+| Committed dashboard snapshots represent the experiment currently intended for viewing. | Static results can become stale after local training or reliability runs. | Run IDs are published. Regeneration, review, and commit of the static export are explicit steps. |
+| Uploaded histories are appropriate for a public demonstration app. | Users could upload confidential operational data to an app without a multi-tenant trust boundary. | Uploaded data is processed in memory, but no confidentiality workflow exists. Do not use the public app for private operational records. |
+
 ## Security and verification limits
+
+- Latest local dependency scan attempt on 2026-11-02 was inconclusive. The Python advisory request stalled without a response and was interrupted; npm audit --omit=dev returned an advisory endpoint error. Earlier hosted CI scans passed for their recorded commit, but the current commit's CI result was not available during this audit. No current dependency vulnerability-free claim is made.
 
 - A repository text scan found no matches for common token/private-key patterns; this is not a complete secret-scanning guarantee.
 - Python `pip-audit --local` timed out while retrieving advisories from PyPI, and the npm advisory endpoint reset its connection. Neither dependency advisory scan produced a result; no claim is made that the dependencies are vulnerability-free.

@@ -19,6 +19,9 @@ This matrix links current requirements to project objectives, implementation, ve
 | REQ-CI-01 | Run Python tests on supported Ridge/training runtimes and build the web app. | O-07 | `.github/workflows/ci.yml` | GitHub-hosted Python 3.12/3.14 and web jobs passed, including dependency scans and the Python 3.12 C++ wheel build. | [Repository checks for `560cf9d`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41108973945); `.github/workflows/ci.yml` | Verified |
 | REQ-DOCKER-01 | Build the Streamlit image and verify its health and root routes. | O-07 | `Dockerfile`, `.dockerignore`, `.github/workflows/docker.yml` | Hosted build passed; on 2026-11-02 local Docker Engine 28.5.1 built the 4.04 GB image and both Streamlit routes returned HTTP 200. | [Docker image check for `0dc35d0`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41107892668); local verification recorded in `docs/REPOSITORY_AUDIT.md`; `.github/workflows/docker.yml` | Verified |
 | REQ-PROD-01 | Provide validated aircraft maintenance recommendations or production RUL service. | N/A | Not implemented | Out of scope; no operational data, system integration, or safety validation exists. | `docs/limitations.md` | Not Applicable |
+| REQ-DOC-02 | Record authoritative research sources, runtime compatibility, and provenance for committed generated outputs. | O-07 | docs/research-sources.md, docs/compatibility.md, docs/generated-artifacts.md | Local Markdown target check and full documentation review. | The three linked records; scripts/check_docs.py; docs/REPOSITORY_AUDIT.md | Verified for documentation presence and local links; scientific and hosted claims retain their stated limits |
+| REQ-DOC-03 | Record referenced skills and specialized tools separately from those available or actually used. | O-07 | docs/AI_SKILLS_REFERENCE.md | Registry reviewed against the attached master prompt and repository artifacts. | docs/AI_SKILLS_REFERENCE.md | Verified for recorded inventory; upstream skill code is not installed unless stated |
+| REQ-CI-02 | Detect missing local file targets in Markdown links and images. | O-07 | scripts/check_docs.py, .github/workflows/ci.yml | Six focused tests pass; the checker reports no missing local targets across the repository's Markdown files. | tests/test_docs_check.py; latest local run recorded in docs/REPOSITORY_AUDIT.md | Verified for inline links and images; external URLs and heading fragments are not checked |
 
 ## Interpretation
 
@@ -40,3 +43,9 @@ This matrix links current requirements to project objectives, implementation, ve
 
 - Docker Engine 28.5.1 built the repository image successfully. The Streamlit health endpoint and dashboard root both returned HTTP 200 from a temporary local container, which was stopped after the check.
 - The image reports 4.04 GB because it includes TensorFlow 2.21 for LSTM training; the first build downloads a 572.6 MB TensorFlow wheel.
+
+## Documentation and compatibility update (2026-11-02)
+
+- The local Markdown checker is part of CI and contributor instructions. It checks inline local link and image targets, rejects links that escape the repository, and intentionally does not validate external URLs or heading fragments.
+- New source, compatibility, generated-artifact, and AI skills records are indexed by docs/README.md and the root README.
+- The exact compatibility and validation evidence, including checks that could not be retrieved for the latest commit, is recorded in docs/compatibility.md and docs/REPOSITORY_AUDIT.md.
