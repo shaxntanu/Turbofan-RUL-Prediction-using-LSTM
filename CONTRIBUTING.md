@@ -28,6 +28,7 @@ Run the checks that apply to your changes:
 ```powershell
 python -m compileall -q src scripts tests
 python -m pytest -q
+python scripts/check_docs.py
 ```
 
 ```powershell
