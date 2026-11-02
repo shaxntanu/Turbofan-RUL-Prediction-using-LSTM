@@ -1,9 +1,9 @@
 # Repository audit
 
-**Audit date:** 2026-10-31
+**Audit date:** 2026-11-02
 
 **Initial revision:** `17bc488` (`main`, clean and aligned with `origin/main`)
-**Implementation revision covered by this follow-up:** `8fdfa8e` (`main`, pushed to `origin/main`)
+**Implementation revision covered by this follow-up:** `e30f600` (`main`, pushed to `origin/main`)
 
 This report records local checks and the hosted CI and Vercel observations listed below. A successful push does not verify deployment settings or the Streamlit service.
 
@@ -219,7 +219,7 @@ See [`traceability.md`](traceability.md). At the original audit completion, four
 - A clean local Python 3.14 environment install previously stopped when the configured package index did not provide `fonttools`; the hosted Python 3.14 CI install and test job has since passed.
 - The post-update Python scan reported no known vulnerabilities across 95 installed packages, and npm production dependencies reported zero. CI now repeats both scans; deployment settings were not inspected.
 - Local Julia is unavailable, but the hosted Julia workflow regenerated and verified its committed scenario CSV. The Vercel dashboard and calibration page were checked live. At the last direct Streamlit URL check, Streamlit returned an access/not-found page, so the hosted deployment remains unverified.
-- The local Windows Docker Engine currently fails before creating its engine pipe. The hosted Docker build and Streamlit health/root HTTP checks passed; local Docker Desktop remains unverified until its service starts.
+- Local Docker Engine 28.5.1 built and ran the Streamlit image successfully on 2026-11-02; both health and root routes returned HTTP 200. The image size is 4.04 GB because it includes TensorFlow 2.21.
 - No independent operational engine data, hardware validation, or maintenance outcomes exist.
 - Streamlit uploaded-history prediction uses Ridge only; public applications are not production safety systems.
 - Third-party dataset and paper reuse terms should be confirmed at their source before redistribution.
@@ -274,5 +274,5 @@ This 84/100 score is the previously recorded assessment at `04dacab`, not a newl
 - All 16 Mermaid blocks rendered successfully. The existing interactive conformal-calibration figure was checked at desktop and mobile widths, in both themes, and with keyboard interaction; it uses the saved project results. No duplicate illustration was added.
 - The project-level Archify pipeline diagram remains embedded in the Vercel app and explains the C-MAPSS data-to-RUL analysis, not the Archify authoring workflow. The project also retains the ManimGx explainer, the combined FD001-FD004 views, and the Julia maintenance what-if analysis.
 - Vercel had previously been checked live. The Streamlit public URL still returned the service's access/not-found page, so hosted Streamlit deployment settings and interaction remain unverified.
-- Local Docker Desktop remains unresolved: the Windows backend errors while cleaning up its Docker inference/secrets socket, before the engine pipe is available. The hosted CI result shows the repository image itself builds and serves Streamlit. No Docker data reset or deletion was performed.
+- At the 2026-10-31 check, local Docker Desktop still failed during Windows socket cleanup before creating the engine pipe. On 2026-11-02 the engine started, the image built, and both Streamlit routes returned HTTP 200. No Docker data reset or deletion was performed.
 - Independent operational engine/fleet measurements and maintenance outcomes remain absent. Transfer and maintenance what-if findings use related simulated C-MAPSS subsets and are not field validation.
