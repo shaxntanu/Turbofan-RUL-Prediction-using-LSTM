@@ -3092,8 +3092,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     @page { size: landscape; margin: 1.5cm; }
 
     @media print {
-      /* Force the FULL light palette , including component fills/strokes and
-         lane/arrow colors , so printing from dark theme doesn't put neon
+      /* Force the FULL light palette, including component fills/strokes and
+         lane/arrow colors, so printing from dark theme doesn't put neon
          strokes and translucent dark fills on white paper. */
       :root, [data-theme="dark"], [data-theme="light"] {
         --bg: #ffffff;
@@ -6218,7 +6218,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           : null;
         // Scale width/height so the browser rasterizes the vectors at target
         // resolution directly. viewBox stays unchanged so coordinates don't
-        // shift. This is the key to sharp rasters . Do NOT scale later via
+        // shift. This is the key to sharp rasters. Do NOT scale later via
         // canvas upscaling.
         clone.setAttribute('width', vb.width * scale);
         clone.setAttribute('height', vb.height * scale);
@@ -6393,7 +6393,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         // Serialize at a safe scale (RASTER_SCALE=4 by default, reduced if the
         // resulting canvas would exceed MAX_CANVAS_PIXELS). The SVG itself is
         // rasterized at target resolution natively; drawImage draws at natural
-        // size . No upsampling blur.
+        // size. No upsampling blur.
         var svg = document.querySelector('.diagram-container svg');
         var vb = svg.viewBox.baseVal;
         var scale = pickSafeScale(vb.width, vb.height);
@@ -6413,7 +6413,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
                 ctx.fillStyle = currentBg();
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
               }
-              // Draw at natural size . SVG was already rasterized at target res.
+              // Draw at natural size. SVG was already rasterized at target res.
               ctx.drawImage(img, 0, 0);
               URL.revokeObjectURL(svgUrl);
               var mime = format === 'jpeg' ? 'image/jpeg' :
