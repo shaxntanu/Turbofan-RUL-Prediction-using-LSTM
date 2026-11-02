@@ -276,3 +276,58 @@ This 84/100 score is the previously recorded assessment at `04dacab`, not a newl
 - Vercel had previously been checked live. The Streamlit public URL still returned the service's access/not-found page, so hosted Streamlit deployment settings and interaction remain unverified.
 - At the 2026-10-31 check, local Docker Desktop still failed during Windows socket cleanup before creating the engine pipe. On 2026-11-02 the engine started, the image built, and both Streamlit routes returned HTTP 200. No Docker data reset or deletion was performed.
 - Independent operational engine/fleet measurements and maintenance outcomes remain absent. Transfer and maintenance what-if findings use related simulated C-MAPSS subsets and are not field validation.
+
+## Final repository assurance update (2026-11-02)
+
+### Work completed
+
+- Commit 7ab7016 added a dependency-free local Markdown link and image checker, six focused tests, a CI step, and contributor instructions. It was pushed to origin/main as Shantanu.
+- Commit 19543d8 added a source ledger, compatibility matrix, generated-artifact provenance, AI skills registry, and material assumptions register. It updated the root README's documentation links, the docs index, and requirements traceability. It was pushed to origin/main as Shantanu.
+- Commit bec88e0 added the structured assumptions and failure-mode register and AI change audit, with cross-links from limitations, the docs index, and traceability. It was pushed to origin/main as Shantanu.
+- The final audit added docs/AI_CHANGE_AUDIT.md and a current verification and maturity record. No model implementation, dataset, result snapshot, video, or diagram was regenerated or changed.
+- The root README still has the two application badges and no Contribution heading. No LaTeX source was added.
+
+### Verification on the current source tree
+
+- Python 3.12.10 virtual environment: the full suite passed with 39 tests and one expected scikit-learn convergence warning from a deliberately three-iteration test model.
+- The full suite, compilation, dependency consistency, and Vite build ran on commit 19543d8. Changes after that commit were documentation-only. The local Markdown target check was rerun after all documentation additions and passed at 34 files.
+- The six focused Markdown checker tests passed. The checker found no missing local targets across 34 Markdown files.
+- Python compilation and pip dependency consistency checks passed.
+- The Vite production build passed with local Node v24.19.0 and npm 11.17.0.
+- The Taste-based production UI review covered desktop, tablet, and mobile widths, dark mode, combined results, reliability, the study diagram, and Methods. It found no console errors or horizontal overflow, with one warning for compact secondary labels.
+- The tracked and unignored text scan found no em dash characters.
+- The 2026-11-02 local Docker smoke check built the image and returned HTTP 200 from both Streamlit health and root endpoints.
+- The local Python advisory scan stalled without a response and was interrupted. npm audit --omit=dev returned an advisory endpoint error. Both current local scans are inconclusive. Earlier hosted scans apply only to their recorded commits.
+- Current GitHub Actions run status could not be retrieved. GitHub CLI requests timed out during TLS setup, and connected GitHub API calls also failed with transport timeouts.
+- Local Julia is unavailable. Hosted Julia scenario reconciliation remains supported by its previously recorded workflow result. The hosted Streamlit application's current configuration and access remain unverified.
+
+### Research and applicability decisions
+
+- The source ledger records NASA's current catalog statement that C-MAPSS is simulator data, the catalog has no downloadable payload, and the license is unspecified. It also distinguishes the 2025 in-service TGT study and the supplied 2026 paper from this repository's simulated RUL benchmark.
+- Crawl4AI was not importable in the environment and was not used. Primary sources were checked through ordinary web search and direct source pages.
+- The existing Anatomy-based conformal figure, ManimGx video, Archify study diagram, Matplotlib outputs, and Mermaid diagrams were retained. No duplicate visual was warranted. Diagram Design was reviewed for applicability; no new figure was created.
+- KiCad, PCB, firmware, hardware, and physical safety gates are not applicable because there are no corresponding deliverables in this software and research repository.
+
+### Remaining gaps
+
+- No independent operational fleet data or maintenance outcomes exist. Results remain simulator research and cannot validate a deployed or safety-related maintenance policy.
+- The latest GitHub Actions result, current Vercel revision, and current Streamlit deployment settings could not be confirmed.
+- Current Python and npm advisory scans are inconclusive because their advisory services did not respond. Python dependencies do not have a full transitive lockfile; no SBOM is generated.
+- The Archify editor/export version, Anatomy kit revision, and a public authoritative record for the supplied 2026 paper remain unconfirmed. Julia is not installed locally.
+- Third-party dataset and paper reuse terms remain source-specific and should be confirmed before redistribution.
+
+## Updated repository maturity (2026-11-02)
+
+The original assessment was 64/100. The prior final score was 84/100. This update modestly raises testing and reproducibility for the Markdown CI check and explicit artifact records, and lowers the security score because current local advisory scans were inconclusive and hosted settings remain unverified. Scores are internal engineering estimates, not certifications.
+
+| Dimension | Weight | Initial | Current | Evidence and remaining gap |
+|---|---:|---:|---:|---|
+| Architecture and modularity | 15 | 11 | 13 | Boundaries and study diagrams are documented; full deployment integration remains untested. |
+| Documentation | 15 | 9 | 14 | Scope, methods, results, limitations, sources, compatibility, provenance, assumptions, and AI changes are indexed; exact visual tool provenance remains incomplete. |
+| Code quality | 15 | 11 | 12 | Optional dependencies and runtime behavior are explicit; no linter or type-check policy exists. |
+| Testing | 15 | 9 | 13 | 39 local Python tests pass; CI includes Python, C++, web, Docker, and Julia checks, but the newest hosted status is unavailable. Full experiment reruns are not per-commit checks. |
+| Security | 10 | 7 | 7 | Policies and prior hosted dependency scans exist; current advisory scans and hosted settings could not be verified. |
+| Reproducibility | 10 | 7 | 9 | Commands, source inputs, run IDs, artifacts, and runtime status are documented; Python transitive dependencies and some visual export tools are not fully pinned. |
+| Open-source governance | 10 | 3 | 8 | Contributor, security, citation, conduct, issue, and pull request guidance exists; there is no release process. |
+| Research rigor and traceability | 10 | 7 | 9 | Source, metric units, protocol, and assumptions are traceable; no independent fleet or operational maintenance validation exists. |
+| **Total** | **100** | **64** | **85** | |
