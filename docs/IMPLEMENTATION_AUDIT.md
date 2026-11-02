@@ -1,6 +1,6 @@
 # Implementation Audit
 
-**Reviewed:** 2026-10-31
+**Reviewed:** 2026-11-02
 **Branch:** `main`  
 **Scope:** source implementation, completed local runs, generated dashboard bundle, and documentation. This audit distinguishes executed work from items not verified here.
 
@@ -19,6 +19,7 @@
 | Archify workflow | Delivered and visually checked | `docs/turbofan-pipeline-showcase.workflow.json` validates; `docs/turbofan-pipeline.html` passed the Archify showcase and viewport checks. |
 | Python syntax | Verified | `compileall` is run as a syntax check; it is not a test suite. |
 | Automated tests and CI | Verified | GitHub Actions passed the Python 3.12 and 3.14 suites, C++ wheel build, dependency checks, and web production build for `560cf9d`. |
+| Docker image | Built and smoke-tested | Docker Engine 28.5.1 built the local image; the Streamlit health and root endpoints both returned HTTP 200. The image is 4.04 GB with TensorFlow 2.21 included. |
 | Optional C++ sensor kernels | Implemented and executed | C++17/pybind11 PCA and K-Means compared with scikit-learn on seeded 10k-row training samples from all four subsets. PCA fit-plus-projection subspaces match; PCA was slower on this host, while K-Means ranged from 1.21x to 3.46x faster. These are local microbenchmarks, not RUL/LSTM inference speedups. |
 | LaTeX manuscript | Intentionally omitted | Per request, no `.tex` file was created. |
 
@@ -37,6 +38,7 @@ The optional native module was built with MSVC and OpenMP. Its PCA principal sub
 - The GitHub Actions repository checks for `560cf9d` passed Python 3.12 and 3.14, dependency scans, the optional C++ wheel, and the Vite production build. The Docker workflow built the Streamlit image and received HTTP 200 from its health and root routes.
 - All 16 Mermaid diagrams in the architecture and study documents rendered and passed SVG checks. The existing interactive conformal-calibration figure was reviewed at desktop/mobile sizes in light/dark themes and with keyboard controls; no duplicate figure was added.
 - The Streamlit responsive-layout tests passed (7 tests). The public Streamlit URL remains inaccessible to this audit session, so hosted account/deployment settings and hosted interaction are not verified.
+- Local Docker verification on 2026-11-02 passed: the image built and both HTTP routes returned 200. The 4.04 GB size reflects the full TensorFlow-enabled training environment; the first build downloads TensorFlow's 572.6 MB wheel.
 
 ## Limitations
 
@@ -46,7 +48,7 @@ The optional native module was built with MSVC and OpenMP. Its PCA principal sub
 - Split-conformal coverage is measured on the same held-out test windows and is descriptive, not a deployment guarantee.
 - This is a single seeded training run with a 20-epoch ceiling, not a hyperparameter search or a claim of state-of-the-art performance.
 - `models/` and `outputs/` are git-ignored. Re-run the documented pipeline to recreate model binaries and detailed local reports; the web benchmark JSON and selected figures are versioned.
-- Local Windows Docker Desktop remains unavailable because its service fails before the engine pipe starts; the hosted image-build and HTTP smoke workflow passes. No local Docker Desktop reset or data deletion was performed.
+- The Docker image is large at 4.04 GB because it includes TensorFlow for the LSTM training path. The local image build and HTTP smoke checks pass; the hosted Docker workflow also passes.
 
 ## Reproduction
 
