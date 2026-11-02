@@ -38,6 +38,10 @@ npm run build
 
 For changes to Julia scenario generation, run `julia scripts/maintenance_what_if.jl` and verify that the committed scenario table is the intended result. For the optional C++ extension, build it with `python -m pip install ./cpp_engine` and run `python -m pytest tests/test_cpp_engine.py -q`.
 
+## Writing and interface style
+
+Do not use the em dash character in project-owned text. This applies to the React dashboard, Streamlit interface, HTML diagrams, README files, and documentation. Use commas, periods, colons, or parentheses instead.
+
 ## Research and data expectations
 
 - Keep training, validation, and official test roles explicit. Do not fit preprocessing, choose models, or tune thresholds using official test labels.
