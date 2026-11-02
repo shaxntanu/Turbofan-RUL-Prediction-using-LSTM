@@ -47,7 +47,7 @@ docker build -t turbofan-rul .
 docker run --rm -p 8501:8501 turbofan-rul
 ```
 
-Open [http://localhost:8501](http://localhost:8501). The image uses Python 3.12; `.dockerignore` keeps local environments, generated outputs, and model files out of the build context. GitHub Actions builds the image and checks that Streamlit responds on both its health endpoint and dashboard route. The workflow does not publish the image.
+Open [http://localhost:8501](http://localhost:8501). The image uses Python 3.12; `.dockerignore` keeps local environments, generated outputs, and model files out of the build context. It includes TensorFlow for the LSTM training path, so the first build downloads a large wheel and takes time; this machine's built image is 4.04 GB. Later builds reuse cached layers. GitHub Actions builds the image and checks that Streamlit responds on both its health endpoint and dashboard route. The workflow does not publish the image.
 
 ## Run Experiments
 
