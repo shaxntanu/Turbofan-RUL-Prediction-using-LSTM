@@ -17,7 +17,7 @@ This matrix links current requirements to project objectives, implementation, ve
 | REQ-JULIA-01 | Regenerate the maintenance what-if table from the committed input snapshot. | O-06 | `scripts/maintenance_what_if.jl` | Hosted Julia workflow regenerated the scenario table and confirmed it matches the committed CSV; local Julia is unavailable. | [Julia scenario verification for `6d99649`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41030696910); `.github/workflows/julia-what-if.yml` | Verified |
 | REQ-DOC-01 | Explain scope, architecture, methods, limitations, and evidence to a new maintainer. | O-07 | `README.md`, `docs/` | Local documentation-link audit found no missing targets; all 16 Mermaid blocks rendered successfully. The current results and verification records are refreshed in this audit. | `docs/README.md`; `docs/REPOSITORY_AUDIT.md`; `docs/IMPLEMENTATION_AUDIT.md` | Verified |
 | REQ-CI-01 | Run Python tests on supported Ridge/training runtimes and build the web app. | O-07 | `.github/workflows/ci.yml` | GitHub-hosted Python 3.12/3.14 and web jobs passed, including dependency scans and the Python 3.12 C++ wheel build. | [Repository checks for `560cf9d`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41108973945); `.github/workflows/ci.yml` | Verified |
-| REQ-DOCKER-01 | Build the Streamlit image and verify its health and root routes. | O-07 | `Dockerfile`, `.dockerignore`, `.github/workflows/docker.yml` | Hosted Docker build and HTTP smoke checks passed; the local Windows Docker Engine remains unavailable. | [Docker image check for `0dc35d0`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41107892668); `.github/workflows/docker.yml` | Verified |
+| REQ-DOCKER-01 | Build the Streamlit image and verify its health and root routes. | O-07 | `Dockerfile`, `.dockerignore`, `.github/workflows/docker.yml` | Hosted build passed; on 2026-11-02 local Docker Engine 28.5.1 built the 4.04 GB image and both Streamlit routes returned HTTP 200. | [Docker image check for `0dc35d0`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41107892668); local verification recorded in `docs/REPOSITORY_AUDIT.md`; `.github/workflows/docker.yml` | Verified |
 | REQ-PROD-01 | Provide validated aircraft maintenance recommendations or production RUL service. | — | Not implemented | Out of scope; no operational data, system integration, or safety validation exists. | `docs/limitations.md` | Not Applicable |
 
 ## Interpretation
@@ -34,4 +34,9 @@ This matrix links current requirements to project objectives, implementation, ve
 - Reliability run `20261030-231526` completed for all four subsets; the current snapshots are exported under `web/public/results/reliability/`.
 - The hosted repository checks for `560cf9d` passed Python 3.12, Python 3.14, and the web production build. The Docker image workflow also built the image and received HTTP 200 from both Streamlit routes.
 - All 16 Mermaid blocks across the architecture and study documents rendered successfully. The static calibration figure was reviewed at desktop/mobile sizes in both themes and with keyboard input.
-- Hosted Streamlit access and local Windows Docker startup remain environment/deployment limitations; see [`REPOSITORY_AUDIT.md`](REPOSITORY_AUDIT.md).
+- Hosted Streamlit access remains an environment/deployment limitation; see [`REPOSITORY_AUDIT.md`](REPOSITORY_AUDIT.md).
+
+## Local Docker Update (2026-11-02)
+
+- Docker Engine 28.5.1 built the repository image successfully. The Streamlit health endpoint and dashboard root both returned HTTP 200 from a temporary local container, which was stopped after the check.
+- The image reports 4.04 GB because it includes TensorFlow 2.21 for LSTM training; the first build downloads a 572.6 MB TensorFlow wheel.
