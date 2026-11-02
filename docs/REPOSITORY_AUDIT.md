@@ -124,8 +124,8 @@ The underlying models, published metric snapshots, dataset, and license remain u
 
 ## Verification Update at `1759605` (2026-10-30)
 
-- Repository `.venv` Python 3.12.10: `python -m pytest -q` — **29 passed**, with one expected scikit-learn convergence warning from the deliberately three-iteration MLP test; `compileall` and `pip check` passed.
-- System Python 3.14.7: `pytest` — **27 passed, 2 skipped**, with the same expected convergence warning; `compileall` and `pip check` passed. `pip check` printed an ignored invalid `~treamlit` distribution warning in the user-level site-packages directory, then reported no broken requirements.
+- Repository `.venv` Python 3.12.10: `python -m pytest -q`: **29 passed**, with one expected scikit-learn convergence warning from the deliberately three-iteration MLP test; `compileall` and `pip check` passed.
+- System Python 3.14.7: `pytest`: **27 passed, 2 skipped**, with the same expected convergence warning; `compileall` and `pip check` passed. `pip check` printed an ignored invalid `~treamlit` distribution warning in the user-level site-packages directory, then reported no broken requirements.
 - `npm run build` passed. Vite emitted the MP4, poster, external VTT captions, interactive calibration page, and dashboard bundles.
 - The latest GitHub Actions run, [Repository checks for `1759605`](https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/actions/runs/41005793081), completed successfully: Python 3.12 tests/compile/C++ wheel, Python 3.14 tests/compile, and the Vite production build all passed. The optional C++ build is skipped on Python 3.14 by design.
 - Browser inspection of the live Vercel dashboard confirmed that the Methods calibration iframe loads, reports FD001's saved q95 and observed coverage, and that the video plays with its caption visible. The standalone calibration page also loaded with working controls. Local interaction checks confirmed subset and light/dark synchronization, including FD004.
