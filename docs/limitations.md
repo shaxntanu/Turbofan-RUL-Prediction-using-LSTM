@@ -48,15 +48,7 @@ These limitations define what the current repository's results can support. A su
 
 ## Material assumptions and failure modes
 
-| Assumption or condition | Failure mode | Existing evidence or response |
-|---|---|---|
-| Simulated C-MAPSS trajectories are a useful research benchmark. | Model performance may not transfer to in-service engines, another fleet, or actual failure patterns. | Results and UI identify the data as simulated. No operational data or external fleet validation is available. |
-| The 125-cycle target cap and 30-cycle history are appropriate for the reported baseline. | Different caps, history lengths, preprocessing, or engine partitions may change the ranking and errors. | The configuration is recorded. The reliability study includes cap and history sensitivity results. |
-| Validation residuals are informative about future residuals. | Dependence, drift, or domain shift can invalidate nominal split-conformal coverage. | Coverage and interval widths are reported descriptively. The intervals are not safety guarantees or individual failure probabilities. |
-| Overlapping test windows are suitable for the main aggregate benchmark. | Adjacent windows share observations, so window-level metrics can understate uncertainty about engine-level performance. | The results name window-level aggregation and report terminal-engine results separately in the reliability study. |
-| Analyst-selected urgency thresholds and service capacities describe a useful what-if range. | A schedule may be misleading when real costs, service time, downtime, and post-service outcomes differ. | The Julia output is labeled retrospective scenario analysis. No validated maintenance policy is claimed. |
-| Committed dashboard snapshots represent the experiment currently intended for viewing. | Static results can become stale after local training or reliability runs. | Run IDs are published. Regeneration, review, and commit of the static export are explicit steps. |
-| Uploaded histories are appropriate for a public demonstration app. | Users could upload confidential operational data to an app without a multi-tenant trust boundary. | Uploaded data is processed in memory, but no confidentiality workflow exists. Do not use the public app for private operational records. |
+The [assumptions and failure-mode register](assumptions.md) summarizes material research, runtime, deployment, and data-handling assumptions. The supporting protocol limitations are detailed above.
 
 ## Security and verification limits
 

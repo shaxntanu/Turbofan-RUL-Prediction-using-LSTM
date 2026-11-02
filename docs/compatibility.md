@@ -25,6 +25,6 @@ This matrix separates local execution, CI verification, and unverified deploymen
 - Julia snapshot: julia scripts/maintenance_what_if.jl, then review the CSV diff
 - Container smoke path: use the Docker workflow or the root README Docker commands
 
-The GitHub Actions workflows are the canonical cross-environment checks. A green result applies only to the workflow jobs and commit that actually completed. The CI status for commit 7ab7016 was not available during this documentation pass because GitHub API requests timed out.
+The GitHub Actions workflows are the canonical cross-environment checks. A green result applies only to the workflow jobs and commit that actually completed. The status for the newly pushed commits was not available during this documentation pass because GitHub API and connected GitHub requests timed out.
 
 There is no hardware or firmware target in this repository, so board, sensor, PCB, and embedded runtime compatibility do not apply.

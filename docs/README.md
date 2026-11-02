@@ -15,6 +15,8 @@ Use the current documents below for the implemented project. Several original sp
 - [Runtime and platform compatibility](compatibility.md)
 - [Generated artifact provenance](generated-artifacts.md)
 - [AI skills and specialized tool registry](AI_SKILLS_REFERENCE.md)
+- [Assumptions and failure modes](assumptions.md)
+- [AI-assisted change audit](AI_CHANGE_AUDIT.md)
 - [Limitations and residual risks](limitations.md)
 - [Requirements-to-evidence traceability](traceability.md)
 - [Architecture decisions](decisions/)

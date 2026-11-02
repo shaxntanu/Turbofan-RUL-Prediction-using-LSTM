@@ -23,6 +23,9 @@ This matrix links current requirements to project objectives, implementation, ve
 | REQ-DOC-03 | Record referenced skills and specialized tools separately from those available or actually used. | O-07 | docs/AI_SKILLS_REFERENCE.md | Registry reviewed against the attached master prompt and repository artifacts. | docs/AI_SKILLS_REFERENCE.md | Verified for recorded inventory; upstream skill code is not installed unless stated |
 | REQ-CI-02 | Detect missing local file targets in Markdown links and images. | O-07 | scripts/check_docs.py, .github/workflows/ci.yml | Six focused tests pass; the checker reports no missing local targets across the repository's Markdown files. | tests/test_docs_check.py; latest local run recorded in docs/REPOSITORY_AUDIT.md | Verified for inline links and images; external URLs and heading fragments are not checked |
 
+| REQ-DOC-04 | Keep material research and runtime assumptions, failure effects, detection, and mitigations visible. | O-07 | docs/assumptions.md, docs/limitations.md | Reviewed against methods, app behavior, compatibility, and deployment limits. | docs/assumptions.md | Verified for documented assumptions; operational risks remain untested |
+| REQ-DOC-05 | Record substantial AI-assisted repository changes, validation, and remaining uncertainty. | O-07 | docs/AI_CHANGE_AUDIT.md | Compared against commits, tool outputs, source checks, and unavailable verification paths. | docs/AI_CHANGE_AUDIT.md | Verified for the 2026-11-02 audit pass |
+
 ## Interpretation
 
 - **Verified** means the cited test or build ran successfully for the stated behavior in this audit.
