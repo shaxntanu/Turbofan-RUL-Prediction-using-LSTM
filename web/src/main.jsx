@@ -35,6 +35,7 @@ import { Bar, Line } from "react-chartjs-2";
 import methodVideoUrl from "../../docs/media/rul-method.mp4?url";
 import methodPosterUrl from "../../docs/media/rul-method-poster.png?url";
 import methodCaptionsUrl from "../../docs/media/rul-method-captions.vtt?url&no-inline";
+import EngineAnatomy from "./engine-anatomy";
 import "./styles.css";
 import "./model-comparison.css";
 import "./theme.css";
@@ -214,13 +215,16 @@ function Overview({ data, dataset, setPage, theme }) {
 
   return (
     <>
-      <div className="page-intro">
-        <div>
-          <div className="eyebrow">NASA C-MAPSS / BENCHMARKS</div>
-          <h1>Engine health benchmark</h1>
-          <p>Remaining useful life estimates across four simulated operating regimes.</p>
+      <div className="overview-intro">
+        <div className="page-intro">
+          <div>
+            <div className="eyebrow">NASA C-MAPSS / BENCHMARKS</div>
+            <h1>Engine health benchmark</h1>
+            <p>Remaining useful life estimates across four simulated operating regimes.</p>
+          </div>
+          <div className="run-stamp"><span className="live-dot" />LATEST RUN <b>{result.run_id}</b></div>
         </div>
-        <div className="run-stamp"><span className="live-dot" />LATEST RUN <b>{result.run_id}</b></div>
+        <EngineAnatomy dataset={dataset} theme={theme} />
       </div>
 
       <div className="dataset-strip">
