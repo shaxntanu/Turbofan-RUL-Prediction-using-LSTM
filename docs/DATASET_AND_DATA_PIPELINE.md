@@ -40,7 +40,7 @@ The NASA C-MAPSS dataset contains four subsets with varying complexity:
 | FD001 | 100 | 100 | 1 (Sea Level) | 1 | HPC Degradation |
 | FD002 | 260 | 259 | 6 | 1 | HPC Degradation |
 | FD003 | 100 | 100 | 1 | 2 | HPC Degradation, Fan Degradation |
-| FD004 | 248 | 249 | 6 | 2 | HPC Degradation, Fan Degradation |
+| FD004 | 249 | 248 | 6 | 2 | HPC Degradation, Fan Degradation |
 
 ### 3.2 Selected Subset for Baseline
 
@@ -69,7 +69,7 @@ The NASA C-MAPSS dataset contains four subsets with varying complexity:
 | FD001 | Low | 100 | 100 | 1 | 1 | Baseline, quick experiments |
 | FD002 | Medium | 260 | 259 | 6 | 1 | Multi-condition evaluation |
 | FD003 | Medium | 100 | 100 | 1 | 2 | Multi-fault evaluation |
-| FD004 | High | 248 | 249 | 6 | 2 | Comprehensive evaluation |
+| FD004 | High | 249 | 248 | 6 | 2 | Comprehensive evaluation |
 
 ---
 
