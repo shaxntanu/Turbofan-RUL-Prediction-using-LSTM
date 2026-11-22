@@ -18,16 +18,23 @@ class Visualizer:
         sns.set_theme(style="whitegrid", context="notebook", font_scale=0.9)
 
     @staticmethod
-    def _save(fig, path: str | Path) -> Path:
+    def _save(fig, path: str | Path, dpi: int = 170) -> Path:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        fig.savefig(path, dpi=170, bbox_inches="tight", facecolor="white")
+        fig.savefig(path, dpi=dpi, bbox_inches="tight", facecolor="white")
         plt.close(fig)
         return path
 
-    def plot_training_history(self, history, save_path: str | Path) -> Path:
+    def plot_training_history(
+        self,
+        history,
+        save_path: str | Path,
+        *,
+        figsize: tuple[float, float] = (11, 4.2),
+        dpi: int = 170,
+    ) -> Path:
         values = history.history if hasattr(history, "history") else history
-        fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
+        fig, axes = plt.subplots(1, 2, figsize=figsize)
         for key, label, color in (("loss", "Train", PALETTE["blue"]), ("val_loss", "Validation", PALETTE["coral"])):
             if key in values:
                 axes[0].plot(values[key], label=label, color=color, linewidth=2)
@@ -39,30 +46,54 @@ class Visualizer:
         for axis in axes:
             axis.legend(frameon=False)
         fig.tight_layout()
-        return self._save(fig, save_path)
+        return self._save(fig, save_path, dpi=dpi)
 
-    def plot_predictions_vs_actual(self, y_true, y_pred, save_path: str | Path) -> Path:
+    def plot_predictions_vs_actual(
+        self,
+        y_true,
+        y_pred,
+        save_path: str | Path,
+        *,
+        figsize: tuple[float, float] = (6.5, 5.5),
+        axis_limits: tuple[float, float] | None = None,
+        dpi: int = 170,
+    ) -> Path:
         truth = np.asarray(y_true, dtype=float).ravel()
         pred = np.asarray(y_pred, dtype=float).ravel()
-        fig, ax = plt.subplots(figsize=(6.5, 5.5))
+        fig, ax = plt.subplots(figsize=figsize)
         ax.scatter(truth, pred, s=13, alpha=0.35, color=PALETTE["teal"], edgecolors="none")
         low = float(min(truth.min(), pred.min()))
         high = float(max(truth.max(), pred.max()))
+        if axis_limits is not None:
+            low, high = map(float, axis_limits)
+            if not np.isfinite(low) or not np.isfinite(high) or low >= high:
+                raise ValueError("axis_limits must contain finite values with low < high")
         ax.plot([low, high], [low, high], linestyle="--", color=PALETTE["coral"], linewidth=1.8)
         ax.set(title="Predicted versus observed RUL", xlabel="Observed RUL (cycles)", ylabel="Predicted RUL (cycles)")
+        if axis_limits is not None:
+            ax.set_xlim(low, high)
+            ax.set_ylim(low, high)
         fig.tight_layout()
-        return self._save(fig, save_path)
+        return self._save(fig, save_path, dpi=dpi)
 
-    def plot_error_distribution(self, y_true, y_pred, save_path: str | Path) -> Path:
+    def plot_error_distribution(
+        self,
+        y_true,
+        y_pred,
+        save_path: str | Path,
+        *,
+        figsize: tuple[float, float] = (7, 4.5),
+        dpi: int = 170,
+    ) -> Path:
         errors = np.asarray(y_true, dtype=float).ravel() - np.asarray(y_pred, dtype=float).ravel()
-        fig, ax = plt.subplots(figsize=(7, 4.5))
+        fig, ax = plt.subplots(figsize=figsize)
         sns.histplot(errors, bins=40, kde=True, color=PALETTE["blue"], ax=ax)
         ax.axvline(0, color=PALETTE["coral"], linestyle="--", linewidth=1.7)
         ax.axvline(errors.mean(), color=PALETTE["gold"], linewidth=1.7, label=f"Mean = {errors.mean():.1f}")
         ax.set(title="RUL residual distribution", xlabel="Observed - predicted RUL (cycles)", ylabel="Window count")
         ax.legend(frameon=False)
         fig.tight_layout()
-        return self._save(fig, save_path)
+        return self._save(fig, save_path, dpi=dpi)
 
     def plot_engine_trajectory(self, true_rul, pred_rul, unit: int, save_path: str | Path) -> Path:
         truth = np.asarray(true_rul, dtype=float).ravel()
@@ -99,14 +130,22 @@ class Visualizer:
         fig.tight_layout()
         return self._save(fig, save_path)
 
-    def plot_sensor_correlation(self, frame: pd.DataFrame, columns: list[str], save_path: str | Path) -> Path:
+    def plot_sensor_correlation(
+        self,
+        frame: pd.DataFrame,
+        columns: list[str],
+        save_path: str | Path,
+        *,
+        figsize: tuple[float, float] | None = None,
+        dpi: int = 170,
+    ) -> Path:
         corr = frame[columns].corr()
         size = max(7, min(12, len(columns) * 0.42))
-        fig, ax = plt.subplots(figsize=(size, size - 1))
+        fig, ax = plt.subplots(figsize=figsize or (size, size - 1))
         sns.heatmap(corr, cmap="vlag", center=0, square=True, ax=ax, cbar_kws={"shrink": 0.72})
         ax.set(title=f"{self.config.dataset}: sensor correlation")
         fig.tight_layout()
-        return self._save(fig, save_path)
+        return self._save(fig, save_path, dpi=dpi)
 
     def plot_model_comparison(self, metrics: dict[str, dict], save_path: str | Path) -> Path:
         rows = [{"Model": name, "MAE": values["mae"], "RMSE": values["rmse"]} for name, values in metrics.items()]

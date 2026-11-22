@@ -18,6 +18,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, a { font: inherit; }
+figure { margin: 0; }
 a { color: var(--cyan); text-underline-offset: .22em; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--amber); outline-offset: 4px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -128,17 +129,24 @@ h3 { font-size: clamp(25px, 2vw, 38px); line-height: 1.1; margin-bottom: .55em; 
 .model-index.alt { border-color: var(--amber); color: var(--amber); }
 .model-columns .model-detail { color: var(--cyan); margin-top: 32px; font-weight: 700; }
 .training-layout { display: grid; grid-template-columns: 1.3fr .9fr; gap: 8%; }
+.training-evidence { display: grid; gap: 20px; min-width: 0; }
 .training-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .training-facts > div, .scenario-values > div, .closing-points > div { display: grid; gap: 12px; }
 .training-facts strong, .scenario-values strong, .closing-points strong { color: var(--cyan); font-family: Georgia, serif; font-size: clamp(54px, 6vw, 110px); font-weight: 400; line-height: 1; }
 .training-facts span, .scenario-values span, .closing-points span { color: var(--muted); font-size: clamp(18px, 1.35vw, 26px); line-height: 1.35; }
+.training-history-figure img { display: block; width: 100%; max-height: 33vh; object-fit: contain; background: #ffffff; }
+.training-history-figure figcaption, .anatomy-figure figcaption { margin-top: 8px; color: var(--muted); font-size: clamp(14px, .9vw, 17px); }
 
-.figure-layout { display: grid; grid-template-columns: 1fr .8fr; gap: 8%; }
-.result-figure { max-width: 100%; max-height: 47vh; object-fit: contain; background: #fff; }
+.figure-layout { display: grid; grid-template-columns: 1.35fr .8fr; gap: 5%; }
+.result-figure { display: block; width: 100%; max-width: 100%; max-height: 62vh; object-fit: contain; background: #fff; }
 .metric-big { color: var(--cyan); font-family: Georgia, serif; font-size: clamp(64px, 7vw, 130px); line-height: 1; margin: 15px 0 24px; }
 .metric-big small { font-family: Arial, sans-serif; font-size: .25em; color: var(--muted); white-space: nowrap; }
-.interpret-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 10%; }
+.interpret-layout { display: grid; grid-template-columns: 1.05fr .95fr; gap: 6%; align-items: center; }
+.sensor-correlation-figure { display: block; width: 100%; max-height: 55vh; object-fit: contain; background: #fff; }
+.interpret-stats { display: grid; gap: 18px; }
 .coverage-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 8%; }
+.coverage-narrative { min-width: 0; }
+.interval-figure { display: block; width: 100%; max-height: 29vh; margin-top: 14px; object-fit: contain; background: #fff; }
 .coverage-values { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--line); }
 .coverage-values div { display: grid; gap: 8px; padding: clamp(18px, 2.1vw, 38px); background: var(--surface); }
 .coverage-values span { color: var(--muted); font-size: clamp(18px, 1.3vw, 24px); }
@@ -170,7 +178,7 @@ h3 { font-size: clamp(25px, 2vw, 38px); line-height: 1.1; margin-bottom: .55em; 
 .sources-note { max-width: 1100px; margin: 0 0 12px; color: var(--muted); font-size: clamp(17px, 1.1vw, 21px); line-height: 1.4; }
 
 .architecture-layout { display: grid; grid-template-columns: minmax(180px, .8fr) 38px minmax(0, 2fr) 38px minmax(190px, .9fr); align-items: stretch; gap: 2%; }
-.architecture-stage { display: grid; align-content: center; gap: 14px; border-top: 4px solid var(--cyan); padding: 22px 0; }
+.architecture-stage { display: grid; align-content: start; gap: 14px; border-top: 4px solid var(--cyan); padding: 22px 0; }
 .architecture-stage strong { font: 400 clamp(30px, 2.8vw, 52px)/1.05 Georgia, 'Times New Roman', serif; }
 .architecture-stage p, .architecture-model p { color: var(--muted); font-size: clamp(18px, 1.35vw, 25px); line-height: 1.42; }
 .architecture-stage.decision { border-color: var(--green); }
@@ -180,6 +188,31 @@ h3 { font-size: clamp(25px, 2vw, 38px); line-height: 1.1; margin-bottom: .55em; 
 .architecture-model:last-child { border-color: var(--amber); }
 .architecture-model h3 { margin: 12px 0 18px; }
 .architecture-model .small-label { font-size: clamp(15px, 1vw, 19px); }
+
+.anatomy-layout { display: grid; grid-template-columns: 1.35fr .8fr; gap: 5%; align-items: center; }
+.anatomy-figure img { display: block; width: 100%; max-height: 54vh; object-fit: contain; }
+.anatomy-steps { display: grid; gap: 18px; }
+.anatomy-steps > div { display: grid; grid-template-columns: 48px 1fr; align-items: start; gap: 12px; border-top: 2px solid var(--line); padding-top: 12px; }
+.anatomy-steps span { color: var(--amber); font: 400 clamp(24px, 2.2vw, 38px)/1 Georgia, serif; }
+.anatomy-steps p { margin: 0; color: var(--muted); font-size: clamp(17px, 1.2vw, 23px); line-height: 1.35; }
+
+.subset-chart-shell { flex: 1; display: flex; align-items: center; width: 100%; min-height: 0; }
+.subset-mae-chart { display: block; width: 100%; max-height: 58vh; overflow: visible; }
+.subset-chart-grid line { stroke: var(--line); stroke-width: 2; }
+.subset-chart-grid text { fill: var(--muted); font: 18px Arial, sans-serif; }
+.subset-chart-name { fill: var(--ink); font: 700 25px Arial, sans-serif; }
+.subset-chart-value { fill: var(--ink); font: 700 23px Arial, sans-serif; }
+.subset-chart-model { fill: var(--muted); font: 20px Arial, sans-serif; }
+.residual-layout { display: grid; grid-template-columns: 1.35fr .75fr; gap: 6%; align-items: center; }
+.residual-figure { display: block; width: 100%; max-height: 58vh; object-fit: contain; background: #fff; }
+
+.sdg-layout { display: grid; grid-template-columns: .9fr 1fr 1.2fr; gap: 4%; align-items: stretch; }
+.sdg-layout article { border-top: 4px solid var(--line); padding-top: 20px; }
+.sdg-layout article:first-child { border-color: var(--green); }
+.sdg-layout h3 { margin: 18px 0 12px; }
+.sdg-layout p { color: var(--muted); font-size: clamp(18px, 1.3vw, 24px); line-height: 1.42; }
+.sdg-layout a { display: inline-block; margin-top: 8px; font-size: clamp(17px, 1.2vw, 22px); }
+.sdg-goal > strong { display: block; margin-top: 22px; color: var(--green); font: 400 clamp(72px, 8vw, 140px)/.95 Georgia, serif; }
 .architecture-link { align-self: center; position: relative; height: 2px; background: var(--line); }
 .architecture-link::after { content: ''; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left-color: var(--muted); border-right: 0; }
 
@@ -188,13 +221,16 @@ h3 { font-size: clamp(25px, 2vw, 38px); line-height: 1.1; margin-bottom: .55em; 
   .slide.cover { overflow: clip; }
   h2 { max-width: 24ch; }
   .content-center { flex: initial; margin: 6vh 0; }
-  .two-col, .dataset-layout, .chart-layout, .model-columns, .architecture-layout, .training-layout, .figure-layout, .interpret-layout, .coverage-layout, .stress-layout, .scenario-layout, .app-columns { grid-template-columns: 1fr; gap: 30px; }
+  .two-col, .dataset-layout, .chart-layout, .model-columns, .architecture-layout, .training-layout, .figure-layout, .interpret-layout, .coverage-layout, .stress-layout, .scenario-layout, .app-columns, .anatomy-layout, .residual-layout, .sdg-layout { grid-template-columns: 1fr; gap: 30px; }
   .split-grid, .next-steps { grid-template-columns: 1fr; gap: 30px; }
   .split-step h3 { margin: 12px 0; }
   .cover-copy { width: 100%; margin: 8vh 0 25vh; }
   .cover h1 { max-width: 10ch; }
   .engine-art { width: 60vw; top: auto; bottom: -6%; right: -16%; transform: none; opacity: .45; }
-  .result-figure { max-height: none; width: min(100%, 620px); }
+  .result-figure, .sensor-correlation-figure, .interval-figure, .residual-figure { max-height: none; width: 100%; }
+  .anatomy-figure img { max-height: none; }
+  .training-history-figure img { max-height: none; }
+  .subset-mae-chart { max-height: none; }
   .trace-figure svg { max-height: none; }
   .chart-caption span { display: block; float: none; margin-top: 6px; }
   .data-table { font-size: clamp(14px, 2vw, 20px); }
@@ -228,6 +264,11 @@ h3 { font-size: clamp(25px, 2vw, 38px); line-height: 1.1; margin-bottom: .55em; 
   .window-cycles span { font-size: 18px; }
   .equation-row { gap: 15px; }
   .equation-row strong { font-size: 20px; }
+  .anatomy-steps > div { grid-template-columns: 38px 1fr; }
+  .subset-chart-grid text { font-size: 24px; }
+  .subset-chart-name { font-size: 30px; }
+  .subset-chart-value { font-size: 28px; }
+  .subset-chart-model { font-size: 23px; }
 }
 
 @page { size: 16in 9in; margin: 0; }
@@ -238,5 +279,9 @@ h3 { font-size: clamp(25px, 2vw, 38px); line-height: 1.1; margin-bottom: .55em; 
   .slide:last-child { break-after: auto; page-break-after: auto; }
   .content-center { flex: 1; margin: 0; }
   .slide-foot { padding-top: 12px; }
-  .result-figure { max-height: 5.2in; }
+  .result-figure, .residual-figure, .sensor-correlation-figure { max-height: 5.4in; }
+  .interval-figure { max-height: 3.2in; }
+  .anatomy-figure img { max-height: 4.8in; }
+  .training-history-figure img { max-height: 2.8in; }
+  .subset-mae-chart { max-height: 5.4in; }
 }

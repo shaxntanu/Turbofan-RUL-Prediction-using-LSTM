@@ -1,6 +1,7 @@
 import json
 from html.parser import HTMLParser
 from pathlib import Path
+import struct
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +18,7 @@ class PresentationParser(HTMLParser):
         self.cell = None
         self.trace = None
         self.images = []
+        self.subset_mae_rows = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -33,6 +35,14 @@ class PresentationParser(HTMLParser):
             self.trace = attrs.get("points")
         elif tag == "img":
             self.images.append(attrs["src"])
+        elif tag == "g" and attrs.get("class") == "subset-mae-row":
+            self.subset_mae_rows.append(
+                {
+                    "subset": attrs["data-subset"],
+                    "model": attrs["data-model"],
+                    "mae": attrs["data-mae"],
+                }
+            )
 
     def handle_data(self, data):
         if self.cell is not None:
@@ -57,8 +67,41 @@ def read_deck():
 
 def test_presentation_has_unique_slides_and_local_images():
     deck = read_deck()
-    assert deck.slides == [f"slide-{i}" for i in range(1, 21)]
+    assert deck.slides == [f"slide-{i}" for i in range(1, 25)]
     assert deck.images and all((DECK / image).is_file() for image in deck.images)
+
+
+def test_landscape_prediction_figure_is_wide_and_keeps_the_recorded_result():
+    path = DECK / "figures" / "fd001-predicted-vs-actual-landscape.png"
+    width, height = struct.unpack(">II", path.read_bytes()[16:24])
+    assert width > height
+
+    snapshot = json.loads((ROOT / "web" / "public" / "results" / "benchmark.json").read_text())
+    assert snapshot["datasets"]["FD001"]["test_metrics"]["n_samples"] == 10196
+    assert f"{snapshot['datasets']['FD001']['test_metrics']['mae']:.2f}" == "10.31"
+
+
+def test_subset_mae_chart_matches_the_committed_snapshot():
+    deck = read_deck()
+    snapshot = json.loads((ROOT / "web" / "public" / "results" / "benchmark.json").read_text())
+    assert [row["subset"] for row in deck.subset_mae_rows] == ["FD001", "FD002", "FD003", "FD004"]
+    for row in deck.subset_mae_rows:
+        data = snapshot["datasets"][row["subset"]]
+        assert row["model"] == data["selected_model"]
+        assert row["mae"] == f"{data['test_metrics']['mae']:.2f}"
+
+
+def test_sdg_slide_stays_within_the_documented_alignment():
+    html = (DECK / "index.html").read_text(encoding="utf-8")
+    assessment = (ROOT / "docs" / "sdg-alignment.md").read_text(encoding="utf-8")
+    assert "Target 9.5" in html
+    assert "No other SDG impact is claimed" in html
+    assert "no other SDG alignment is sufficiently direct to claim" in assessment
+
+
+def test_presentation_deliverables_do_not_contain_em_dash():
+    for path in (DECK / "index.html", DECK / "deck.css", DECK / "README.md"):
+        assert "\u2014" not in path.read_text(encoding="utf-8")
 
 
 def test_reported_engine_counts_match_bundled_files():
