@@ -14,6 +14,7 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `outputs/`: generated metrics, predictions, reports, and Matplotlib figures (created by a run; not tracked).
 - `models/`: generated model and scaler files (not tracked).
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
+- `web/public/presentation/`: browser-based project presentation covering the dataset, methods, results, reliability, and deployment scope. [Open the presentation](https://turbofan-rul-prediction-using-lstm.vercel.app/presentation/).
 - `streamlit_app.py`: interactive data exploration and prediction interface.
 - `docs/turbofan-pipeline.html`: the interactive C-MAPSS research diagram, also bundled into the Vercel dashboard under **Study diagram**.
 - `docs/reliability-pipeline.html`: the source diagram for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation.

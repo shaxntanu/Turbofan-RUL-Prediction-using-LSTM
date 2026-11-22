@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A research presentation on turbofan remaining useful life prediction using NASA C-MAPSS data.">
+  <title>Turbofan RUL | Project presentation</title>
+  <link rel="stylesheet" href="deck.css">
+  <script src="deck.js" defer></script>
+</head>
+<body>
+  <header class="toolbar" aria-label="Presentation controls">
+    <a class="toolbar-brand" href="#slide-1" aria-label="Go to the first slide"><span class="brand-mark" aria-hidden="true"></span> Turbofan RUL</a>
+    <div class="toolbar-controls">
+      <span id="slide-count" class="slide-count" aria-live="polite">01 / 20</span>
+      <button id="previous" type="button" aria-label="Previous slide">&#8592;</button>
+      <button id="next" type="button" aria-label="Next slide">&#8594;</button>
+      <button id="fullscreen" class="text-control" type="button">Fullscreen</button>
+      <button id="print" class="text-control" type="button">Print / PDF</button>
+    </div>
+  </header>
+
+  <main id="deck" class="deck" aria-label="Turbofan remaining useful life presentation">
+    <section class="slide cover" id="slide-1" aria-labelledby="title-1">
+      <div class="cover-copy">
+        <p class="eyebrow">A research project on predictive maintenance</p>
+        <h1 id="title-1">How much life does an engine have left?</h1>
+        <p class="lead">Predicting turbofan remaining useful life from simulated sensor histories.</p>
+        <p class="cover-meta">NASA C-MAPSS &nbsp; / &nbsp; Ridge + LSTM &nbsp; / &nbsp; FD001 to FD004</p>
+      </div>
+      <svg class="engine-art" viewBox="0 0 640 640" role="img" aria-label="Schematic turbine cross-section">
+        <circle cx="320" cy="320" r="277" fill="#141A24"/>
+        <circle cx="320" cy="320" r="235" fill="none" stroke="#3BC9DE" stroke-width="3"/>
+        <circle cx="320" cy="320" r="187" fill="none" stroke="#262E3D" stroke-width="36"/>
+        <g fill="#3BC9DE" opacity=".75">
+          <path d="M320 116 353 246 320 263 287 246Z"/><path d="M320 524 287 394 320 377 353 394Z"/>
+          <path d="M116 320 246 287 263 320 246 353Z"/><path d="M524 320 394 353 377 320 394 287Z"/>
+          <path d="M176 176 291 245 280 280 245 291Z"/><path d="M464 464 349 395 360 360 395 349Z"/>
+          <path d="M464 176 395 291 360 280 349 245Z"/><path d="M176 464 245 349 280 360 291 395Z"/>
+        </g>
+        <circle cx="320" cy="320" r="81" fill="#000000" stroke="#4FD1A5" stroke-width="4"/>
+        <circle cx="320" cy="320" r="39" fill="#F5A524"/>
+      </svg>
+      <footer class="slide-foot"><span>Research presentation</span><span>Use arrow keys to navigate</span></footer>
+    </section>
+
+    <section class="slide" id="slide-2" aria-labelledby="title-2">
+      <p class="eyebrow">The problem</p>
+      <h2 id="title-2">Predict the time left before failure.</h2>
+      <div class="two-col content-center">
+        <div><p class="lead">Remaining useful life, or RUL, is the number of operating cycles until a simulated engine reaches failure.</p><p class="support">Earlier estimates can support maintenance planning when their uncertainty and limits are understood.</p></div>
+        <div class="timeline-block">
+          <p class="small-label">A real training example: FD001 engine 1</p>
+          <div class="timeline"><span class="timeline-dot"></span><span class="timeline-line"></span><span class="timeline-dot amber"></span><span class="timeline-line dashed"></span><span class="timeline-dot"></span></div>
+          <div class="timeline-labels"><span>Cycle 1<br><small>first reading</small></span><span>Cycle 163<br><small>observation</small></span><span>Cycle 192<br><small>failure</small></span></div>
+          <p class="callout"><strong>29</strong> cycles remaining at cycle 163</p>
+        </div>
+      </div>
+      <footer class="slide-foot"><span>Training trajectory: Ref/CMAPSSData/train_FD001.txt</span><span>02</span></footer>
+    </section>
+
+    <section class="slide" id="slide-3" aria-labelledby="title-3">
+      <p class="eyebrow">Data</p>
+      <h2 id="title-3">Four simulated datasets test different conditions.</h2>
+      <div class="dataset-layout content-center">
+        <div><p class="lead">Each row records one engine cycle.</p><p class="support"><strong>21 sensors</strong> and <strong>3 operating settings</strong> describe temperature, pressure and other simulated signals.</p></div>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="C-MAPSS subset table, scroll horizontally for all columns"><table class="data-table" aria-label="C-MAPSS subset characteristics">
+          <thead><tr><th>Subset</th><th>Train engines</th><th>Test engines</th><th>Conditions</th><th>Fault modes</th></tr></thead>
+          <tbody><tr><th>FD001</th><td>100</td><td>100</td><td>1</td><td>1</td></tr><tr><th>FD002</th><td>260</td><td>259</td><td>6</td><td>1</td></tr><tr><th>FD003</th><td>100</td><td>100</td><td>1</td><td>2</td></tr><tr><th>FD004</th><td>249</td><td>248</td><td>6</td><td>2</td></tr></tbody>
+        </table></div>
+      </div>
+      <footer class="slide-foot"><span>Source: bundled C-MAPSS files, engine IDs counted directly</span><span>03</span></footer>
+    </section>
+
+    <section class="slide" id="slide-4" aria-labelledby="title-4">
+      <p class="eyebrow">Exploratory analysis</p>
+      <h2 id="title-4">Sensor readings change as an engine ages.</h2>
+      <div class="chart-layout content-center">
+        <div class="trace-figure">
+          <p class="chart-title">FD001, training engine 1: sensor 4</p>
+          <svg viewBox="0 0 1040 440" role="img" aria-label="Sampled sensor 4 readings for FD001 engine 1 trend upward over 192 cycles">
+            <g stroke="#262E3D" stroke-width="2"><line x1="70" y1="80" x2="970" y2="80"/><line x1="70" y1="252" x2="970" y2="252"/><line x1="70" y1="390" x2="970" y2="390"/></g>
+            <g fill="#8A93A6" font-size="26" font-family="sans-serif"><text x="0" y="89">1435</text><text x="0" y="261">1410</text><text x="0" y="399">1390</text><text x="70" y="430">1</text><text x="500" y="430">96</text><text x="935" y="430">192</text></g>
+            <polyline fill="none" stroke="#3BC9DE" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" points="70.0,317.0 88.8,278.3 107.7,356.9 126.5,315.4 145.4,321.5 164.2,334.0 183.1,325.3 201.9,314.3 220.8,304.4 239.6,328.7 258.5,299.0 277.3,326.9 296.2,336.5 315.0,305.5 333.9,301.9 352.7,283.1 371.6,298.8 390.4,312.6 409.3,335.4 428.1,314.4 447.0,307.1 465.8,280.1 484.7,305.8 503.5,262.7 522.4,267.3 541.2,297.6 560.1,298.9 578.9,258.4 597.7,275.7 616.6,256.7 635.4,239.1 654.3,276.9 673.1,263.1 692.0,251.5 710.8,285.6 729.7,216.1 748.5,254.8 767.4,247.4 786.2,220.8 805.1,235.2 823.9,201.9 842.8,265.4 861.6,196.8 880.5,147.0 899.3,155.8 918.2,178.9 937.0,153.0 955.9,128.2 970.0,133.7"/>
+          </svg>
+          <p class="chart-caption">Operating cycle <span>Sensor values shown in the dataset's raw scale</span></p>
+        </div>
+        <div><p class="lead">A sequence contains more information than a single reading.</p><p class="support">The trace is sampled every four cycles for display. This is one simulated training engine, not a fleet average.</p></div>
+      </div>
+      <footer class="slide-foot"><span>Source: FD001 training file, engine 1, sensor 4</span><span>04</span></footer>
+    </section>
+
+    <section class="slide" id="slide-5" aria-labelledby="title-5">
+      <p class="eyebrow">Preprocessing</p>
+      <h2 id="title-5">Turn a history into one training example.</h2>
+      <div class="content-center">
+        <div class="window-visual"><div class="window-cycles"><span>134</span><span>135</span><span>136</span><span class="dots">...</span><span>161</span><span>162</span><span>163</span></div><p>30 consecutive cycles of sensor and setting values</p></div>
+        <div class="equation-row"><div><span class="small-label">Input</span><strong>30-cycle window</strong></div><div class="flow-arrow" aria-hidden="true">&#8594;</div><div><span class="small-label">Training target</span><strong>192 - 163 = 29 cycles</strong></div></div>
+        <p class="support">RUL labels are capped at <strong>125 cycles</strong>. Windows never cross engine boundaries.</p>
+      </div>
+      <footer class="slide-foot"><span>Source: docs/methodology.md</span><span>05</span></footer>
+    </section>
+
+    <section class="slide" id="slide-6" aria-labelledby="title-6">
+      <p class="eyebrow">Evaluation design</p>
+      <h2 id="title-6">Keep engines apart before preprocessing.</h2>
+      <div class="split-grid content-center">
+        <div class="split-step"><span>01</span><h3>Split engines</h3><p>Use 80% of training engines for fitting and 20% for validation.</p></div>
+        <div class="split-step"><span>02</span><h3>Fit transforms</h3><p>Remove constant channels and fit scaling on the training engines only.</p></div>
+        <div class="split-step"><span>03</span><h3>Select a model</h3><p>Choose the lower validation MAE before scoring the official test set.</p></div>
+      </div>
+      <p class="strip-note">Overlapping windows from the same engine never appear in both fit and validation sets.</p>
+      <footer class="slide-foot"><span>Source: docs/methodology.md, seed 42</span><span>06</span></footer>
+    </section>
+
+    <section class="slide" id="slide-7" aria-labelledby="title-7">
+      <p class="eyebrow">Model design</p>
+      <h2 id="title-7">One window feeds two model paths.</h2>
+      <div class="architecture-layout content-center" role="group" aria-label="Model architecture from shared sensor windows through Ridge and LSTM candidates to validation selection">
+        <div class="architecture-stage"><span class="small-label">Shared input</span><strong>30 cycles</strong><p>Three operating settings and retained sensors.</p></div>
+        <span class="architecture-link" aria-hidden="true"></span>
+        <div class="architecture-models">
+          <article class="architecture-model"><span class="small-label">Baseline</span><h3>Ridge regression</h3><p>First, mean, standard deviation, slope and last value from each window.</p></article>
+          <article class="architecture-model"><span class="small-label">Sequence model</span><h3>Stacked LSTM</h3><p>64 and 32 recurrent units, dropout and a dense RUL output.</p></article>
+        </div>
+        <span class="architecture-link" aria-hidden="true"></span>
+        <div class="architecture-stage decision"><span class="small-label">Selection</span><strong>Validation MAE</strong><p>Choose the lower score before official test evaluation.</p></div>
+      </div>
+      <footer class="slide-foot"><span>Source: src/baseline_model.py and src/lstm_model.py</span><span>07</span></footer>
+    </section>
+
+    <section class="slide" id="slide-8" aria-labelledby="title-8">
+      <p class="eyebrow">Training and evaluation</p>
+      <h2 id="title-8">Select on validation. Report held-out error.</h2>
+      <div class="training-layout content-center">
+        <div class="training-facts"><div><strong>20</strong><span>maximum LSTM epochs</span></div><div><strong>64</strong><span>batch size</span></div><div><strong>42</strong><span>random seed</span></div></div>
+        <div><p class="lead">Adam training uses early stopping and restores the best validation weights.</p><p class="support"><strong>MAE</strong> measures average absolute error. <strong>RMSE</strong> penalizes larger errors more heavily. Both are reported in cycles.</p></div>
+      </div>
+      <p class="strip-note">Benchmark results count all eligible overlapping test windows, not one prediction per engine.</p>
+      <footer class="slide-foot"><span>Source: docs/RESULTS.md, snapshot 2026-10-31</span><span>08</span></footer>
+    </section>
+
+    <section class="slide" id="slide-9" aria-labelledby="title-9">
+      <p class="eyebrow">Results</p>
+      <h2 id="title-9">LSTM wins validation on one of four subsets.</h2>
+      <div class="content-center">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Results table, scroll horizontally for all columns"><table class="data-table result-table" aria-label="Validation-selected models and test errors by subset">
+          <thead><tr><th>Subset</th><th>Ridge val MAE</th><th>LSTM val MAE</th><th>Selected</th><th>Test MAE</th><th>Test RMSE</th></tr></thead>
+          <tbody><tr><th>FD001</th><td>12.80</td><td>10.54</td><td class="accent">LSTM</td><td>10.31</td><td>13.94</td></tr><tr><th>FD002</th><td>16.10</td><td>19.80</td><td class="accent">Ridge</td><td>15.39</td><td>19.36</td></tr><tr><th>FD003</th><td>12.26</td><td>13.13</td><td class="accent">Ridge</td><td>11.25</td><td>15.57</td></tr><tr><th>FD004</th><td>14.56</td><td>16.83</td><td class="accent">Ridge</td><td>13.08</td><td>18.00</td></tr></tbody>
+        </table></div>
+        <p class="support">For FD003, Ridge stays selected even though LSTM later scores lower on test. Selection never uses test labels.</p>
+      </div>
+      <footer class="slide-foot"><span>All numbers are cycles; test metrics are per window. Source: docs/RESULTS.md</span><span>09</span></footer>
+    </section>
+
+    <section class="slide" id="slide-10" aria-labelledby="title-10">
+      <p class="eyebrow">Result visualization</p>
+      <h2 id="title-10">Predictions track the target with visible spread.</h2>
+      <div class="figure-layout content-center">
+        <img class="result-figure" src="../results/fd001-predicted-vs-actual.png" alt="FD001 predicted versus observed remaining useful life for held-out test windows">
+        <div><p class="metric-big">10.31 <small>cycles</small></p><p class="lead">FD001 selected LSTM test MAE</p><p class="support">Points closer to the diagonal have smaller errors. The cap creates the vertical band at 125 cycles.</p></div>
+      </div>
+      <footer class="slide-foot"><span>FD001, 10,196 eligible test windows. Source: committed Matplotlib figure</span><span>10</span></footer>
+    </section>
+
+    <section class="slide" id="slide-11" aria-labelledby="title-11">
+      <p class="eyebrow">Interpretability</p>
+      <h2 id="title-11">Explore which sensors carry variation.</h2>
+      <div class="interpret-layout content-center">
+        <div><span class="small-label">FD001 training sensors</span><p class="metric-big">10 <small>components</small></p><p class="lead">capture 95.18% of retained-sensor variance.</p></div>
+        <div><span class="small-label">Strongest absolute Pearson association</span><p class="metric-big">-0.774</p><p class="lead">Sensor 11 versus capped training RUL.</p></div>
+      </div>
+      <p class="strip-note">PCA and correlation are descriptive. They do not establish causality or explain an individual LSTM prediction.</p>
+      <footer class="slide-foot"><span>Source: benchmark snapshot, training-only sensor screening</span><span>11</span></footer>
+    </section>
+
+    <section class="slide" id="slide-12" aria-labelledby="title-12">
+      <p class="eyebrow">Uncertainty</p>
+      <h2 id="title-12">Give each prediction an interval.</h2>
+      <div class="coverage-layout content-center">
+        <div><p class="lead">Validation residuals set a split-conformal interval around the selected model's prediction.</p><p class="support">The nominal target is <strong>95%</strong> coverage. Test-window coverage is measured after calibration.</p></div>
+        <div class="coverage-values"><div><span>FD001</span><strong>95.70%</strong></div><div><span>FD002</span><strong>95.97%</strong></div><div><span>FD003</span><strong>95.93%</strong></div><div><span>FD004</span><strong>95.66%</strong></div></div>
+      </div>
+      <p class="strip-note">Overlapping windows are dependent. Coverage on future or shifted data is not guaranteed.</p>
+      <footer class="slide-foot"><span>Source: docs/RESULTS.md, selected-model test windows</span><span>12</span></footer>
+    </section>
+
+    <section class="slide" id="slide-13" aria-labelledby="title-13">
+      <p class="eyebrow">Reliability</p>
+      <h2 id="title-13">Sensor corruption exposes a real weakness.</h2>
+      <div class="stress-layout content-center">
+        <div><span class="small-label">FD002 Ridge, terminal-engine MAE</span><div class="stress-values"><div><strong>13.33</strong><span>clean</span></div><span class="stress-arrow" aria-hidden="true">&#8594;</span><div><strong>58.01</strong><span>severe combined stress</span></div></div></div>
+        <p class="lead">The severe result averages two synthetic corruption scenarios. It is a stress test, not a field failure rate.</p>
+      </div>
+      <footer class="slide-foot"><span>Source: reliability run 20261030-231526, MAE in cycles</span><span>13</span></footer>
+    </section>
+
+    <section class="slide" id="slide-14" aria-labelledby="title-14">
+      <p class="eyebrow">Generalization</p>
+      <h2 id="title-14">Holding out a whole subset tests shift.</h2>
+      <div class="two-col content-center">
+        <div><p class="lead">Train and calibrate on three subsets. Evaluate on the fourth.</p><p class="support">These are related simulator domains. The table is a shift diagnostic, not external fleet validation.</p></div>
+        <table class="data-table compact-table" aria-label="Leave-one-subset-out terminal-engine mean absolute errors"><thead><tr><th>Held out</th><th>Ridge</th><th>LSTM</th></tr></thead><tbody><tr><th>FD001</th><td>13.50</td><td>11.69</td></tr><tr><th>FD002</th><td>15.48</td><td>13.60</td></tr><tr><th>FD003</th><td>14.51</td><td>12.24</td></tr><tr><th>FD004</th><td>17.79</td><td>20.08</td></tr></tbody></table>
+      </div>
+      <footer class="slide-foot"><span>Terminal-engine MAE in cycles, one seed. Source: docs/RESULTS.md</span><span>14</span></footer>
+    </section>
+
+    <section class="slide" id="slide-15" aria-labelledby="title-15">
+      <p class="eyebrow">Application insight</p>
+      <h2 id="title-15">What if maintenance slots are limited?</h2>
+      <div class="scenario-layout content-center">
+        <div><p class="lead">FD001 retrospective scenario</p><p class="support">Urgent means at most 30 cycles of true RUL. Schedule at most 20 of 100 engines using the point estimate.</p></div>
+        <div class="scenario-values"><div><strong>19</strong><span>urgent engines serviced</span></div><div><strong>6</strong><span>urgent engines missed</span></div><div><strong>1</strong><span>non-urgent engine serviced</span></div></div>
+      </div>
+      <p class="strip-note">The Julia what-if engine uses held-out labels only for retrospective scoring. No cost or repair outcomes are modeled.</p>
+      <footer class="slide-foot"><span>FD001, seed 42, 30-cycle threshold, 20% capacity. Source: scenario CSV</span><span>15</span></footer>
+    </section>
+
+    <section class="slide" id="slide-16" aria-labelledby="title-16">
+      <p class="eyebrow">Engineering optimization</p>
+      <h2 id="title-16">Native kernels help some analyses, not all.</h2>
+      <div class="two-col content-center">
+        <div><p class="metric-big">3.46&#215;</p><p class="lead">FD002 K-Means speedup in a local C++ benchmark.</p></div>
+        <div><p class="lead">PCA was slower in the same comparison.</p><p class="support">scikit-learn: <strong>7.61 ms</strong><br>C++: <strong>15.12 ms</strong></p><p class="support">These are sensor-analysis kernels, not LSTM inference speedups.</p></div>
+      </div>
+      <footer class="slide-foot"><span>10,000 training rows, local Windows host. Source: docs/RESULTS.md</span><span>16</span></footer>
+    </section>
+
+    <section class="slide" id="slide-17" aria-labelledby="title-17">
+      <p class="eyebrow">Application and delivery</p>
+      <h2 id="title-17">Two interfaces make the study explorable.</h2>
+      <div class="app-columns content-center">
+        <article><span class="app-number">01</span><h3>Vercel dashboard</h3><p>Compare subsets, inspect reliability and explore the study diagram.</p><a href="https://turbofan-rul-prediction-using-lstm.vercel.app/" target="_blank" rel="noopener noreferrer">Open dashboard &#8599;</a></article>
+        <article><span class="app-number">02</span><h3>Streamlit app</h3><p>Explore data, model outputs and maintenance what-if scenarios.</p><a href="https://turbofan-rul-prediction-lstm.streamlit.app/" target="_blank" rel="noopener noreferrer">Open Streamlit &#8599;</a></article>
+      </div>
+      <p class="strip-note">The dashboard reads committed research snapshots. Live sensor or API integration is future work.</p>
+      <footer class="slide-foot"><span>Source: project README and applications</span><span>17</span></footer>
+    </section>
+
+    <section class="slide" id="slide-18" aria-labelledby="title-18">
+      <p class="eyebrow">Limitations and next steps</p>
+      <h2 id="title-18">A benchmark is the start of validation.</h2>
+      <div class="next-steps content-center">
+        <div><span>01</span><p>Validate with independent operational engines and maintenance outcomes.</p></div>
+        <div><span>02</span><p>Evaluate sensor drift, missing data and uncertainty under real distribution shifts.</p></div>
+        <div><span>03</span><p>Study per-prediction explanations, streaming integration and model compression.</p></div>
+      </div>
+      <p class="strip-note">SHAP, live telemetry, pruning and quantization are not implemented in the current project.</p>
+      <footer class="slide-foot"><span>Source: docs/limitations.md and docs/RELIABILITY_AND_ROBUSTNESS.md</span><span>18</span></footer>
+    </section>
+
+    <section class="slide closing" id="slide-19" aria-labelledby="title-19">
+      <p class="eyebrow">Takeaway</p>
+      <h2 id="title-19">Good predictions need honest boundaries.</h2>
+      <div class="closing-points content-center"><div><strong>04</strong><span>simulated subsets evaluated</span></div><div><strong>02</strong><span>model families compared</span></div><div><strong>01</strong><span>reproducible research pipeline</span></div></div>
+      <p class="lead closing-message">The project combines leakage-aware evaluation, uncertainty, stress tests and accessible research tools.</p>
+      <footer class="slide-foot"><span>Questions and discussion</span><span>19</span></footer>
+    </section>
+
+    <section class="slide sources" id="slide-20" aria-labelledby="title-20">
+      <p class="eyebrow">References</p>
+      <h2 id="title-20">Sources and further reading.</h2>
+      <div class="source-list content-center">
+        <a href="https://github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM/blob/main/Ref/1060818294-GT2026-176316.pdf" target="_blank" rel="noopener noreferrer">Jung et al., ASME Turbo Expo 2026, GT2026-176316 <span>&#8599;</span></a>
+        <a href="https://doi.org/10.3390/aerospace12080725" target="_blank" rel="noopener noreferrer">Jung et al., Aerospace 2025, 12(8), 725 <span>&#8599;</span></a>
+        <a href="https://c3.ndc.nasa.gov/dashlink/resources/139/" target="_blank" rel="noopener noreferrer">NASA PCoE turbofan degradation data record <span>&#8599;</span></a>
+        <a href="https://doi.org/10.1109/PHM.2008.4711414" target="_blank" rel="noopener noreferrer">Saxena et al., damage propagation modeling, 2008 <span>&#8599;</span></a>
+      </div>
+      <p class="sources-note">Project results, methods and robustness protocols are in the repository documentation. The supplied studies predict turbine gas temperature on proprietary data. This deck describes adaptations to simulated C-MAPSS RUL.</p>
+      <footer class="slide-foot"><span>Project repository: github.com/shaxntanu/Turbofan-RUL-Prediction-using-LSTM</span><span>20</span></footer>
+    </section>
+  </main>
+  <p class="sr-only" id="navigation-help">Use the arrow keys, Page Up, Page Down, Home or End to move between slides.</p>
+</body>
+</html>
