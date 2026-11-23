@@ -1,0 +1,60 @@
+name: Publish presentation to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/presentation-pages.yml"
+      - "web/public/presentation/**"
+      - "web/public/results/fd001-prediction-intervals.png"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: presentation-pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/presentation/
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Assemble presentation site
+        run: |
+          mkdir -p _site/presentation _site/results
+          cp -R web/public/presentation/. _site/presentation/
+          cp web/public/results/fd001-prediction-intervals.png _site/results/
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=presentation/">
+              <title>Turbofan RUL presentation</title>
+            </head>
+            <body><p><a href="presentation/">Open the Turbofan RUL presentation</a></p></body>
+          </html>
+          EOF
+          test -s _site/index.html
+          test -s _site/presentation/index.html
+          test -s _site/presentation/deck.css
+          test -s _site/presentation/deck.js
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -104,6 +104,21 @@ def test_presentation_deliverables_do_not_contain_em_dash():
         assert "\u2014" not in path.read_text(encoding="utf-8")
 
 
+def test_github_pages_publishes_the_deck_and_badge_targets_it():
+    workflow = (ROOT / ".github" / "workflows" / "presentation-pages.yml").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    pages_url = "https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/presentation/"
+
+    assert "web/public/presentation/. _site/presentation/" in workflow
+    assert "web/public/results/fd001-prediction-intervals.png _site/results/" in workflow
+    assert 'url=presentation/' in workflow
+    assert "actions/upload-pages-artifact@v3" in workflow
+    assert "actions/deploy-pages@v4" in workflow
+    assert pages_url in workflow
+    assert f"]({pages_url})" in readme
+    assert "GitHub Pages presentation" in readme
+
+
 def test_reported_engine_counts_match_bundled_files():
     rows = read_deck().tables["C-MAPSS subset characteristics"][1:]
     for subset, train_count, test_count, *_ in rows:

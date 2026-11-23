@@ -2,6 +2,7 @@
 
 [![Vercel dashboard](https://img.shields.io/badge/Vercel-Dashboard-000000?logo=vercel&logoColor=white)](https://turbofan-rul-prediction-using-lstm.vercel.app)
 [![Streamlit app](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://turbofan-rul-prediction-lstm.streamlit.app)
+[![GitHub Pages presentation](https://img.shields.io/badge/GitHub%20Pages-Presentation-222222?logo=github&logoColor=white)](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/presentation/)
 
 An end-to-end NASA C-MAPSS benchmark for aircraft-engine remaining useful life (RUL), with an LSTM and Ridge baseline, a reproducible experiment pipeline, research analyses, Matplotlib figures, a Streamlit application, and a React results dashboard.
 
@@ -14,7 +15,7 @@ See [measured results and research analyses](docs/RESULTS.md) for the completed 
 - `outputs/`: generated metrics, predictions, reports, and Matplotlib figures (created by a run; not tracked).
 - `models/`: generated model and scaler files (not tracked).
 - `web/`: Vite/React benchmark and research dashboard, with a committed static results bundle.
-- `web/public/presentation/`: browser-based project presentation covering the dataset, methods, results, reliability, and deployment scope. [Open the presentation](https://turbofan-rul-prediction-using-lstm.vercel.app/presentation/).
+- `web/public/presentation/`: browser-based project presentation covering the dataset, methods, results, reliability, and deployment scope. [Open the GitHub Pages presentation](https://shaxntanu.github.io/Turbofan-RUL-Prediction-using-LSTM/presentation/).
 - `streamlit_app.py`: interactive data exploration and prediction interface.
 - `docs/turbofan-pipeline.html`: the interactive C-MAPSS research diagram, also bundled into the Vercel dashboard under **Study diagram**.
 - `docs/reliability-pipeline.html`: the source diagram for validation-controlled uncertainty, held-out-subset, short-history, and sensor-stress evaluation.
