@@ -114,6 +114,9 @@ def test_github_pages_publishes_the_deck_and_badge_targets_it():
     assert 'url=presentation/' in workflow
     assert "actions/upload-pages-artifact@v3" in workflow
     assert "actions/deploy-pages@v4" in workflow
+    artifact_name = "github-pages-${{ github.run_id }}-${{ github.run_attempt }}"
+    assert f"name: {artifact_name}" in workflow
+    assert f"artifact_name: {artifact_name}" in workflow
     assert pages_url in workflow
     assert f"]({pages_url})" in readme
     assert "GitHub Pages presentation" in readme
